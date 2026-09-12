@@ -1,333 +1,295 @@
-SWI — Structured Workflow Intelligence
+Structured Workflow Intelligence (SWI)
 
-Reference Implementation · Volume 1 · Part 1
+Modules 00–10 — Verified Reference Implementation
 
-SWI is a structured workflow integrity system being rebuilt from working code, automated tests, and explicitly documented limitations.
-
-This repository contains the current reference implementation of Modules 00–10, with Module 00 acting as the pipeline orchestrator.
-
-«Core principle:
-Don't claim what hasn't been built. Don't claim what hasn't been tested. Don't hide what the implementation cannot do.»
+Author: Keletso Ronald Mosidila
+Organisation: Trusts Motion
+Status: Rebuilding / Verified Reference Implementation
 
 ---
 
-What This Repository Contains
+What This Repository Is
 
-The current implementation is a single-process reference pipeline.
+This repository contains the currently verified implementation of SWI Modules 00–10 for a local, single-process reference implementation.
 
-A message enters through Module 00 — Trainer and is processed in this order:
+It exists to establish a reproducible engineering foundation for the parts of SWI that can currently be demonstrated through source code, executable tests, and documented behaviour.
 
-Input
-  │
-  ▼
-Module 02 — Security Probe
-  │
-  ▼
-Module 03 — Context Sync
-  │
-  ▼
-Module 05 — Redaction Engine
-  │
-  ▼
-Module 06 — Drift Analyzer
-  │
-  ├───────────────┐
-  ▼               ▼
-Module 07       Module 09
-Memory          Audit
-Validator       Logger
-  │               │
-  └───────┬───────┘
-          ▼
-       Outcome
+This repository should not be interpreted as a complete reconstruction of every capability, prototype, architectural concept, or research direction previously explored under SWI.
 
-A high security-risk score from Module 02 can halt the pipeline before downstream processing.
+The guiding principle for this rebuild is simple:
 
-Every pipeline outcome is recorded through two independent hash-chain mechanisms:
-
-- Module 07 — in-process memory validation
-- Module 09 — on-disk audit logging
+«What is implemented must be distinguishable from what is remembered, proposed, or intended.»
 
 ---
 
-Modules
-
-Module 00 — Trainer
-
-The orchestrator of the reference pipeline.
-
-It coordinates:
-
-- Security Probe
-- Context Sync
-- Redaction
-- Drift Analysis
-- Memory Validation
-- Audit Logging
-
-Module 00 does not implement the later SWI modules and does not make autonomous decisions beyond the logic currently implemented by these modules.
-
----
-
-Module 01 — Node Scanner
-
-Checks the integrity of files or configuration at rest using SHA-256 hashes.
-
-It can detect that content has changed.
-
-It does not determine why the content changed and does not make the baseline itself tamper-proof.
-
----
-
-Module 02 — Security Probe
-
-Performs heuristic security checks against incoming text.
-
-The current implementation checks for patterns associated with:
-
-- instruction override attempts
-- role override attempts
-- system-prompt extraction
-- zero-width characters
-- base64-like payloads
-
-It produces a bounded risk score and can trigger a pipeline halt when the configured threshold is reached.
-
-This is a heuristic detector, not a universal injection detector.
-
----
-
-Module 03 — Context Sync
-
-Tracks timestamps and checks for:
-
-- stale context
-- out-of-order turns
-
-The current implementation relies on the timestamp supplied by the caller.
-
-It does not independently establish whether the supplied context is truthful.
-
----
-
-Module 04 — Encryption Handler
-
-Provides authenticated encryption using AES-256-GCM.
-
-It supports:
-
-- encryption
-- decryption
-- random nonces
-- optional associated data
-- tamper detection through authenticated decryption
-
-Key management, rotation, custody, and identity infrastructure remain outside this module.
-
----
-
-Module 05 — Redaction Engine
-
-Detects and masks selected structured identifiers before downstream processing.
-
-Current patterns include:
-
-- email addresses
-- phone numbers
-- credit-card-shaped digit sequences
-- Botswana Omang-shaped 9-digit identifiers
-
-It is a first-pass structured redaction layer, not a complete PII detection system.
-
----
-
-Module 06 — Drift Analyzer
-
-Measures textual change using bag-of-words frequency vectors and cosine similarity.
-
-It can identify significant changes against a defined baseline.
-
-This is a coarse syntactic signal.
-
-It is not semantic understanding and does not use embeddings.
-
----
-
-Module 07 — Memory Validator
-
-Maintains an append-only hash chain.
-
-Each record incorporates the hash of the preceding record, allowing the chain to be checked for modification.
-
-It can identify a broken chain and report the point of failure.
-
-This provides tamper evidence, not tamper-proof storage.
-
----
-
-Module 08 — Access Auth
-
-Creates and validates signed, expiring session tokens using HMAC-SHA256.
-
-The current implementation provides:
-
-- token signing
-- expiry checking
-- subject identification
-- constant-time signature comparison
-
-It is not a complete identity provider and does not provide passwords, MFA, biometrics, or key custody.
-
----
-
-Module 09 — Audit Logger
-
-Writes audit records to a JSONL file using an append-only hash chain.
-
-The chain can be independently verified to detect modification.
-
-The current implementation does not provide remote mirroring or write-once physical storage.
-
----
-
-Module 10 — External Sandbox
-
-Executes Python code in a separate subprocess with resource controls.
-
-The current implementation provides:
-
-- subprocess isolation
-- wall-clock timeout
-- CPU limits
-- memory limits
-- stdout/stderr capture
-- exit-status capture
-
-It is not a hardened security sandbox against a determined adversary and does not constitute a physical network air gap.
-
----
-
-What Is Actually Wired Together?
-
-Only Module 00 directly orchestrates the reference pipeline.
-
-Wired into Module 00
-
-02 Security Probe
-03 Context Sync
-05 Redaction Engine
-06 Drift Analyzer
-07 Memory Validator
-09 Audit Logger
-
-Standalone utilities
-
-01 Node Scanner
-04 Encryption Handler
-08 Access Auth
-10 External Sandbox
-
-These utilities can be called directly by other code but are not automatically inserted into the Module 00 pipeline.
-
----
-
-Current Scope
-
-This repository covers Modules 00–10 of the SWI architecture.
-
-The implementation is:
-
-- single-process
-- local
-- testable
-- explicitly scoped
-- limitation-aware
-
-There is currently no distributed consensus layer, network propagation system, Sovereign Mesh, or multi-node enforcement mechanism implemented in this volume.
-
-References to those concepts in earlier SWI material should not be interpreted as features of this implementation.
-
----
-
-Testing
-
-The implementation is developed against automated tests.
-
-Run:
-
-python3 -m pytest test_swi_core.py -v
-
-The repository should be evaluated from the code and tests rather than from architectural claims alone.
-
-A feature described in documentation without a corresponding runnable implementation and test should be treated as unverified.
-
----
-
-Development Standard
-
-SWI is being rebuilt using the following sequence:
-
-Claim
-  ↓
-Implementation
-  ↓
-Test
-  ↓
-Result
-  ↓
-Limitation
-  ↓
-Next iteration
-
-The documentation follows the implementation rather than the other way around.
-
-This is intentional.
-
-Earlier SWI material contained broader architectural claims than the accompanying implementation could demonstrate. This repository is a deliberate reset of that approach.
-
-The objective is not to preserve every previous claim.
-
-The objective is to determine what can actually be built, tested, measured, and demonstrated.
-
----
-
-Roadmap
-
-Future SWI modules will be added only when they have a runnable implementation and corresponding evidence.
-
-Later architecture may include additional modules and infrastructure, but those components are not represented as implemented features until they exist in code and are tested.
-
----
 Architectural Continuity
 
-This repository is a verified implementation foundation, not a replacement for the broader SWI architectural work that preceded it.
+SWI has developed through multiple stages of research, experimentation, architectural discussion, and implementation.
 
 Earlier SWI development explored deeper semantic, kernel-level, and higher-order architectural concepts. Those directions remain part of the broader research context of SWI, but they are intentionally not represented here as implemented capabilities unless they can be reconstructed, tested, and verified.
 
-The purpose of this repository is to establish a reproducible foundation from which those higher-level layers can be rebuilt.
+This repository is therefore not a replacement for the broader SWI architecture.
 
-This distinction is important:
+It is the verified implementation layer being rebuilt from surviving, reproducible evidence.
+
+The distinction is important:
 
 Architecture describes where SWI is intended to go.
 Implementation demonstrates what SWI can currently prove.
 
 Neither replaces the other.
 
-As development continues, architectural concepts will be promoted into the implementation only when their definitions, mechanisms, tests, and limitations can be demonstrated in code.
+As development continues, architectural concepts may be promoted into implementation when their definitions, mechanisms, tests, and limitations can be demonstrated in code.
+
+---
+
+Why This Rebuild Exists
+
+Earlier SWI development grew beyond what is currently preserved in this repository.
+
+Following the loss of earlier development data, some capabilities could still be remembered or described but could no longer be reliably reproduced from surviving source code.
+
+That created an important engineering problem:
+
+Remembering that something existed is not the same as being able to prove that it exists.
+
+This repository therefore takes a deliberately conservative approach.
+
+Claims are being rebuilt from:
+
+- surviving source code;
+- executable tests;
+- reproducible behaviour;
+- documented interfaces;
+- explicit architectural boundaries; and
+- clearly identified limitations.
+
+Where something cannot currently be demonstrated, it is not presented as an implemented capability.
+
+---
+
+Current Scope
+
+This repository contains the currently verified implementation of SWI Modules 00–10.
+
+The reference implementation establishes a local, single-process pipeline in which Module 00 acts as the primary trainer/orchestrator for the modules that are currently wired into the execution path.
+
+The broader SWI architecture includes additional concepts and architectural directions that are not implemented in this volume.
+
+These may include deeper semantic, kernel-level, distributed, and multi-node layers explored during earlier research and development.
+
+Those concepts are intentionally not presented here as implemented capabilities.
+
+There is currently no distributed consensus layer, network propagation system, Sovereign Mesh, or multi-node enforcement mechanism implemented in this volume.
+
+References to such concepts in earlier SWI material should therefore be understood as architectural or historical context, not evidence of functionality contained in this repository.
+
+---
+
+Pipeline
+
+The current reference pipeline is:
+
+Input
+  │
+  ▼
+Module 00 — Trainer
+  │
+  ├── Module 02 — Security Probe
+  │
+  ├── Module 03 — Context Sync
+  │
+  ├── Module 05 — Redaction
+  │
+  ├── Module 06 — Drift Detection
+  │
+  ├── Module 07 — Memory Validator
+  │
+  └── Module 09 — Audit Logger
+
+Several modules are currently implemented as standalone utilities rather than being directly invoked by Module 00 in the reference pipeline.
+
+These include:
+
+Module 01 — SHA-256 Node Scanner
+Module 04 — AES-256-GCM Encryption
+Module 08 — Access Authentication / Tokens
+Module 10 — External Sandbox
+
+This distinction is intentional.
+
+A module existing in the repository does not automatically mean that it is currently part of the default execution path.
+
+---
+
+Module Overview
+
+Module| Component| Current Role
+00| Trainer| Pipeline orchestration
+01| Node Scanner| SHA-256 integrity scanning
+02| Security Probe| Instruction/injection risk detection
+03| Context Sync| Timestamp and ordering validation
+04| Encryption| AES-256-GCM encryption utility
+05| Redaction| Sensitive-content handling
+06| Drift| Context/drift analysis
+07| Memory Validator| Memory consistency validation
+08| Access Auth| Authentication/token handling
+09| Audit Logger| Audit/event recording
+10| External Sandbox| External execution boundary
+
+---
+
+Important Implementation Boundary
+
+The current implementation should not be confused with a general-purpose autonomous AI governance system.
+
+It is a reference implementation of specific workflow, integrity, security, validation, and audit mechanisms.
+
+In particular, Module 06 currently uses a coarse syntactic approach to drift analysis.
+
+It should not be described as semantic understanding or as proof that a system understands the meaning of a context.
+
+Likewise, the presence of security, authentication, encryption, audit, or validation modules does not by itself establish complete system security.
+
+Each mechanism has a defined scope and limitations.
+
+---
+
+Verification Standard
+
+SWI uses the following distinction:
+
+Implemented
+
+Functionality exists in the repository and can be inspected in source code.
+
+Tested
+
+The functionality is supported by executable automated tests.
+
+Architectural
+
+A design, mechanism, or concept exists as an architectural direction but has not yet been sufficiently implemented and verified in this repository.
+
+Historical
+
+A capability, prototype, or concept may have existed in earlier development but cannot currently be reconstructed from surviving evidence.
+
+These categories must not be treated as interchangeable.
+
+---
+
+Security and Integrity Terminology
+
+This project uses tamper-evident rather than tamper-proof language.
+
+A tamper-evident mechanism is designed to detect or expose alteration.
+
+It does not imply that alteration is impossible.
+
+Similarly, describing code as tested means that the relevant automated tests pass under the tested conditions.
+
+It does not mean that the system is universally proven secure or correct.
+
+---
+
+Testing
+
+Tests are intended to demonstrate the behaviour that the current implementation actually provides.
+
+Examples include checks for:
+
+- node integrity/tamper detection;
+- instruction-override or injection detection;
+- context ordering and staleness;
+- redaction behaviour;
+- drift handling;
+- memory validation;
+- audit logging; and
+- other module-specific behaviour.
+
+The tests should be treated as evidence of the behaviour they actually exercise—not as proof of capabilities outside their coverage.
+
+---
+
+Design Principle
+
+The rebuild follows a simple engineering rule:
+
+«Proof before assumption.»
+
+Where an architectural claim cannot currently be reproduced, it remains a claim.
+
+Where functionality can be implemented, it is implemented.
+
+Where functionality can be tested, it is tested.
+
+Where limitations exist, they are documented.
+
+This is intended to make SWI easier to audit, understand, extend, and challenge.
+
+---
+
+Relationship Between Foundation and Future Architecture
+
+The Modules 00–10 implementation is not intended to define the final boundary of SWI.
+
+Instead, it provides a verified base from which higher-level architecture can be reconstructed.
+
+Future work may include deeper semantic and kernel-level mechanisms, broader workflow intelligence, distributed components, multi-node enforcement, and other architectural layers.
+
+Those capabilities should be added only when their implementation and verification can support the claims made about them.
+
+The objective is therefore not to make the repository appear complete.
+
+The objective is to make it accurate.
+
+---
+
+Attribution and Intellectual Context
+
+SWI has developed through the contributions, challenges, research, experimentation, and architectural discussions of multiple people over time.
+
+This repository specifically represents the implementation that can currently be reproduced and verified from the surviving codebase.
+
+Earlier architectural discussions—including work exploring deeper semantic and kernel-level foundations—remain part of the broader intellectual development of SWI.
+
+Specific concepts, implementations, or contributions should be attributed according to the work actually represented in the relevant source, documentation, research, or design material.
+
+Attribution does not imply that every concept in the broader SWI architecture is implemented in this repository.
+
+Likewise, the absence of a concept from this repository does not imply that the concept was abandoned.
+
+---
+
+Current Status
+
+Status: Active reconstruction
+
+The repository is being developed incrementally.
+
+The current priority is:
+
+1. establish a reproducible foundation;
+2. verify each implementation;
+3. document actual behaviour;
+4. identify limitations;
+5. separate implementation from architectural intent;
+6. reconstruct higher-level components progressively; and
+7. avoid unsupported claims.
+
+---
+
+Guiding Principle
+
+«Do not claim what the code cannot demonstrate.
+
+Do not discard what has not yet been reconstructed.
+
+Build from what can be proven, then extend from there.»
 
 ---
 
 License
 
-License information will be added with the repository's formal release.
-
----
-
-Author
-
-Keletso Ronald Mosidila
-Lead Architect & Author
-Trusts Motion
-Gaborone, Botswana
-
-SWI — Structured Workflow Intelligence
+See the repository license for the current terms governing use, modification, and distribution.
