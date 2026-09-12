@@ -13,6 +13,7 @@ echo ""
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}Step 1: Checking prerequisites...${NC}"
@@ -54,7 +55,7 @@ echo ""
 echo -e "${BLUE}Step 6: Extracting source code...${NC}"
 if [ -f "swi_v1_part1_source.zip" ]; then
     if command -v unzip &> /dev/null; then
-        unzip -q swi_v1_part1_source.zip
+        unzip -oq swi_v1_part1_source.zip
         echo -e "${GREEN}✅ Source code extracted${NC}"
     else
         python3 -m zipfile -e swi_v1_part1_source.zip .
@@ -63,6 +64,8 @@ if [ -f "swi_v1_part1_source.zip" ]; then
 else
     echo -e "${YELLOW}⚠️  swi_v1_part1_source.zip not found${NC}"
 fi
+# Extraction is flat: this creates ./swi_core/ and ./test_swi_core.py
+# in the current directory -- there is no swi_v1_part1_source/ subfolder.
 
 echo ""
 echo -e "${BLUE}Step 7: Creating configuration files...${NC}"
@@ -81,13 +84,16 @@ pip list --quiet | grep -E "pytest|cryptography|pyyaml" || true
 
 echo ""
 echo -e "${BLUE}Step 9: Running verification tests...${NC}"
-if [ -f "swi_v1_part1_source/tests/test_swi_core.py" ]; then
-    cd swi_v1_part1_source
-    python3 -m pytest tests/test_swi_core.py -v --tb=short 2>&1 | head -50 || true
-    cd ..
-    echo -e "${GREEN}✅ Tests executed${NC}"
+if [ -f "test_swi_core.py" ] && [ -d "swi_core" ]; then
+    if python3 -m pytest test_swi_core.py -v --tb=short; then
+        echo -e "${GREEN}✅ Tests executed - all passing${NC}"
+    else
+        echo -e "${RED}❌ Tests failed - see output above${NC}"
+        exit 1
+    fi
 else
-    echo -e "${YELLOW}⚠️  Test file not found${NC}"
+    echo -e "${RED}❌ test_swi_core.py or swi_core/ not found - extraction did not complete${NC}"
+    exit 1
 fi
 
 echo ""
@@ -99,14 +105,11 @@ echo "📋 Next Steps:"
 echo "   1. Activate virtual environment:"
 echo "      source swi_env/bin/activate"
 echo ""
-echo "   2. Navigate to source:"
-echo "      cd swi_v1_part1_source"
+echo "   2. Run the full test suite (from this directory):"
+echo "      python3 -m pytest test_swi_core.py -v"
 echo ""
-echo "   3. Run full test suite:"
-echo "      python3 -m pytest tests/test_swi_core.py -v"
-echo ""
-echo "   4. Generate coverage report:"
-echo "      python3 -m pytest tests/ --cov=src --cov-report=html"
+echo "   3. Generate a coverage report:"
+echo "      python3 -m pytest test_swi_core.py --cov=swi_core --cov-report=html"
 echo ""
 echo "📚 Documentation:"
 echo "   - README.md - Project overview"
@@ -114,8 +117,8 @@ echo "   - SETUP_GUIDE.md - Detailed setup"
 echo "   - INSTALLATION.md - Installation steps"
 echo ""
 echo "🔧 Configuration:"
-echo "   - config/swi_config.yaml - Module settings"
-echo "   - .env - Environment variables"
+echo "   - config/swi_config.yaml - module settings reference (not yet read by the code)"
+echo "   - .env - environment variable template (not yet read by the code)"
 echo ""
 echo "Virtual environment: $VIRTUAL_ENV"
 echo ""
