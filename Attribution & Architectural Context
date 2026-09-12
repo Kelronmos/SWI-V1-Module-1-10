@@ -1,0 +1,32 @@
+Attribution & Architectural Context
+
+SWI has developed through multiple stages of research, experimentation, architectural discussion, and implementation.
+
+This repository represents the verified implementation foundation for SWI Modules 00–10. It should not be interpreted as a complete representation of every architectural concept, research direction, or prototype previously explored under SWI.
+
+Earlier work and discussions, including contributions and architectural challenges around semantic and kernel-level foundations, informed the direction of the broader SWI architecture. Those ideas are not being discarded or attributed to this repository unless they are implemented and verifiable here.
+
+The current approach is deliberately evidence-based:
+
+- Implemented means the functionality exists in the repository.
+- Tested means it is supported by executable tests.
+- Architectural direction means an idea or design that has not yet been fully reconstructed or implemented.
+- Historical work may inform future development without being represented as current repository capability.
+
+This distinction is intentional. After the loss of earlier development data, the project is being rebuilt from a reproducible foundation rather than relying on memory, descriptions, or assumptions about what previously existed.
+
+Contributors & Intellectual Context
+
+Keletso Ronald Mosidila — Lead Architect & Author of this implementation and repository.
+
+Terry Synader — Contributor to the broader architectural thinking and development direction of SWI, including discussions that challenged the project toward deeper semantic and kernel-level foundations.
+
+Attribution here does not imply that every concept, module, implementation, or claim in this repository originated from either contributor. Specific contributions should be attributed according to the work actually represented in the relevant code, documentation, or research.
+
+This repository therefore preserves two principles:
+
+«Give credit for ideas and contributions.»
+
+«Claim only what can currently be demonstrated.»
+
+The broader SWI architecture may extend beyond the implementation contained in this repository as future layers are reconstructed, implemented, tested, and verified.
