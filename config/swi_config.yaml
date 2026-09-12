@@ -1,0 +1,256 @@
+# SWI V1 Module 1-10 Configuration
+# Reference Implementation - Volume 1 Part 1
+
+swi:
+  version: "1.0.0"
+  environment: "development"
+  author: "Keletso Ronald Mosidila"
+  organization: "Trusts Motion"
+  location: "Gaborone, Botswana"
+
+pipeline:
+  description: "Single-process reference pipeline for security and workflow integrity"
+  
+  # Modules wired into Module 00 (Trainer/Orchestrator)
+  active_modules:
+    - module_00  # Trainer - Orchestrator
+    - module_02  # Security Probe
+    - module_03  # Context Sync
+    - module_05  # Redaction Engine
+    - module_06  # Drift Analyzer
+    - module_07  # Memory Validator
+    - module_09  # Audit Logger
+  
+  # Standalone utilities (not auto-inserted into pipeline)
+  utilities:
+    - module_01  # Node Scanner
+    - module_04  # Encryption Handler
+    - module_08  # Access Auth
+    - module_10  # External Sandbox
+
+modules:
+  module_00:
+    name: "Trainer"
+    description: "Pipeline Orchestrator"
+    role: "core"
+    status: "active"
+    features:
+      - coordinates_security_probe
+      - coordinates_context_sync
+      - coordinates_redaction
+      - coordinates_drift_analysis
+      - coordinates_memory_validation
+      - coordinates_audit_logging
+  
+  module_01:
+    name: "Node Scanner"
+    description: "File and configuration integrity checker using SHA-256"
+    role: "standalone"
+    status: "active"
+    hash_algorithm: "sha256"
+    limitations:
+      - does_not_determine_change_reason
+      - baseline_not_tamper_proof
+  
+  module_02:
+    name: "Security Probe"
+    description: "Heuristic security checks against incoming text"
+    role: "pipeline"
+    status: "active"
+    risk_threshold: 0.7
+    checks:
+      - instruction_override_attempts
+      - role_override_attempts
+      - system_prompt_extraction
+      - zero_width_characters
+      - base64_like_payloads
+    limitations:
+      - heuristic_detector_only
+      - not_universal_injection_detector
+  
+  module_03:
+    name: "Context Sync"
+    description: "Timestamp and context validation"
+    role: "pipeline"
+    status: "active"
+    max_context_age_seconds: 3600
+    checks:
+      - stale_context
+      - out_of_order_turns
+    limitations:
+      - relies_on_supplied_timestamp
+      - cannot_independently_verify_truthfulness
+  
+  module_04:
+    name: "Encryption Handler"
+    description: "Authenticated encryption using AES-256-GCM"
+    role: "standalone"
+    status: "active"
+    algorithm: "AES-256-GCM"
+    features:
+      - encryption
+      - decryption
+      - random_nonces
+      - optional_associated_data
+      - tamper_detection
+    limitations:
+      - key_management_outside_scope
+      - no_key_rotation_infrastructure
+  
+  module_05:
+    name: "Redaction Engine"
+    description: "Detects and masks structured identifiers"
+    role: "pipeline"
+    status: "active"
+    patterns:
+      - email_addresses
+      - phone_numbers
+      - credit_card_sequences
+      - botswana_omang_identifiers
+    limitations:
+      - first_pass_redaction_only
+      - not_complete_pii_system
+  
+  module_06:
+    name: "Drift Analyzer"
+    description: "Textual change detection using bag-of-words"
+    role: "pipeline"
+    status: "active"
+    algorithm: "cosine_similarity"
+    similarity_threshold: 0.8
+    limitations:
+      - coarse_syntactic_signal
+      - no_semantic_understanding
+      - no_embeddings
+  
+  module_07:
+    name: "Memory Validator"
+    description: "Append-only hash chain for in-process validation"
+    role: "pipeline"
+    status: "active"
+    hash_algorithm: "sha256"
+    limitations:
+      - tamper_evidence_only
+      - not_tamper_proof
+  
+  module_08:
+    name: "Access Auth"
+    description: "Session token management using HMAC-SHA256"
+    role: "standalone"
+    status: "active"
+    algorithm: "HMAC-SHA256"
+    token_expiry_seconds: 3600
+    features:
+      - token_signing
+      - expiry_checking
+      - subject_identification
+      - constant_time_comparison
+    limitations:
+      - not_complete_identity_provider
+      - no_password_mfa_biometrics
+  
+  module_09:
+    name: "Audit Logger"
+    description: "On-disk audit logging with append-only hash chain"
+    role: "pipeline"
+    status: "active"
+    log_format: "jsonl"
+    log_file: "logs/audit.jsonl"
+    hash_chain: true
+    limitations:
+      - no_remote_mirroring
+      - no_write_once_physical_storage
+  
+  module_10:
+    name: "External Sandbox"
+    description: "Isolated Python code execution with resource controls"
+    role: "standalone"
+    status: "active"
+    features:
+      - subprocess_isolation
+      - wall_clock_timeout
+      - cpu_limits
+      - memory_limits
+      - stdout_stderr_capture
+      - exit_status_capture
+    timeout_seconds: 30
+    memory_limit_mb: 512
+    cpu_limit_percent: 50
+    limitations:
+      - not_hardened_against_determined_adversary
+      - not_physical_network_air_gap
+
+security:
+  enable_pii_redaction: true
+  enable_injection_detection: true
+  enable_drift_detection: true
+  enable_memory_validation: true
+  enable_audit_logging: true
+  
+  encryption:
+    algorithm: "AES-256-GCM"
+    key_length: 32
+    nonce_length: 12
+  
+  authentication:
+    algorithm: "HMAC-SHA256"
+    token_expiry: 3600
+    check_expiry: true
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  directory: "logs"
+  audit_file: "logs/audit.jsonl"
+  rotation:
+    enabled: true
+    max_size: 10485760  # 10MB
+    backup_count: 5
+
+storage:
+  audit_log_path: "logs/audit.jsonl"
+  temp_directory: ".swi_temp"
+  memory_records_limit: 10000
+  cache_directory: ".swi_cache"
+
+testing:
+  pytest_config:
+    testpaths:
+      - "tests"
+    python_files:
+      - "test_*.py"
+      - "*_test.py"
+    python_classes:
+      - "Test*"
+    python_functions:
+      - "test_*"
+    verbosity: 2
+    coverage_threshold: 80
+    markers:
+      - unit: "Unit tests"
+      - integration: "Integration tests"
+      - security: "Security tests"
+      - performance: "Performance tests"
+
+development:
+  code_style:
+    formatter: "black"
+    linter: "flake8"
+    type_checker: "mypy"
+  
+  standards:
+    claim_implementation_test_sequence: true
+    document_limitations: true
+    test_driven_development: true
+    explicit_scope: true
+
+limitations:
+  scope:
+    - "Single-process reference pipeline only"
+    - "Local execution only"
+    - "No distributed consensus layer"
+    - "No network propagation system"
+    - "No Sovereign Mesh implementation"
+    - "No multi-node enforcement"
+  
+  current_focus: "Testable, explicitly scoped, limitation-aware implementation"

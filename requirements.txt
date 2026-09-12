@@ -1,0 +1,21 @@
+# SWI V1 Module 1-10 - Python Dependencies
+# Core Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+
+# Encryption & Security
+cryptography>=41.0.0
+
+# Configuration Management
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Utilities
+requests>=2.28.0
+click>=8.0.0
+
+# Development
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
