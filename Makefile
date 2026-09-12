@@ -8,9 +8,9 @@ help: ## Display this help message
 	@echo "==================================="
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
-extract: ## Extract swi_v1_part1_source.zip
+extract: ## Extract swi_v1_part1_source.zip into the repo root
 	@echo "Extracting source ZIP..."
-	python3 extract_and_setup.py
+	unzip -o swi_v1_part1_source.zip
 
 install: ## Install dependencies
 	@echo "Installing dependencies..."
@@ -23,19 +23,13 @@ setup: extract install ## Full setup (extract + install)
 
 test: ## Run all tests with coverage
 	@echo "Running tests..."
-	cd swi_v1_part1_source && python3 -m pytest tests/test_swi_core.py -v --cov=src --cov-report=term-color
-
-test-unit: ## Run unit tests only
-	@echo "Running unit tests..."
-	cd swi_v1_part1_source && python3 -m pytest tests/test_swi_core.py -v -m unit
-
-test-integration: ## Run integration tests
-	@echo "Running integration tests..."
-	cd swi_v1_part1_source && python3 -m pytest tests/test_swi_core.py -v -m integration
+	@mkdir -p logs
+	python3 -m pytest test_swi_core.py -v --cov=swi_core --cov-report=term
 
 test-coverage: ## Generate HTML coverage report
 	@echo "Generating coverage report..."
-	cd swi_v1_part1_source && python3 -m pytest tests/ --cov=src --cov-report=html --cov-report=term-color
+	@mkdir -p logs
+	python3 -m pytest test_swi_core.py --cov=swi_core --cov-report=html --cov-report=term
 	@echo "Report: open htmlcov/index.html"
 
 clean: ## Remove build artifacts and cache
@@ -64,17 +58,17 @@ dev: ## Setup development environment
 
 format: ## Format code with black
 	@echo "Formatting code..."
-	black swi_v1_part1_source/src swi_v1_part1_source/tests
+	black swi_core test_swi_core.py
 	@echo "✅ Formatting complete"
 
 lint: ## Run linter
 	@echo "Running linter..."
-	flake8 swi_v1_part1_source/src swi_v1_part1_source/tests --max-line-length=100
+	flake8 swi_core test_swi_core.py --max-line-length=100
 	@echo "✅ Linting complete"
 
 type: ## Run type checker
 	@echo "Running type checker..."
-	mypy swi_v1_part1_source/src
+	mypy swi_core
 	@echo "✅ Type checking complete"
 
 quality: format lint type ## Run all quality checks
@@ -105,7 +99,7 @@ status: ## Show installation status
 	@echo "Pytest: $$(python3 -m pytest --version 2>/dev/null || echo 'Not installed')"
 	@echo "Config file: $$([ -f config/swi_config.yaml ] && echo '✅' || echo '❌')"
 	@echo "Virtual env: $$([ -d swi_env ] && echo '✅' || echo '❌')"
-	@echo "Source extracted: $$([ -d swi_v1_part1_source ] && echo '✅' || echo '❌')"
+	@echo "Source extracted: $$([ -d swi_core ] && echo '✅' || echo '❌')"
 
 info: ## Display system information
 	@echo "System Information"
