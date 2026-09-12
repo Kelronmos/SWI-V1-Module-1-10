@@ -2,7 +2,8 @@
 
 ## Overview
 
-This guide walks you through extracting the ZIP file, configuring the SWI system, and preparing it for testing and use.
+This guide walks you through extracting the ZIP file, understanding the
+current configuration surface, and running the test suite.
 
 ## Prerequisites
 
@@ -13,7 +14,8 @@ This guide walks you through extracting the ZIP file, configuring the SWI system
 
 ## Step 1: Extract the ZIP File
 
-The repository contains `swi_v1_part1_source.zip` which contains the source code.
+The repository contains `swi_v1_part1_source.zip`, which contains the
+source code.
 
 ### Option A: Extract via Command Line
 
@@ -24,19 +26,20 @@ cd SWI-V1-Module-1-10
 # Extract the ZIP file
 unzip swi_v1_part1_source.zip
 
-# This will create the following structure:
-# swi_v1_part1_source/
-#   ├── src/
-#   ├── tests/
-#   ├── config/
-#   └── requirements.txt
+# This creates the following structure, flat in the current directory
+# (there is no swi_v1_part1_source/ subfolder):
+#   swi_core/
+#     __init__.py
+#     module00_trainer.py
+#     module01_node_scanner.py
+#     ...through module10_external_sandbox.py
+#   test_swi_core.py
 ```
 
 ### Option B: Extract Programmatically
 
 ```python
 import zipfile
-import os
 
 zip_path = 'swi_v1_part1_source.zip'
 extract_path = '.'
@@ -52,13 +55,10 @@ print("Extraction complete!")
 ### Create a Virtual Environment
 
 ```bash
-# Create virtual environment
 python3 -m venv swi_env
 
-# Activate the virtual environment
 # On macOS/Linux:
 source swi_env/bin/activate
-
 # On Windows:
 swi_env\Scripts\activate
 ```
@@ -66,298 +66,69 @@ swi_env\Scripts\activate
 ### Install Dependencies
 
 ```bash
-# First, ensure you have the requirements file
-# If extracted, use the one from the ZIP:
 pip install --upgrade pip setuptools wheel
 
-# Install project dependencies
-pip install -r swi_v1_part1_source/requirements.txt
-
-# Core dependencies (if requirements.txt is not available):
-pip install pytest pytest-cov cryptography pyyaml
+# requirements.txt is at the repo root, not inside the ZIP
+pip install -r requirements.txt
 ```
 
-## Step 3: Configuration
+## Step 3: Configuration — current status
 
-### Create Configuration Directory
+`config/swi_config.yaml` and `.env.example` already ship with the repo.
+**Neither is currently read by any module** — there is no YAML loader
+and no `os.environ`/`dotenv` call anywhere in `swi_core`. They document
+the intended settings surface, but every module is configured through
+constructor arguments only (see the examples in Step 7). Treat them as
+a design reference, not a working config file, until a loader exists.
+
+If you want a local `.env` for your own notes:
 
 ```bash
-mkdir -p config
+cp .env.example .env
 ```
 
-### Create Main Configuration File
-
-Create `config/swi_config.yaml`:
-
-```yaml
-# SWI Configuration
-swi:
-  version: "1.0.0"
-  environment: "development"
-  
-pipeline:
-  enabled_modules:
-    - module_00  # Trainer (Orchestrator)
-    - module_02  # Security Probe
-    - module_03  # Context Sync
-    - module_05  # Redaction Engine
-    - module_06  # Drift Analyzer
-    - module_07  # Memory Validator
-    - module_09  # Audit Logger
-  
-  module_00:
-    description: "Pipeline Orchestrator"
-    enabled: true
-  
-  module_01:
-    name: "Node Scanner"
-    enabled: true
-    hash_algorithm: "sha256"
-  
-  module_02:
-    name: "Security Probe"
-    enabled: true
-    risk_threshold: 0.7
-    check_patterns:
-      - instruction_override
-      - role_override
-      - system_prompt_extraction
-      - zero_width_characters
-      - base64_payloads
-  
-  module_03:
-    name: "Context Sync"
-    enabled: true
-    max_context_age_seconds: 3600
-    check_ordering: true
-  
-  module_04:
-    name: "Encryption Handler"
-    enabled: true
-    algorithm: "AES-256-GCM"
-    key_length: 32
-  
-  module_05:
-    name: "Redaction Engine"
-    enabled: true
-    patterns:
-      - email_addresses
-      - phone_numbers
-      - credit_card_numbers
-      - omang_identifiers
-  
-  module_06:
-    name: "Drift Analyzer"
-    enabled: true
-    similarity_threshold: 0.8
-  
-  module_07:
-    name: "Memory Validator"
-    enabled: true
-    hash_algorithm: "sha256"
-  
-  module_08:
-    name: "Access Auth"
-    enabled: true
-    token_expiry_seconds: 3600
-    signature_algorithm: "HMAC-SHA256"
-  
-  module_09:
-    name: "Audit Logger"
-    enabled: true
-    log_format: "jsonl"
-    log_file: "logs/audit.jsonl"
-    hash_chain: true
-  
-  module_10:
-    name: "External Sandbox"
-    enabled: true
-    timeout_seconds: 30
-    memory_limit_mb: 512
-    cpu_limit_percent: 50
-
-security:
-  enable_pii_redaction: true
-  enable_injection_detection: true
-  enable_drift_detection: true
-  audit_all_operations: true
-
-logging:
-  level: "INFO"
-  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  log_directory: "logs"
-
-storage:
-  audit_log_path: "logs/audit.jsonl"
-  temp_directory: ".swi_temp"
-  memory_validation_records: 1000
-
-testing:
-  pytest_verbosity: "v"
-  coverage_threshold: 80
-```
-
-### Create Environment Variables File
-
-Create `.env`:
-
-```bash
-# SWI Environment Configuration
-SWI_ENV=development
-SWI_DEBUG=false
-SWI_LOG_LEVEL=INFO
-SWI_CONFIG_PATH=config/swi_config.yaml
-
-# Security
-SWI_ENCRYPTION_KEY_LENGTH=32
-SWI_TOKEN_EXPIRY=3600
-
-# Paths
-SWI_LOG_DIR=logs
-SWI_TEMP_DIR=.swi_temp
-SWI_AUDIT_LOG=logs/audit.jsonl
-
-# Testing
-SWI_TEST_MODE=false
-SWI_PYTEST_ARGS=-v --cov=swi_v1_part1_source --cov-report=term-color
-```
-
-### Create Module Configuration Templates
-
-Create `config/modules_config.json`:
-
-```json
-{
-  "modules": {
-    "module_00": {
-      "name": "Trainer",
-      "description": "Pipeline Orchestrator",
-      "role": "core",
-      "status": "active"
-    },
-    "module_01": {
-      "name": "Node Scanner",
-      "description": "File integrity checker",
-      "role": "standalone",
-      "status": "active"
-    },
-    "module_02": {
-      "name": "Security Probe",
-      "description": "Heuristic security checks",
-      "role": "pipeline",
-      "status": "active"
-    },
-    "module_03": {
-      "name": "Context Sync",
-      "description": "Timestamp and ordering validation",
-      "role": "pipeline",
-      "status": "active"
-    },
-    "module_04": {
-      "name": "Encryption Handler",
-      "description": "AES-256-GCM encryption",
-      "role": "standalone",
-      "status": "active"
-    },
-    "module_05": {
-      "name": "Redaction Engine",
-      "description": "PII and structured identifier masking",
-      "role": "pipeline",
-      "status": "active"
-    },
-    "module_06": {
-      "name": "Drift Analyzer",
-      "description": "Textual change detection",
-      "role": "pipeline",
-      "status": "active"
-    },
-    "module_07": {
-      "name": "Memory Validator",
-      "description": "In-process hash chain validation",
-      "role": "pipeline",
-      "status": "active"
-    },
-    "module_08": {
-      "name": "Access Auth",
-      "description": "Session token management",
-      "role": "standalone",
-      "status": "active"
-    },
-    "module_09": {
-      "name": "Audit Logger",
-      "description": "JSONL audit logging with hash chain",
-      "role": "pipeline",
-      "status": "active"
-    },
-    "module_10": {
-      "name": "External Sandbox",
-      "description": "Isolated Python code execution",
-      "role": "standalone",
-      "status": "active"
-    }
-  }
-}
-```
+It will not affect runtime behavior yet.
 
 ## Step 4: Directory Structure Setup
 
-Create required directories:
+The only directories the code actually needs at runtime are `logs/`
+(required — see the `AuditLogger` note in Step 7) and `.swi_temp/`
+(used by the sandbox for temp files):
 
 ```bash
-# Create directory structure
-mkdir -p logs
-mkdir -p .swi_temp
-mkdir -p config
-mkdir -p tests/fixtures
-mkdir -p docs
-mkdir -p examples
-
-# Set proper permissions
-chmod 755 logs
-chmod 755 .swi_temp
-chmod 755 config
+mkdir -p logs .swi_temp
+chmod 755 logs .swi_temp
 ```
 
 ## Step 5: Verify Installation
 
-### Check Python and Dependencies
-
 ```bash
-# Verify Python version
 python3 --version
-
-# Verify installed packages
 pip list
-
-# Verify pytest installation
 python3 -m pytest --version
 ```
 
 ### Test Basic Import
 
-Create `test_import.py`:
+Create `test_import.py` at the repo root (next to `swi_core/`):
 
 ```python
 #!/usr/bin/env python3
 """Verify SWI module imports."""
 
 import sys
-import os
-
-# Add source to path
-sys.path.insert(0, 'swi_v1_part1_source/src')
 
 try:
-    print("Testing SWI module imports...")
-    print("✓ Python environment ready")
-    print("✓ Virtual environment activated")
+    from swi_core.module00_trainer import Trainer
+    from swi_core.module02_security_probe import SecurityProbe
+    print("✓ swi_core imports successfully")
     print("\nSWI system is ready for testing!")
 except ImportError as e:
     print(f"✗ Import error: {e}")
     sys.exit(1)
 ```
 
-Run the test:
+Run it from the repo root:
 
 ```bash
 python3 test_import.py
@@ -365,205 +136,197 @@ python3 test_import.py
 
 ## Step 6: Run Tests
 
-### Run Full Test Suite
-
 ```bash
-# Navigate to source directory
-cd swi_v1_part1_source
-
-# Run all tests with verbose output
+# Run from the repo root — test_swi_core.py lives there, not in a
+# swi_v1_part1_source/ subfolder
 python3 -m pytest test_swi_core.py -v
 
-# Run with coverage report
-python3 -m pytest test_swi_core.py -v --cov=. --cov-report=term-color
+# With coverage
+python3 -m pytest test_swi_core.py -v --cov=swi_core --cov-report=term
 
-# Run specific test module
-python3 -m pytest test_swi_core.py::TestModule02 -v
+# Run a single test (tests are plain functions, not classes —
+# use its exact name from `pytest --collect-only` or the list below)
+python3 -m pytest test_swi_core.py::test_security_probe_flags_instruction_override -v
 ```
 
 ### Generate Test Report
 
 ```bash
-# Generate HTML coverage report
-python3 -m pytest test_swi_core.py --cov=. --cov-report=html
+python3 -m pytest test_swi_core.py --cov=swi_core --cov-report=html
 
-# Open the report
-# On macOS:
-open htmlcov/index.html
-
-# On Linux:
-xdg-open htmlcov/index.html
-
-# On Windows:
-start htmlcov/index.html
+open htmlcov/index.html        # macOS
+xdg-open htmlcov/index.html    # Linux
+start htmlcov/index.html       # Windows
 ```
 
 ## Step 7: Quick Start Examples
 
-### Example 1: Security Probe
+These match the actual classes and method names in `swi_core` as of
+this ZIP. Run them from the repo root so `swi_core` is importable.
+
+### Example 1: Security Probe (Module 02)
 
 ```python
-from swi.module_02 import SecurityProbe
+from swi_core.module02_security_probe import SecurityProbe
 
-probe = SecurityProbe(risk_threshold=0.7)
-text = "Your input text here"
-result = probe.check(text)
-print(f"Risk score: {result['risk_score']}")
-print(f"Threats: {result['threats']}")
+probe = SecurityProbe(block_threshold=0.5)
+result = probe.scan("Your input text here")
+print(f"Blocked: {result.blocked}")
+print(f"Risk score: {result.risk_score}")
+print(f"Triggered patterns: {result.triggered}")
 ```
 
-### Example 2: Redaction Engine
+### Example 2: Redaction Engine (Module 05)
 
 ```python
-from swi.module_05 import RedactionEngine
+from swi_core.module05_redaction_engine import RedactionEngine
 
 redactor = RedactionEngine()
-text = "Contact me at john@example.com or 555-1234"
-redacted = redactor.redact(text)
-print(redacted)
+result = redactor.redact("Contact me at john@example.com or 555-123-4567")
+print(result.redacted_text)
+print(result.matches)   # list of RedactionMatch, one per masked item
 ```
 
-### Example 3: Encryption Handler
+### Example 3: Encryption Handler (Module 04)
 
 ```python
-from swi.module_04 import EncryptionHandler
+from swi_core.module04_encryption_handler import EncryptionHandler
 
-handler = EncryptionHandler(key_length=32)
-plaintext = "Secret message"
-encrypted = handler.encrypt(plaintext)
-decrypted = handler.decrypt(encrypted)
+handler = EncryptionHandler()   # generates a random key if none given
+payload = handler.encrypt(b"Secret message")
+decrypted = handler.decrypt(payload)
+print(decrypted)
 ```
 
-### Example 4: External Sandbox
+### Example 4: External Sandbox (Module 10)
 
 ```python
-from swi.module_10 import ExternalSandbox
+from swi_core.module10_external_sandbox import ExternalSandbox
 
-sandbox = ExternalSandbox(timeout=30, memory_limit_mb=512)
-code = "print('Hello from sandbox')"
-result = sandbox.execute(code)
+sandbox = ExternalSandbox(timeout_seconds=30, memory_bytes=512 * 1024 * 1024)
+result = sandbox.run("print('Hello from sandbox')")
+print(result)
+```
+
+### Example 5: Orchestrated Pipeline (Module 00)
+
+```python
+import os
+os.makedirs("logs", exist_ok=True)   # AuditLogger requires this to exist first
+
+from swi_core.module00_trainer import Trainer
+
+trainer = Trainer(audit_log_path="logs/audit.jsonl")
+result = trainer.process("Your input here")
+print(result.allowed, result.reason)
 ```
 
 ## Step 8: Troubleshooting
 
-### Issue: ModuleNotFoundError
+### Issue: ModuleNotFoundError: No module named 'swi_core'
 
-**Solution:**
 ```bash
-# Verify virtual environment is activated
 source swi_env/bin/activate
-
-# Add source to PYTHONPATH
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/swi_v1_part1_source/src"
+# Run Python from the repo root, or add it explicitly:
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 ```
 
-### Issue: Permission Denied on Logs
+### Issue: FileNotFoundError when creating a Trainer or AuditLogger
 
-**Solution:**
+`AuditLogger` opens its log file immediately on construction and does
+not create missing parent directories:
+
 ```bash
-chmod 755 logs
-chmod 755 .swi_temp
+mkdir -p logs
 ```
 
 ### Issue: Tests Fail
 
-**Solution:**
 ```bash
-# Run with verbose output
 python3 -m pytest test_swi_core.py -v -s
-
-# Check for missing dependencies
 pip install -r requirements.txt --upgrade
-
-# Clear cache
 rm -rf .pytest_cache __pycache__
 ```
 
 ## Step 9: Configuration Validation
 
-Create `validate_config.py`:
+This script only checks that expected files/directories exist — it
+does not validate that anything in `swi_config.yaml` is actually
+applied at runtime, because nothing reads it yet (see Step 3).
 
 ```python
 #!/usr/bin/env python3
-"""Validate SWI configuration."""
+"""Check that expected SWI setup files/directories are present."""
 
 import yaml
-import json
 import os
 
 def validate_config():
     errors = []
     warnings = []
-    
-    # Check configuration file
+
     config_path = 'config/swi_config.yaml'
     if os.path.exists(config_path):
         try:
             with open(config_path, 'r') as f:
-                config = yaml.safe_load(f)
-            print(f"✓ Configuration file valid: {config_path}")
+                yaml.safe_load(f)
+            print(f"✓ Configuration file parses: {config_path}")
+            warnings.append("Note: this file is not yet read by swi_core at runtime")
         except Exception as e:
             errors.append(f"Configuration file error: {e}")
     else:
         errors.append(f"Configuration file not found: {config_path}")
-    
-    # Check required directories
-    required_dirs = ['logs', '.swi_temp', 'config']
-    for dir_name in required_dirs:
+
+    for dir_name in ['logs', '.swi_temp']:
         if os.path.isdir(dir_name):
             print(f"✓ Directory exists: {dir_name}")
         else:
             errors.append(f"Missing directory: {dir_name}")
-    
-    # Check .env file
+
     if os.path.exists('.env'):
         print("✓ Environment file exists: .env")
     else:
-        warnings.append("Environment file not found: .env")
-    
-    # Report results
+        warnings.append("No local .env (optional — copy from .env.example if wanted)")
+
     if errors:
         print("\n❌ ERRORS:")
-        for error in errors:
-            print(f"  - {error}")
+        for e in errors:
+            print(f"  - {e}")
         return False
-    
+
     if warnings:
-        print("\n⚠️  WARNINGS:")
-        for warning in warnings:
-            print(f"  - {warning}")
-    
-    print("\n✅ Configuration validation passed!")
+        print("\n⚠️  NOTES:")
+        for w in warnings:
+            print(f"  - {w}")
+
+    print("\n✅ Setup files present.")
     return True
 
 if __name__ == '__main__':
     validate_config()
 ```
 
-Run validation:
-
-```bash
-python3 validate_config.py
-```
-
 ## Next Steps
 
-1. **Explore Modules**: Review the source code in `swi_v1_part1_source/src/`
-2. **Run Tests**: Execute `python3 -m pytest test_swi_core.py -v`
-3. **Check Limitations**: Review the README.md for explicitly documented limitations
-4. **Build Examples**: Create integration examples based on your use case
-5. **Contribute**: Submit issues or improvements to the repository
+1. **Explore Modules**: Review the source in `swi_core/`
+2. **Run Tests**: `python3 -m pytest test_swi_core.py -v`
+3. **Check Limitations**: Each module's docstring states what it does
+   and does not do — read those before relying on a module
+4. **Build Examples**: Try the Step 7 snippets against your own input
+5. **Contribute**: Submit issues or improvements through GitHub
 
 ## Support
 
-For issues or questions:
-- Check the README.md for architectural overview
-- Review test files for usage examples
-- Check the documentation in the ZIP file
-- Submit issues through GitHub
+- README.md for the architectural overview
+- `test_swi_core.py` for real, working usage examples
+- GitHub Issues for questions or bug reports
+
+## Core Principle
+
+> "Don't claim what hasn't been built. Don't claim what hasn't been
+> tested. Don't hide what the implementation cannot do."
 
 ---
 
-**Version:** 1.0.0  
-**Last Updated:** 2026-09-12  
-**Author:** Configuration Setup Guide
+**Version:** 1.0.1
+**Author:** Keletso Ronald Mosidila
