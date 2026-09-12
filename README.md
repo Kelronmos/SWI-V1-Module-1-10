@@ -10,9 +10,9 @@ Status: Active Reconstruction / Verified Reference Implementation
 
 What This Repository Is
 
-This repository contains the currently verified implementation of the SWI Modules 00–10 reference implementation.
+This repository contains the currently reproducible implementation of the SWI Modules 00–10 reference implementation.
 
-It establishes a local, single-process, reproducible engineering foundation for components that can currently be demonstrated through source code, executable tests, and documented behaviour.
+It establishes a local, single-process engineering foundation for mechanisms that can currently be inspected in source code, exercised through automated tests, and described from observed behaviour.
 
 This repository is not a complete reconstruction of the broader SWI architecture or of every capability, prototype, research direction, or architectural concept previously explored under SWI.
 
@@ -22,7 +22,7 @@ This repository is not a complete reconstruction of the broader SWI architecture
 
 Verification Boundary
 
-The current repository should be evaluated from the code, tests, and documented behaviour rather than from architectural claims alone.
+The current repository should be evaluated from its code, tests, and documented behaviour rather than from architectural claims alone.
 
 Status| Meaning
 Implemented| Functionality exists in the repository and can be inspected in source code.
@@ -40,9 +40,9 @@ The rebuild therefore prioritises reproducibility over reconstruction by memory.
 
 Current Scope
 
-The current repository establishes a verified implementation foundation for the Modules 00–10 reference implementation.
+The current repository provides a verified implementation foundation for Modules 00–10.
 
-It provides a local, single-process workflow in which Module 00 — Trainer is the primary orchestrator for the modules currently wired into its execution path.
+It is a local, single-process implementation. Module 00 — Trainer is the primary orchestrator for the modules currently wired into its execution path.
 
 Integrated Pipeline
 
@@ -57,6 +57,10 @@ Module 00 — Trainer
   ├── Module 06 — Drift Detection
   ├── Module 07 — Memory Validator
   └── Module 09 — Audit Logger
+
+Module 03 — Context Sync is part of the Trainer execution flow. However, the current "Trainer.process()" interface does not accept an explicit timestamp. Therefore, its timestamp-based staleness and out-of-order validation are currently exercised through direct "ContextSync" usage rather than through the default Trainer pipeline.
+
+This distinction is intentional: a module being wired into a pipeline does not mean every capability of that module is exercised by every integration path.
 
 Standalone Components
 
@@ -73,18 +77,18 @@ A module existing in the repository does not automatically mean that it is part 
 
 Module Overview
 
-Module| Component| Current Role
-00| Trainer| Pipeline orchestration
-01| Node Scanner| SHA-256 integrity scanning
-02| Security Probe| Instruction/injection risk detection
-03| Context Sync| Timestamp and ordering validation
-04| Encryption| AES-256-GCM encryption utility
-05| Redaction| Sensitive-content handling
-06| Drift Detection| Context/drift analysis
-07| Memory Validator| Memory consistency validation
-08| Access Auth| Authentication/token handling
-09| Audit Logger| Audit/event recording
-10| External Sandbox| External execution boundary
+Module| Component| Current Role| Default Trainer Path
+00| Trainer| Pipeline orchestration| Yes
+01| Node Scanner| SHA-256 integrity scanning| No
+02| Security Probe| Heuristic instruction/injection risk detection| Yes
+03| Context Sync| Turn ordering and timestamp-based context validation| Yes, with timestamp limitation
+04| Encryption| AES-256-GCM encryption utility| No
+05| Redaction| Sensitive-content handling| Yes
+06| Drift Detection| Coarse context/drift analysis| Yes
+07| Memory Validator| Hash-chain memory consistency validation| Yes
+08| Access Auth| Authentication/token handling| No
+09| Audit Logger| Audit/event recording| Yes
+10| External Sandbox| Resource-controlled external execution boundary| No
 
 ---
 
@@ -94,11 +98,51 @@ This repository is a reference implementation of specific workflow, integrity, s
 
 It should not be represented as a complete autonomous AI governance system.
 
+Module 02 — Security Probe
+
+The security probe uses bounded heuristic checks for patterns associated with instruction or role override, system-prompt extraction, zero-width characters, and other suspicious input patterns.
+
+It is not a universal prompt-injection detector and does not establish that all malicious input will be detected.
+
+Module 03 — Context Sync
+
+Module 03 supports explicit timestamp-based context validation, including stale and out-of-order checks, when used directly.
+
+The current "Trainer.process()" interface does not expose a timestamp parameter. The default Trainer pipeline therefore cannot currently supply conversation timestamps to Module 03 for those checks.
+
+This is an implementation boundary, not a claim that the underlying Module 03 capability does not exist.
+
+Future work may wire timestamp input through Module 00 once the interface and corresponding tests are defined and verified.
+
+Module 04 — Encryption
+
+Module 04 provides AES-256-GCM encryption/decryption with authenticated integrity checks. Key management and secure key custody are outside the scope of this reference implementation.
+
+Module 05 — Redaction
+
+Module 05 performs structured first-pass redaction for supported sensitive patterns. It is not a complete PII discovery or classification system.
+
 Module 06 — Drift Detection
 
-The current drift mechanism uses a coarse syntactic approach.
+The current drift mechanism uses a coarse syntactic approach based on token/frequency similarity.
 
 It should not be described as semantic understanding, consciousness, reasoning about meaning, or proof that a system understands context.
+
+Module 07 — Memory Validation
+
+The memory validator uses an append-only hash-chain mechanism to expose alteration of the recorded chain. It is tamper-evident, not tamper-proof.
+
+Module 08 — Access Authentication
+
+Module 08 provides signed, expiring token handling within the reference implementation. It is not a complete identity provider and does not provide a full password, MFA, biometric, or enterprise key-custody system.
+
+Module 09 — Audit Logger
+
+Module 09 records audit events using a hash-linked append-only JSONL structure. It does not by itself provide remote mirroring, immutable physical storage, or complete operational audit infrastructure.
+
+Module 10 — External Sandbox
+
+Module 10 provides a resource-controlled Python subprocess boundary. It should not be represented as a hardened security sandbox, container isolation system, or physical network air gap.
 
 Security
 
@@ -120,41 +164,51 @@ References to these concepts in earlier SWI material are architectural or histor
 
 ---
 
+Configuration Boundary
+
+"config/swi_config.yaml" currently documents intended module settings such as thresholds and key lengths, but the current "swi_core" implementation does not load this YAML file at runtime.
+
+Runtime settings are supplied through module constructors or code-level parameters.
+
+Therefore, editing "config/swi_config.yaml" does not currently change runtime behaviour. It should be treated as a configuration/design reference until a verified configuration loader is implemented.
+
+---
+
 Testing
 
-Tests demonstrate the behaviour covered by the current implementation.
+Tests demonstrate the behaviour covered by the current implementation. They are not evidence of capabilities outside their coverage.
 
-They are not evidence of capabilities outside their coverage.
+The current repository documentation identifies 22 automated tests in "test_swi_core.py".
 
-The repository includes module-level checks covering areas such as:
+The documented coverage includes areas such as:
 
 - node integrity and tamper detection;
 - instruction-override/injection detection;
-- context ordering and staleness;
+- direct context ordering and staleness validation;
 - redaction behaviour;
 - drift handling;
 - memory validation; and
 - audit logging.
 
-Run the current test suite with:
+Run the test suite from the repository root:
 
 python3 -m pytest test_swi_core.py -v
 
-For coverage reporting, the repository also provides Makefile targets:
+For the Makefile test target:
 
 make test
 
-and:
+For coverage:
 
 make coverage
 
-See the repository's setup and installation documentation for environment requirements and additional instructions.
+A passing test demonstrates the behaviour exercised by that test under the conditions in which it ran. It does not establish that the entire SWI architecture, or any capability outside the test's coverage, has been proven.
 
 ---
 
 Evidence and Verification
 
-The implementation should be evaluated through the following chain:
+The implementation should be evaluated through this chain:
 
 Claim
   ↓
@@ -168,25 +222,21 @@ Documented Limitation
   ↓
 Next Iteration
 
-A passing test demonstrates the behaviour exercised by that test.
+The rule is simple:
 
-It does not establish that the entire SWI architecture, or any capability outside the test's coverage, has been proven.
+«Claim only what the current evidence can support.»
 
-This distinction is central to the reconstruction.
+This is the central discipline of the reconstruction.
 
 ---
 
 Integrity Terminology
 
-This project uses tamper-evident rather than tamper-proof terminology.
+This project deliberately uses tamper-evident rather than tamper-proof terminology.
 
-A tamper-evident mechanism is intended to detect or expose alteration.
+A tamper-evident mechanism is intended to detect or expose alteration. It does not imply that alteration is impossible.
 
-It does not imply that alteration is impossible.
-
-Likewise, tested means that the relevant automated tests pass under the conditions covered by those tests.
-
-It does not mean that the entire system is universally proven secure, correct, or complete.
+Likewise, tested means that the relevant automated tests pass under the conditions covered by those tests. It does not mean that the entire system is universally proven secure, correct, or complete.
 
 ---
 
@@ -198,16 +248,12 @@ Earlier work explored deeper semantic, kernel-level, and higher-order architectu
 
 They are not presented here as implemented capabilities unless they can be reconstructed, implemented, tested, and verified.
 
-This repository is therefore not a replacement for the broader SWI architecture.
-
-It is the verified implementation layer being rebuilt from surviving, reproducible evidence.
+This repository is therefore not a replacement for the broader SWI architecture. It is the verified implementation layer being rebuilt from surviving, reproducible evidence.
 
 «Architecture describes where SWI is intended to go.
 Implementation demonstrates what SWI can currently prove.»
 
-The absence of a concept from this repository does not mean that the concept was abandoned.
-
-Likewise, mentioning an architectural concept does not mean that it has been implemented.
+The absence of a concept from this repository does not mean that the concept was abandoned. Likewise, mentioning an architectural concept does not mean that it has been implemented.
 
 ---
 
@@ -217,16 +263,16 @@ Earlier SWI development grew beyond what is currently preserved in this reposito
 
 Some capabilities can still be remembered or described, while the surviving code may not be sufficient to reproduce or prove them.
 
-The rebuild therefore does not attempt to recreate missing functionality simply because it is remembered.
+The rebuild therefore does not recreate missing functionality simply because it is remembered.
 
 Instead:
 
-- surviving code is inspected;
-- behaviour is reproduced;
-- tests are written or executed;
-- limitations are documented;
-- architectural concepts remain clearly labelled; and
-- new implementation is added only when it can be verified.
+1. surviving code is inspected;
+2. behaviour is reproduced;
+3. tests are written or executed;
+4. limitations are documented;
+5. architectural concepts remain clearly labelled; and
+6. new implementation is added only when it can be verified.
 
 «Reconstruction must follow evidence, not memory.»
 
@@ -299,59 +345,101 @@ Earlier architectural concepts that are not represented by executable implementa
 
 Repository Structure
 
-The repository is organised around the current reference implementation and its verification materials.
+The current implementation is organised around the following primary paths:
 
-The primary implementation is located under:
+SWI-V1-Module-1-10/
+├── README.md
+├── SETUP_GUIDE.md
+├── INSTALLATION.md
+├── requirements.txt
+├── .env.example
+├── config/
+│   └── swi_config.yaml
+├── swi_core/
+│   ├── __init__.py
+│   ├── module00_trainer.py
+│   ├── module01_node_scanner.py
+│   ├── module02_security_probe.py
+│   ├── module03_context_sync.py
+│   ├── module04_encryption_handler.py
+│   ├── module05_redaction_engine.py
+│   ├── module06_drift_analyzer.py
+│   ├── module07_memory_validator.py
+│   ├── module08_access_auth.py
+│   ├── module09_audit_logger.py
+│   └── module10_external_sandbox.py
+└── test_swi_core.py
 
-swi_core/
-
-The main test suite is:
-
-test_swi_core.py
-
-Supporting documentation and tooling include:
-
-SETUP_GUIDE.md
-INSTALLATION.md
-Makefile
-quickstart.sh
-extract_and_setup.py
-
-The exact repository structure should be treated as authoritative over this overview as the implementation evolves.
+The repository may also contain historical documents and supporting extraction/tooling files. The actual repository contents should remain authoritative as the implementation evolves.
 
 ---
 
 Getting Started
 
-Install the required Python dependencies according to the repository setup documentation.
+1. Clone the repository
 
-Then run:
+git clone https://github.com/Kelronmos/SWI-V1-Module-1-10.git
+cd SWI-V1-Module-1-10
+
+2. Create a virtual environment
+
+python3 -m venv swi_env
+source swi_env/bin/activate
+
+On Windows:
+
+swi_env\Scripts\activate
+
+3. Install dependencies
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
+4. Run verification tests
 
 python3 -m pytest test_swi_core.py -v
 
-For the standard Makefile test target:
+For the complete installation notes and working examples, see "INSTALLATION.md" and "SETUP_GUIDE.md".
 
-make test
+Basic Pipeline Example
 
-For coverage:
+The current "AuditLogger" expects its log directory to exist before construction. The following example matches the documented interface:
 
-make coverage
+import os
+os.makedirs("logs", exist_ok=True)
 
-For a guided setup, review:
+from swi_core.module00_trainer import Trainer
 
-SETUP_GUIDE.md
+trainer = Trainer(audit_log_path="logs/audit.jsonl")
+result = trainer.process("Your input here")
 
-and:
+print(f"Allowed: {result.allowed}")
+print(f"Reason: {result.reason}")
+print(f"Risk score: {result.security.risk_score}")
+print(f"Redacted text: {result.redaction.redacted_text}")
 
-INSTALLATION.md
+Direct Context Validation Example
+
+Because the Trainer interface does not currently accept timestamps, explicit timestamp validation is demonstrated through "ContextSync" directly:
+
+import datetime
+from swi_core.module03_context_sync import ContextSync
+
+sync = ContextSync(staleness_seconds=1800.0)
+result = sync.record_turn(
+    1,
+    timestamp=datetime.datetime.now(datetime.timezone.utc),
+)
+
+For additional module examples, use "INSTALLATION.md" and the test suite as the current implementation references.
 
 ---
 
 Scope of Claims
 
-This repository makes claims only about functionality that can be supported by its current implementation and verification evidence.
+This repository makes claims only about functionality supported by its current implementation and verification evidence.
 
-The following should not be inferred merely from the existence of the repository:
+The following should not be inferred merely from the existence of this repository:
 
 - general intelligence;
 - consciousness;
@@ -383,4 +471,4 @@ The goal is to establish a foundation that can be inspected, tested, challenged,
 
 License
 
-See the repository license for the current terms governing use, modification, and distribution.
+See the repository's "LICENSE" file for the current terms governing use, modification, and distribution.
