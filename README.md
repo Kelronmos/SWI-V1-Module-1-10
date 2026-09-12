@@ -298,6 +298,24 @@ Future SWI modules will be added only when they have a runnable implementation a
 Later architecture may include additional modules and infrastructure, but those components are not represented as implemented features until they exist in code and are tested.
 
 ---
+Architectural Continuity
+
+This repository is a verified implementation foundation, not a replacement for the broader SWI architectural work that preceded it.
+
+Earlier SWI development explored deeper semantic, kernel-level, and higher-order architectural concepts. Those directions remain part of the broader research context of SWI, but they are intentionally not represented here as implemented capabilities unless they can be reconstructed, tested, and verified.
+
+The purpose of this repository is to establish a reproducible foundation from which those higher-level layers can be rebuilt.
+
+This distinction is important:
+
+Architecture describes where SWI is intended to go.
+Implementation demonstrates what SWI can currently prove.
+
+Neither replaces the other.
+
+As development continues, architectural concepts will be promoted into the implementation only when their definitions, mechanisms, tests, and limitations can be demonstrated in code.
+
+---
 
 License
 
