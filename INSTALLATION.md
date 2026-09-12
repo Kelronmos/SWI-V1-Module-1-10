@@ -12,193 +12,152 @@ cd SWI-V1-Module-1-10
 ### 2. Extract the Source ZIP
 
 ```bash
-# Using Python (recommended - cross-platform)
-python3 extract_and_setup.py
-
-# OR using command line
 unzip swi_v1_part1_source.zip
 ```
+
+This extracts flat into the repo root — it does **not** create a
+`swi_v1_part1_source/` subfolder. After extraction you'll have:
+
+```
+SWI-V1-Module-1-10/
+├── README.md
+├── SETUP_GUIDE.md
+├── INSTALLATION.md
+├── requirements.txt
+├── .env.example
+├── config/
+│   └── swi_config.yaml          # NOTE: currently descriptive only — see below
+├── swi_core/                    # the actual package
+│   ├── __init__.py
+│   ├── module00_trainer.py
+│   ├── module01_node_scanner.py
+│   ├── module02_security_probe.py
+│   ├── module03_context_sync.py
+│   ├── module04_encryption_handler.py
+│   ├── module05_redaction_engine.py
+│   ├── module06_drift_analyzer.py
+│   ├── module07_memory_validator.py
+│   ├── module08_access_auth.py
+│   ├── module09_audit_logger.py
+│   └── module10_external_sandbox.py
+└── test_swi_core.py             # all 22 tests, at repo root
+```
+
+There is no `src/`, `tests/`, `docs/`, or `examples/` folder produced by
+extraction — earlier drafts of this guide described a layout that the
+current ZIP does not produce. If you want that layout, see "Optional:
+Matching the described directory layout" at the end of this file.
 
 ### 3. Create Virtual Environment
 
 ```bash
-# Create virtual environment
 python3 -m venv swi_env
-
-# Activate it
-# On Linux/macOS:
-source swi_env/bin/activate
-
-# On Windows:
-swi_env\Scripts\activate
+source swi_env/bin/activate      # Linux/macOS
+swi_env\Scripts\activate         # Windows
 ```
 
 ### 4. Install Dependencies
 
 ```bash
-# Upgrade pip
 pip install --upgrade pip
-
-# Install project dependencies
 pip install -r requirements.txt
 ```
 
-### 5. Verify Installation
+### 5. Run the Tests
 
 ```bash
-# Check Python version
-python3 --version
-
-# Verify packages
-pip list
-
-# Run a simple test
-python3 -c "import sys; print(f'Python {sys.version}')"
+python3 -m pytest test_swi_core.py -v
 ```
 
-## Directory Structure After Extraction
-
-```
-SWI-V1-Module-1-10/
-├── README.md                          # Project overview
-├── SETUP_GUIDE.md                    # Detailed setup guide
-├── INSTALLATION.md                   # This file
-├── requirements.txt                  # Python dependencies
-├── .env.example                      # Environment template
-├── .gitignore                        # Git ignore rules
-├── extract_and_setup.py              # Automated setup script
-│
-├── config/
-│   └── swi_config.yaml              # Main configuration
-│
-├── logs/                             # Application logs (created after first run)
-│   └── audit.jsonl                  # Audit log file
-│
-├── .swi_temp/                        # Temporary storage (created at runtime)
-│
-├── swi_v1_part1_source/              # Extracted source code
-│   ├── src/
-│   │   ├── __init__.py
-│   │   ├── module_00.py             # Trainer/Orchestrator
-│   │   ├── module_01.py             # Node Scanner
-│   │   ├── module_02.py             # Security Probe
-│   │   ├── module_03.py             # Context Sync
-│   │   ├── module_04.py             # Encryption Handler
-│   │   ├── module_05.py             # Redaction Engine
-│   │   ├── module_06.py             # Drift Analyzer
-│   │   ├── module_07.py             # Memory Validator
-│   │   ├── module_08.py             # Access Auth
-│   │   ├── module_09.py             # Audit Logger
-│   │   └── module_10.py             # External Sandbox
-│   │
-│   ├── tests/
-│   │   ├── test_swi_core.py         # Main test suite
-│   │   ├── test_modules_*.py        # Module-specific tests
-│   │   └── fixtures/                # Test data
-│   │
-│   └── requirements.txt              # Source dependencies
-│
-├── tests/                            # Additional test files
-│   └── fixtures/                    # Test fixtures
-│
-├── docs/                             # Documentation
-│
-└── examples/                         # Example code
-```
+All 22 tests should pass. This is the actual, current test suite —
+run it from the repo root, not from a `swi_v1_part1_source/` path.
 
 ## Configuration
 
-### 1. Copy Environment Template
+`config/swi_config.yaml` documents the intended module settings
+(risk thresholds, key lengths, etc.), but **no module currently reads
+this file** — none of the `swi_core` classes accept a `config_path` or
+load YAML. Settings are passed as constructor arguments instead. Treat
+`swi_config.yaml` as a design reference until a loader is written, not
+as something you can edit to change runtime behavior yet.
 
-```bash
-cp .env.example .env
+## Using the SWI Pipeline
+
+The examples below match the actual constructors and methods in
+`swi_core` as of this ZIP. If you update the source, update this
+section too — that's the point of it existing.
+
+### Basic Example — the orchestrated pipeline (Module 00)
+
+`AuditLogger` opens `audit_log_path` for writing as soon as it's
+constructed — it does not create missing parent directories, so
+create the `logs/` folder first or the constructor raises
+`FileNotFoundError`:
+
+```python
+import os
+os.makedirs("logs", exist_ok=True)
+
+from swi_core.module00_trainer import Trainer
+
+trainer = Trainer(audit_log_path="logs/audit.jsonl")
+
+result = trainer.process("Your input here")
+
+print(f"Allowed: {result.allowed}")
+print(f"Reason: {result.reason}")
+print(f"Risk score: {result.security.risk_score}")
+print(f"Redacted text: {result.redaction.redacted_text}")
 ```
 
-### 2. Edit Configuration
+Note: `Trainer.process()` does not accept a `timestamp` argument. It
+calls `ContextSync.record_turn()` with only a turn counter, so
+Module 03's staleness/out-of-order detection cannot currently be
+exercised through the orchestrated pipeline — only by using
+`ContextSync` directly (see below). If your workflow needs real
+conversation timestamps checked, that wiring still needs to be added
+to `Trainer.process()`.
 
-Update these files based on your needs:
+### Individual Module Usage
 
-- **config/swi_config.yaml** - Module settings and pipeline configuration
-- **.env** - Environment variables and paths
+```python
+# Security Probe (Module 02)
+from swi_core.module02_security_probe import SecurityProbe
+probe = SecurityProbe(block_threshold=0.5)
+result = probe.scan("suspicious input")
+print(result.blocked, result.risk_score, result.triggered)
 
-### 3. Common Configuration Changes
+# Context Sync (Module 03) — with an explicit timestamp
+from swi_core.module03_context_sync import ContextSync
+import datetime
+sync = ContextSync(staleness_seconds=1800.0)
+result = sync.record_turn(1, timestamp=datetime.datetime.now(datetime.timezone.utc))
 
-```yaml
-# config/swi_config.yaml
+# Encryption (Module 04)
+from swi_core.module04_encryption_handler import EncryptionHandler
+encryptor = EncryptionHandler()          # generates a key if none given
+payload = encryptor.encrypt(b"secret")
+plaintext = encryptor.decrypt(payload)
 
-# Security risk threshold (0.0 - 1.0)
-modules:
-  module_02:
-    risk_threshold: 0.7
-
-# Sandbox resource limits
-modules:
-  module_10:
-    timeout_seconds: 30
-    memory_limit_mb: 512
-    cpu_limit_percent: 50
-```
-
-## Running Tests
-
-### Run All Tests
-
-```bash
-python3 -m pytest swi_v1_part1_source/tests/test_swi_core.py -v
-```
-
-### Run Specific Test Module
-
-```bash
-# Test Security Probe (Module 02)
-python3 -m pytest swi_v1_part1_source/tests/test_swi_core.py::TestModule02 -v
-
-# Test with coverage
-python3 -m pytest swi_v1_part1_source/tests/ --cov=swi_v1_part1_source/src --cov-report=html
-```
-
-### Generate Coverage Report
-
-```bash
-python3 -m pytest swi_v1_part1_source/tests/ \
-  --cov=swi_v1_part1_source/src \
-  --cov-report=html \
-  --cov-report=term-color
-
-# View report
-open htmlcov/index.html
+# Audit Logging (Module 09)
+from swi_core.module09_audit_logger import AuditLogger
+audit = AuditLogger(log_path="logs/audit.jsonl")   # log_path is required
+audit.log_event({"type": "security_check", "result": "passed"})
 ```
 
 ## Troubleshooting
 
-### Issue: ModuleNotFoundError
+### ModuleNotFoundError: No module named 'swi_core'
 
-**Cause:** Python path not configured correctly
+Run Python from the repo root (the directory containing `swi_core/`),
+or add it to `PYTHONPATH`:
 
-**Solution:**
 ```bash
-# Set PYTHONPATH
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/swi_v1_part1_source/src"
-
-# Or use in commands
-PYTHONPATH=./swi_v1_part1_source/src python3 -m pytest tests/
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 ```
 
-### Issue: Permission Denied (Logs/Temp)
+### Dependency Installation Fails
 
-**Cause:** Directory permissions
-
-**Solution:**
-```bash
-chmod 755 logs
-chmod 755 .swi_temp
-```
-
-### Issue: Dependency Installation Fails
-
-**Cause:** Missing system dependencies
-
-**Solution:**
 ```bash
 # Linux (Ubuntu/Debian)
 sudo apt-get install python3-dev libffi-dev libssl-dev
@@ -206,111 +165,29 @@ sudo apt-get install python3-dev libffi-dev libssl-dev
 # macOS
 brew install python3
 
-# Then retry
 pip install -r requirements.txt --upgrade
 ```
 
-### Issue: Virtual Environment Not Activating
+## Optional: Matching the described directory layout
 
-**Solution:**
-```bash
-# Recreate virtual environment
-rm -rf swi_env
-python3 -m venv swi_env
-source swi_env/bin/activate  # Linux/macOS
-# or
-swi_env\Scripts\activate  # Windows
-```
-
-## Using the SWI Pipeline
-
-### Basic Example
-
-```python
-import sys
-sys.path.insert(0, 'swi_v1_part1_source/src')
-
-from module_00 import Trainer
-
-# Initialize pipeline
-trainer = Trainer(config_path='config/swi_config.yaml')
-
-# Process input
-result = trainer.process(
-    input_text="Your input here",
-    timestamp="2026-09-12T08:00:00Z"
-)
-
-print(f"Security Risk: {result['risk_score']}")
-print(f"Redacted Text: {result['redacted_text']}")
-print(f"Audit Entry: {result['audit_id']}")
-```
-
-### Individual Module Usage
-
-```python
-# Security Probe
-from module_02 import SecurityProbe
-probe = SecurityProbe(risk_threshold=0.7)
-result = probe.check("suspicious input")
-
-# Encryption
-from module_04 import EncryptionHandler
-encryptor = EncryptionHandler(key_length=32)
-encrypted = encryptor.encrypt("secret")
-
-# Audit Logging
-from module_09 import AuditLogger
-audit = AuditLogger()
-audit.log_event({"type": "security_check", "result": "passed"})
-```
-
-## Next Steps
-
-1. **Read Documentation**
-   - Review README.md for architecture
-   - Check SETUP_GUIDE.md for detailed steps
-   - Review module limitations in config/swi_config.yaml
-
-2. **Explore Code**
-   ```bash
-   cd swi_v1_part1_source/src
-   ls -la
-   ```
-
-3. **Run Tests**
-   ```bash
-   python3 -m pytest tests/ -v --cov
-   ```
-
-4. **Create Examples**
-   - Check examples/ directory
-   - Build your own integration
-
-5. **Review Limitations**
-   - All modules have explicit limitations documented
-   - Check config/swi_config.yaml for scope
-   - Single-process, local reference implementation only
-
-## Support
-
-- **Documentation:** See README.md and SETUP_GUIDE.md
-- **Issues:** GitHub Issues
-- **Testing:** Run `pytest` with verbose output
-- **Configuration:** Edit config/swi_config.yaml
+If you'd rather have the `src/` + `tests/` structure this guide used
+to describe, that's a repo-restructuring decision, not something the
+current ZIP does for you. It means: move `swi_core/` to `src/swi_core/`,
+move `test_swi_core.py` to `tests/`, and update the imports in
+`test_swi_core.py` and every internal `from .moduleNN_*` reference
+accordingly, then update the Makefile and this file to match. It's a
+deliberate choice, not a bug fix — do it only if you actually want
+that layout going forward.
 
 ## Core Principle
 
-> "Don't claim what hasn't been built. Don't claim what hasn't been tested. Don't hide what the implementation cannot do."
+> "Don't claim what hasn't been built. Don't claim what hasn't been
+> tested. Don't hide what the implementation cannot do."
 
-All features in this implementation have:
-- ✅ Working code
-- ✅ Automated tests
-- ✅ Documented limitations
-- ✅ Explicit scope definition
+This file follows that principle by describing only what the current
+`swi_core` package actually does, at the paths it actually lives at.
 
 ---
 
-**Version:** 1.0.0  
-**Last Updated:** 2026-09-12  
+**Version:** 1.0.1
 **Author:** Keletso Ronald Mosidila
