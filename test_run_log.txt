@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/claude/swi_manual
+collecting ... collected 22 items
+
+test_swi_core.py::test_node_scanner_detects_no_change PASSED             [  4%]
+test_swi_core.py::test_node_scanner_detects_tamper PASSED                [  9%]
+test_swi_core.py::test_security_probe_flags_instruction_override PASSED  [ 13%]
+test_swi_core.py::test_security_probe_allows_benign_text PASSED          [ 18%]
+test_swi_core.py::test_context_sync_flags_staleness PASSED               [ 22%]
+test_swi_core.py::test_context_sync_flags_out_of_order PASSED            [ 27%]
+test_swi_core.py::test_encryption_round_trip PASSED                      [ 31%]
+test_swi_core.py::test_encryption_detects_tampered_ciphertext PASSED     [ 36%]
+test_swi_core.py::test_redaction_masks_email_and_phone PASSED            [ 40%]
+test_swi_core.py::test_drift_analyzer_flags_topic_shift PASSED           [ 45%]
+test_swi_core.py::test_drift_analyzer_allows_similar_topic PASSED        [ 50%]
+test_swi_core.py::test_memory_validator_chain_valid_when_untouched PASSED [ 54%]
+test_swi_core.py::test_memory_validator_detects_tamper PASSED            [ 59%]
+test_swi_core.py::test_access_auth_accepts_valid_token PASSED            [ 63%]
+test_swi_core.py::test_access_auth_rejects_expired_token PASSED          [ 68%]
+test_swi_core.py::test_access_auth_rejects_forged_token PASSED           [ 72%]
+test_swi_core.py::test_audit_logger_chain_valid PASSED                   [ 77%]
+test_swi_core.py::test_audit_logger_detects_tamper PASSED                [ 81%]
+test_swi_core.py::test_sandbox_runs_benign_code PASSED                   [ 86%]
+test_swi_core.py::test_sandbox_kills_infinite_loop PASSED                [ 90%]
+test_swi_core.py::test_trainer_blocks_injection_end_to_end PASSED        [ 95%]
+test_swi_core.py::test_trainer_allows_and_redacts_benign_message PASSED  [100%]
+
+============================== 22 passed in 1.10s ==============================
