@@ -31,6 +31,9 @@ run_check "Module Kernel unit tests" python -m pytest -q test/test_module_kernel
 run_check "Module 02 kernel pilot tests" python -m pytest -q test/test_security_probe_kernel.py
 run_check "Module 02 boundary/adversarial" python -m pytest -q test/adversarial/test_security_probe_boundaries.py
 run_check "Trainer↔02 boundary seal" python -m pytest -q test/test_trainer_kernel_halt.py
+run_check "Module 05 kernel tests" python -m pytest -q test/test_redaction_kernel.py
+run_check "Trainer↔05 boundary seal" python -m pytest -q test/test_trainer_module05_halt.py
+run_check "Module 05 adversarial" python -m pytest -q test/adversarial/test_redaction_boundaries.py
 run_check "Trainer config tests" python -m pytest -q test/test_trainer_config.py
 run_check "Full suite" python -m pytest -q
 run_check "Coverage (swi_core)" python -m pytest --cov=swi_core --cov-report=term-missing -q
@@ -38,8 +41,9 @@ run_check "Coverage (swi_core)" python -m pytest --cov=swi_core --cov-report=ter
 echo
 echo "======================================"
 echo "What this report does NOT prove:"
-echo "  - Modules 03–10 kernel migration"
+echo "  - Modules 03–04, 06–10 kernel migration"
 echo "  - Universal prompt-injection detection"
+echo "  - Complete PII detection"
 echo "  - CEK / SAD-DFU / Vector Memory / Sovereign Mesh"
 echo "  - Seal 5 (independent rebuild + challenge)"
 echo "======================================"

@@ -42,10 +42,11 @@ python -m pytest -q
 4. `docs/TESTING_AND_VERIFICATION.md`
 5. `docs/VOLUME_1_PART_2_MODULE_KERNEL_REBUILD_MANUAL.md` — kernel rebuild path
 6. `docs/FOUNDATION_MILESTONE.md` — what “finished foundation” means
+7. `docs/MODULE_05_KERNEL_MIGRATION.md` — Module 05 kernel contract
 
 ## Module Kernel status
 
-- **Pilot:** Module 02 (`SecurityProbe.scan`) is wrapped with pre/post checks.
-- **Trainer:** kernel failure on Module 02 → halt, record reason, re-raise (no silent continue).
-- **Not yet:** Full migration of modules 00–01, 03–10 to ModuleKernel.
+- **Pilot:** Modules **02** and **05** are wrapped with pre/post checks.
+- **Trainer:** kernel failure on Module 02 or 05 → halt, record reason, re-raise (no silent continue).
+- **Not yet:** Full migration of modules 00–01, 03–04, 06–10 to ModuleKernel.
 - **Future:** Global SWI Kernel registry — only after foundation Seal 5.

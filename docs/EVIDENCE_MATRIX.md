@@ -11,6 +11,9 @@
 | Oversized input rejected | ModuleKernel pre-check + test | tested |
 | Trainer↔02 halt (no silent continue) | `test/test_trainer_kernel_halt.py` | tested |
 | Module 02 boundary/adversarial | `test/adversarial/test_security_probe_boundaries.py` | tested (documented limits) |
+| Module 05 kernel enforcement | `module05_redaction_engine.py` + `test_redaction_kernel.py` | tested |
+| Trainer↔05 halt | `test_trainer_module05_halt.py` | tested |
+| Module 05 structured-only limitation | adversarial free-text test | tested (limitation) |
 | Hardened sandbox | — | **not claimed** |
 | CEK / Vector Memory / Alita live | — | **not claimed** |
 | Modules 11–19 ready | — | **blocked until Seal 5** |

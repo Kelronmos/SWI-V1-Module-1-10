@@ -15,11 +15,11 @@ python -m pytest -q
 
 Package: `swi_core` (Modules 00–10, `config_loader`, `module_kernel`).
 
-## Module Kernel (pilot)
+## Module Kernel
 
-Module **02 Security Probe** is wrapped with fail-closed pre/post checks via `swi_core/module_kernel.py`.
-If the kernel contract fails, **Trainer stops**, records a halt reason, and re-raises — it does not continue the pipeline.
-Other modules are not yet migrated. See `docs/VOLUME_1_PART_2_MODULE_KERNEL_REBUILD_MANUAL.md`.
+Modules **02 Security Probe** and **05 Redaction** are wrapped with fail-closed pre/post checks via `swi_core/module_kernel.py`.
+If either kernel contract fails, **Trainer stops**, records a halt reason, and re-raises — it does not continue the pipeline.
+Other modules are not yet migrated. Module 05 remains structured-PII only (not complete PII removal).
 
 ## Configuration
 
@@ -51,3 +51,5 @@ Status: `docs/IMPLEMENTATION_STATUS.md` · `docs/EVIDENCE_MATRIX.md` · `docs/KN
 ## Foundation milestone
 
 What “done” means for 00–10 (prove, detect, stop): [`docs/FOUNDATION_MILESTONE.md`](docs/FOUNDATION_MILESTONE.md)
+
+Module 05 migration notes: [`docs/MODULE_05_KERNEL_MIGRATION.md`](docs/MODULE_05_KERNEL_MIGRATION.md)
