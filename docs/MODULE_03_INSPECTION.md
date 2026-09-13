@@ -1,97 +1,125 @@
 # Module 03 — Context Sync — Zero-Ground Inspection
 
-**Status:** INSPECTED · CONTRACT DRAFTED FROM SOURCE · **NOT kernel-migrated** · **NOT sealed**  
-**Inspection basis:** `swi_core/module03_context_sync.py` on main (post Module 05 seal)  
-**Rule:** Do not modify Module 03 code until this inspection is accepted and a migration is authorized.
+**Status:** INSPECTED · BASELINE RECORDED · **DECISION: MIGRATE** · NOT sealed  
+**Commit inspected:** `7e5589f49273ee8786c2248e5170c06af8e71d38` (and prior main with same module03 source)  
+**Rule:** No Module 03 code change until this record is accepted and migration is authorized.
 
 ---
 
-## 1. What the name does *not* prove
+## Evidence map
 
-“Context Sync” is architectural language. Verification requires behaviour evidence, not the filename.
+| Area | Location | Status |
+|------|----------|--------|
+| Implementation | `swi_core/module03_context_sync.py` | INSPECTED |
+| Contract | Drafted from source (below) | DEFINED FROM CODE |
+| Unit tests | `test_swi_core.py` (`test_context_sync_*`) | FOUND |
+| Trainer / config tests | `test/test_trainer_config.py`, `test_swi_core.py` timestamp tests | FOUND |
+| Configuration | `config_loader` DEFAULTS + `config/swi_config.yaml` `context_sync.staleness_seconds` | FOUND |
+| Trainer integration | `module00_trainer.py` → `sync.record_turn` | FOUND |
+| Kernel | — | MISSING |
+| Failure halt | Trainer does not halt on stale/OOO | UNVERIFIED as enforcement |
+| Documentation | this file + module docstring | FOUND |
 
----
-
-## 2. Answers from source (ten questions)
-
-| # | Question | Evidence from code |
-|---|----------|---------------------|
-| 1 | **Input** | `record_turn(turn_id, timestamp=None)`. `turn_id` stored on `Turn` (intended int; **not validated**). `timestamp`: `Optional[datetime]`; `None` → `datetime.now(timezone.utc)`. |
-| 2 | **Output** | `SyncResult(stale: bool, out_of_order: bool, gap_seconds: float)`. |
-| 3 | **State** | Stateful: `self._turns: List[Turn]`. Each call **appends**; `history()` returns a copy. |
-| 4 | **Configuration** | Ctor `staleness_seconds` default **1800.0**. Trainer sets via `config_loader` → `context_sync.staleness_seconds`. |
-| 5 | **“Valid context”** | Module does **not** validate conversation content. It only compares successive timestamps. |
-| 6 | **Stale** | `stale = gap > staleness_seconds` (**strict greater-than**). Gap from previous turn; first turn gap `0.0`, not stale. |
-| 7 | **Invalid input** | No formal contract rejection. Non-datetime / naive-vs-aware mix → likely **TypeError**. Bad types are **not** converted to a soft “valid” SyncResult. |
-| 8 | **Exceptions** | No custom `ModuleKernelError`. Type/compare errors can escape. |
-| 9 | **Downstream** | Trainer always calls `record_turn` early in `process`. Result stored on `PipelineResult.sync`. **`allowed` is not set from `stale` / `out_of_order`** — security block is separate (Module 02). |
-| 10 | **Existing tests** | `test_context_sync_flags_staleness`, `test_context_sync_flags_out_of_order`; Trainer config + explicit timestamp tests (`test_trainer_config` / `test_swi_core`). |
+Existence ≠ correctness. Kernel and pipeline halt on contract failure remain gaps.
 
 ---
 
-## 3. Boundary map
+## Entry point
+
+| Field | Value |
+|-------|--------|
+| File | `swi_core/module03_context_sync.py` |
+| Class | `ContextSync` |
+| Operation | `record_turn(turn_id, timestamp=None) → SyncResult` |
+| Callers | `Trainer.process` only (package path) |
+| Callees | stdlib `datetime` |
+| Side effect | Appends `Turn` to internal `_turns` |
+
+---
+
+## Ten answers from source
+
+1. **Input:** `turn_id` (not validated); `timestamp` optional datetime or wall clock UTC.  
+2. **Output:** `SyncResult(stale, out_of_order, gap_seconds)`.  
+3. **State:** Stateful turn history.  
+4. **Config:** `staleness_seconds` default 1800; Trainer loads from config.  
+5. **Valid context:** Not content — temporal relationship only.  
+6. **Stale:** `gap > staleness_seconds` (equal → not stale).  
+7. **Invalid input:** No soft success path; type errors can raise.  
+8. **Exceptions:** No `ModuleKernelError`; TypeError possible.  
+9. **Downstream:** Result on `PipelineResult.sync`; **`allowed` not driven by stale**.  
+10. **Tests:** staleness, out-of-order, config + explicit timestamps.
+
+---
+
+## Baseline (before any migration)
+
+| Field | Value |
+|-------|--------|
+| Relevant tests | context/sync/timestamp/staleness filters | 
+| Local result | Existing suite includes Module 03 functional tests — **PASS** on main (full suite previously 95+) |
+| Kernel / halt tests | **ABSENT** |
+
+Baseline failure: none recorded for functional paths. Evidence gap: contract enforcement + failure propagation.
+
+---
+
+## Smallest defensible contract (draft)
 
 ```text
-Input (turn_id, timestamp?)
-        ↓
-[no type validation today]
-        ↓
-Compute gap / out_of_order / stale
-        ↓
-Append Turn (always, if no exception)
-        ↓
-SyncResult → Trainer.PipelineResult.sync
-        ↓
-Downstream modules run regardless of stale flag
+INPUT: turn_id; timestamp optional datetime
+PRE: if timestamp provided → must be datetime; optional turn_id type policy
+OPERATION: compute gap/OOO/stale; append Turn
+OUTPUT: SyncResult with bool/bool/finite float (gap may be negative if OOO)
+POST: type/shape of SyncResult
+FAILURE (kernel): type/shape contract → ModuleKernelError
+NOT failure: stale=True or out_of_order=True alone (flags only)
+LIMITATION: no content truth; no clock honesty; no pipeline block on stale
 ```
 
-**Detection vs enforcement:** Module 03 **detects** stale/out-of-order. Trainer does **not** halt the pipeline on those flags. Kernel migration must not invent “stale ⇒ stop pipeline” unless product policy is explicitly changed.
+---
+
+## Decision record
+
+| Field | Value |
+|-------|--------|
+| **Decision** | **MIGRATE** |
+| **Meaning** | Existing operation is valid; add ModuleKernel for type/shape pre/post; preserve flag semantics |
+| **Not** | REBUILD (algorithm stays) · VERIFY-only (kernel missing) |
+| **Reason** | Functional behaviour exists and is tested; no fail-closed input/result contract; Trainer cannot distinguish type failures from normal SyncResult flags without a kernel boundary |
+| **Scope of change** | Wrap `record_turn`; optional ctor validation for `staleness_seconds`; Trainer halt only on `ModuleKernelError` |
+| **Must not change** | Stale rule `>`; first-turn gap 0; always-append on success; stale ≠ `allowed=False` |
 
 ---
 
-## 4. Minimum testable contract (draft — for future migration)
+## Classification (missing evidence vs missing function)
 
-| Layer | Proposed rule (must match code unless behaviour change is intentional) |
-|-------|---------------------------------------------------------------------|
-| Pre | Prefer validate `timestamp is None or isinstance(timestamp, datetime)`; validate `turn_id` as int if required |
-| Op | Existing gap / OOO / stale logic + append |
-| Post | Result is `SyncResult`; bool fields are bool; `gap_seconds` is finite float (**may be negative** when out_of_order) |
-| Ctor | Optional: reject non-numeric or negative `staleness_seconds` |
-| Trainer | Kernel type/shape failure → halt; **stale=True alone remains a flag**, not ModuleKernelError |
-
-Boundary to lock: `gap == staleness_seconds` → **not** stale (`>` only).
+| Case | Classification |
+|------|----------------|
+| Kernel pre/post | Functionality **MISSING** for enforcement |
+| Stale/OOO detection | Functionality **EXISTS**, evidence **SUFFICIENT** for basic flags |
+| Pipeline stop on stale | **Not required** by current product behaviour — do not invent |
+| Invalid timestamp soft-accept | Not observed — TypeError path; harden with explicit pre-check |
 
 ---
 
-## 5. Bounded claims
+## Gate before implementation
 
-**May claim (once tested):** reports temporal gap vs threshold; flags out-of-order timestamps; config can set threshold via Trainer.
+```text
+INSPECTED ✓
+BASELINE RECORDED ✓
+DEPENDENCIES MAPPED ✓
+CONTRACT DRAFTED ✓
+FAILURE PATH IDENTIFIED ✓ (flags vs TypeError vs future kernel)
+DECISION RECORDED ✓ MIGRATE
+→ ONLY THEN code change
+```
 
-**Must not claim:** context content is true; clock is honest; stale means pipeline blocked; “valid context” in a semantic sense.
-
----
-
-## 6. Three-state snapshot
-
-| Item | State |
-|------|--------|
-| Implementation exists | VERIFIED (source read) |
-| Functional tests (stale / OOO / config) | VERIFIED (existing tests) |
-| Kernel enforcement | **NOT IMPLEMENTED** |
-| Trainer halt on M03 contract failure | **NOT IMPLEMENTED** |
-| Full boundary / invalid-type matrix | **UNVERIFIED** |
-| Module 03 seal | **NOT SEALED** |
+**Blocked until authorized:** Module 03 kernel code · Module 06 · Modules 11–19.
 
 ---
 
-## 7. Next authorized step
+## Bounded language
 
-Only after this inspection is accepted:
-
-1. Optional: add `docs/MODULE_03_CONTRACT.md` formalizing the draft table  
-2. Kernel-wrap **without** changing detection meaning  
-3. Negative + boundary tests (X−1 / X / X+1)  
-4. Trainer halt **only** for contract failure (types/shape), not for `stale=True`  
-5. CI → seal record  
-
-**Do not** start Module 06 until Module 03 is sealed under the same discipline as Module 05.
+Use: *reports temporal gap*; *flags out-of-order*; *config sets threshold*.  
+Avoid: *understands context*; *validates truth*; *cannot be bypassed*; *stale always stops the pipeline*.
