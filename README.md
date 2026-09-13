@@ -53,3 +53,5 @@ Status: `docs/IMPLEMENTATION_STATUS.md` · `docs/EVIDENCE_MATRIX.md` · `docs/KN
 What “done” means for 00–10 (prove, detect, stop): [`docs/FOUNDATION_MILESTONE.md`](docs/FOUNDATION_MILESTONE.md)
 
 Module 05 migration notes: [`docs/MODULE_05_KERNEL_MIGRATION.md`](docs/MODULE_05_KERNEL_MIGRATION.md)
+
+Foundation completion (Seal 5 path): [`docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md`](docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md)

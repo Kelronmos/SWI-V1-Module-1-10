@@ -43,6 +43,7 @@ python -m pytest -q
 5. `docs/VOLUME_1_PART_2_MODULE_KERNEL_REBUILD_MANUAL.md` — kernel rebuild path
 6. `docs/FOUNDATION_MILESTONE.md` — what “finished foundation” means
 7. `docs/MODULE_05_KERNEL_MIGRATION.md` — Module 05 kernel contract
+8. `docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md` — path to Seal 5 (11–19 blocked)
 
 ## Module Kernel status
 
