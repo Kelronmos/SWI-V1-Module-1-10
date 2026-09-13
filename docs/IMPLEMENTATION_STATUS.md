@@ -1,7 +1,5 @@
 # Implementation Status — Modules 00–10
 
-Classification: IMPLEMENTED · TESTED · KERNEL · INSPECTED · ARCHITECTURAL · NOT CLAIMED
-
 ## Package
 
 | Component | Status |
@@ -12,27 +10,20 @@ Classification: IMPLEMENTED · TESTED · KERNEL · INSPECTED · ARCHITECTURAL ·
 
 ## Modules
 
-| Module | Role | Status |
-|--------|------|--------|
-| 00 Trainer | Pipeline | IMPLEMENTED + TESTED; halt on M02/M05 kernel failure |
-| 01 Node Scanner | Presence scan | IMPLEMENTED + TESTED; not kernel-migrated |
-| 02 Security Probe | Heuristic risk | **SEALED** (kernel + CI) |
-| 03 Context Sync | Temporal flags | IMPLEMENTED + TESTED; **INSPECTED** (`docs/MODULE_03_INSPECTION.md`); not kernel-migrated |
-| 04 Encryption | Local crypto | IMPLEMENTED + TESTED; not kernel-migrated |
-| 05 Redaction | Structured PII | **SEALED** (kernel + CI) |
-| 06 Drift | Similarity bands | IMPLEMENTED + TESTED; not kernel-migrated |
-| 07 Memory Validator | Hash chain | IMPLEMENTED + TESTED; not kernel-migrated |
-| 08 Access Auth | Auth gate | IMPLEMENTED + TESTED; not kernel-migrated |
-| 09 Audit Logger | Event log | IMPLEMENTED + TESTED; not kernel-migrated |
-| 10 External Sandbox | Subprocess boundary | IMPLEMENTED + TESTED; not kernel-migrated |
+| Module | Status |
+|--------|--------|
+| 00 Trainer | Halt on M02 / M03 / M05 kernel failure |
+| 01 Node Scanner | Implemented; not kernel-migrated |
+| 02 Security Probe | **SEALED** |
+| 03 Context Sync | **SEALED** (kernel + CI #26) |
+| 04 Encryption | Implemented; not kernel-migrated |
+| 05 Redaction | **SEALED** |
+| 06 Drift | Implemented; **next inspect** |
+| 07 Memory Validator | Implemented; not kernel-migrated |
+| 08 Access Auth | Implemented; not kernel-migrated |
+| 09 Audit Logger | Implemented; not kernel-migrated |
+| 10 External Sandbox | Implemented; not kernel-migrated |
 
-## Kernel migration
+## Not claimed
 
-- Module 02: **SEALED**
-- Module 05: **SEALED**
-- Module 03: inspection complete; migration **not started**
-- Remaining: not migrated
-
-## Explicitly not claimed
-
-CEK · SAD-DFU · Vector Memory · Alita · Sovereign Mesh · Modules 11–46 · complete PII · universal AI safety
+CEK · SAD-DFU · Vector Memory · Alita · Modules 11–46 · complete PII · universal AI safety
