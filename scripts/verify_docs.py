@@ -19,6 +19,8 @@ REQUIRED = [
     "docs/MODULE_03_DECISION.md",
     "docs/MODULE_03_SEAL_RECORD.md",
     "docs/MODULE_03_MIGRATION.md",
+    "docs/MODULE_06_INSPECTION.md",
+    "docs/MODULE_06_DECISION.md",
     "docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md",
 ]
 
