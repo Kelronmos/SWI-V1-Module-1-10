@@ -3,14 +3,16 @@ Module 00: The Trainer (The Master Orchestrator)
 
 WHAT THIS ACTUALLY DOES:
 Wires Modules 01-09 into a single request pipeline: an incoming message is
-security-scanned (02), checked for context staleness (03), redacted for PII
+checked for context staleness (03), security-scanned (02), redacted for PII
 (05), checked for output drift against a baseline (06), and every step is
 written to the hash-chained audit log (09) and memory chain (07). It returns
 a structured `PipelineResult` reporting what happened at each stage.
 
-Kernel contract failures on Module 02 or Module 05 STOP the pipeline:
+Kernel contract failures on Module 03, Module 02, or Module 05 STOP the pipeline:
 the failure is recorded best-effort on audit/memory, then re-raised as
 ModuleKernelError so callers cannot treat a contract failure as success.
+
+stale / out_of_order on SyncResult remain flags — they do not by themselves halt.
 
 If `config_path` is given, `security_probe.block_threshold` and
 `context_sync.staleness_seconds` are read from it via `config_loader`.
@@ -82,7 +84,17 @@ class Trainer:
         self, text: str, timestamp: Optional[_dt.datetime] = None
     ) -> PipelineResult:
         self._turn_counter += 1
-        sync_result = self.sync.record_turn(self._turn_counter, timestamp=timestamp)
+
+        # --- Module 03: kernel-wrapped; contract failure => STOP ---
+        # Note: stale/out_of_order flags do not raise; only type/shape contract does.
+        try:
+            sync_result = self.sync.record_turn(
+                self._turn_counter, timestamp=timestamp
+            )
+        except ModuleKernelError as exc:
+            reason = f"halted_by_module_03_kernel:{exc}"
+            self._record_halt(reason)
+            raise ModuleKernelError(reason) from exc
 
         # --- Module 02: kernel-wrapped; contract failure => STOP ---
         try:
