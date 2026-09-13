@@ -1,30 +1,56 @@
 ============================= test session starts ==============================
 platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
 cachedir: .pytest_cache
-rootdir: /home/claude/swi_manual
-collecting ... collected 22 items
+rootdir: /home/claude/handoff_check
+plugins: cov-7.1.0, mock-3.15.1
+collecting ... collected 27 items
 
-test_swi_core.py::test_node_scanner_detects_no_change PASSED             [  4%]
-test_swi_core.py::test_node_scanner_detects_tamper PASSED                [  9%]
-test_swi_core.py::test_security_probe_flags_instruction_override PASSED  [ 13%]
-test_swi_core.py::test_security_probe_allows_benign_text PASSED          [ 18%]
-test_swi_core.py::test_context_sync_flags_staleness PASSED               [ 22%]
-test_swi_core.py::test_context_sync_flags_out_of_order PASSED            [ 27%]
-test_swi_core.py::test_encryption_round_trip PASSED                      [ 31%]
-test_swi_core.py::test_encryption_detects_tampered_ciphertext PASSED     [ 36%]
-test_swi_core.py::test_redaction_masks_email_and_phone PASSED            [ 40%]
-test_swi_core.py::test_drift_analyzer_flags_topic_shift PASSED           [ 45%]
-test_swi_core.py::test_drift_analyzer_allows_similar_topic PASSED        [ 50%]
-test_swi_core.py::test_memory_validator_chain_valid_when_untouched PASSED [ 54%]
-test_swi_core.py::test_memory_validator_detects_tamper PASSED            [ 59%]
-test_swi_core.py::test_access_auth_accepts_valid_token PASSED            [ 63%]
-test_swi_core.py::test_access_auth_rejects_expired_token PASSED          [ 68%]
-test_swi_core.py::test_access_auth_rejects_forged_token PASSED           [ 72%]
-test_swi_core.py::test_audit_logger_chain_valid PASSED                   [ 77%]
-test_swi_core.py::test_audit_logger_detects_tamper PASSED                [ 81%]
-test_swi_core.py::test_sandbox_runs_benign_code PASSED                   [ 86%]
-test_swi_core.py::test_sandbox_kills_infinite_loop PASSED                [ 90%]
-test_swi_core.py::test_trainer_blocks_injection_end_to_end PASSED        [ 95%]
-test_swi_core.py::test_trainer_allows_and_redacts_benign_message PASSED  [100%]
+test_swi_core.py::test_node_scanner_detects_no_change PASSED             [  3%]
+test_swi_core.py::test_node_scanner_detects_tamper PASSED                [  7%]
+test_swi_core.py::test_security_probe_flags_instruction_override PASSED  [ 11%]
+test_swi_core.py::test_security_probe_allows_benign_text PASSED          [ 14%]
+test_swi_core.py::test_context_sync_flags_staleness PASSED               [ 18%]
+test_swi_core.py::test_context_sync_flags_out_of_order PASSED            [ 22%]
+test_swi_core.py::test_encryption_round_trip PASSED                      [ 25%]
+test_swi_core.py::test_encryption_detects_tampered_ciphertext PASSED     [ 29%]
+test_swi_core.py::test_redaction_masks_email_and_phone PASSED            [ 33%]
+test_swi_core.py::test_drift_analyzer_flags_topic_shift PASSED           [ 37%]
+test_swi_core.py::test_drift_analyzer_allows_similar_topic PASSED        [ 40%]
+test_swi_core.py::test_memory_validator_chain_valid_when_untouched PASSED [ 44%]
+test_swi_core.py::test_memory_validator_detects_tamper PASSED            [ 48%]
+test_swi_core.py::test_access_auth_accepts_valid_token PASSED            [ 51%]
+test_swi_core.py::test_access_auth_rejects_expired_token PASSED          [ 55%]
+test_swi_core.py::test_access_auth_rejects_forged_token PASSED           [ 59%]
+test_swi_core.py::test_audit_logger_chain_valid PASSED                   [ 62%]
+test_swi_core.py::test_audit_logger_detects_tamper PASSED                [ 66%]
+test_swi_core.py::test_sandbox_runs_benign_code PASSED                   [ 70%]
+test_swi_core.py::test_sandbox_kills_infinite_loop PASSED                [ 74%]
+test_swi_core.py::test_trainer_blocks_injection_end_to_end PASSED        [ 77%]
+test_swi_core.py::test_trainer_allows_and_redacts_benign_message PASSED  [ 81%]
+test_swi_core.py::test_trainer_uses_default_config_when_no_path_given PASSED [ 85%]
+test_swi_core.py::test_trainer_applies_config_file_block_threshold PASSED [ 88%]
+test_swi_core.py::test_trainer_applies_config_file_staleness_seconds PASSED [ 92%]
+test_swi_core.py::test_trainer_process_accepts_explicit_timestamp PASSED [ 96%]
+test_swi_core.py::test_trainer_process_flags_staleness_with_explicit_timestamps PASSED [100%]
 
-============================== 22 passed in 1.10s ==============================
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.3-final-0 ________________
+
+Name                                      Stmts   Miss  Cover
+-------------------------------------------------------------
+swi_core/__init__.py                          0      0   100%
+swi_core/config_loader.py                    49     11    78%
+swi_core/module00_trainer.py                 44      0   100%
+swi_core/module01_node_scanner.py            45     11    76%
+swi_core/module02_security_probe.py          42      7    83%
+swi_core/module03_context_sync.py            26      1    96%
+swi_core/module04_encryption_handler.py      18      0   100%
+swi_core/module05_redaction_engine.py        38      1    97%
+swi_core/module06_drift_analyzer.py          37      1    97%
+swi_core/module07_memory_validator.py        44      1    98%
+swi_core/module08_access_auth.py             37      2    95%
+swi_core/module09_audit_logger.py            53      2    96%
+swi_core/module10_external_sandbox.py        24      0   100%
+-------------------------------------------------------------
+TOTAL                                       457     37    92%
+============================== 27 passed in 1.31s ==============================
