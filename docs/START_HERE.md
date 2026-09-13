@@ -9,10 +9,11 @@ python -m pytest -q && ./scripts/verify.sh
 
 | Module | Status |
 |--------|--------|
-| 02 | **SEALED** |
+| 02 | **SEALED** (heuristic + kernel; not complete security) — `MODULE_02_SEAL_RECORD.md` |
 | 03 | **SEALED** |
 | 05 | **SEALED** |
-| 06 | **INSPECTED · MIGRATE · procedure READY · not executed** |
+| 06 | INSPECTED · MIGRATE · not executed |
 
-- `docs/MODULE_06_INSPECTION.md` · `docs/MODULE_06_DECISION.md` · `docs/MODULE_06_MIGRATION.md`
-- Modules **11–19 BLOCKED** until Foundation Seal 5
+**SEALED ≠ security complete.** See evidence matrix and limitations.
+
+Modules **11–19 BLOCKED** until Foundation Seal 5.

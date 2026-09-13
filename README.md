@@ -15,43 +15,32 @@ python -m pytest -q
 
 Package: `swi_core` (Modules 00–10, `config_loader`, `module_kernel`).
 
-## Module Kernel
+## Module Kernel (sealed boundaries)
 
-Modules **02 Security Probe** and **05 Redaction** are wrapped with fail-closed pre/post checks via `swi_core/module_kernel.py`.
-If either kernel contract fails, **Trainer stops**, records a halt reason, and re-raises — it does not continue the pipeline.
-Other modules are not yet migrated. Module 05 remains structured-PII only (not complete PII removal).
+| Module | Status |
+|--------|--------|
+| **02 Security Probe** | **SEALED** — kernel-enforced **heuristic** probe; contract fail → **HALT**; risk ≥ threshold → `allowed=False`. Detection is **not** complete. |
+| **03 Context Sync** | **SEALED** — temporal flags; contract fail → HALT |
+| **05 Redaction** | **SEALED** — structured PII only |
+| **06 Drift** | Inspected; MIGRATE decision; **not** kernel-migrated yet |
+
+Seal records: `docs/MODULE_02_SEAL_RECORD.md` · `MODULE_03_SEAL_RECORD.md` · `MODULE_05_SEAL_RECORD.md`
 
 ## Configuration
 
-Trainer loads `config/swi_config.yaml` (or `config_path`) and applies:
-- `security_probe.block_threshold`
-- `context_sync.staleness_seconds`
+Trainer loads config and applies `security_probe.block_threshold` and `context_sync.staleness_seconds`.  
+`process(..., timestamp=...)` supported for deterministic Context Sync tests.
 
-`process(..., timestamp=...)` is supported for deterministic Context Sync tests.
+## Scope of claims
 
-## Scope of Claims
-
-This repository makes claims only about functionality supported by current implementation and tests.
-
-The following should **not** be inferred (explicitly **not claimed**):
-
-- not general intelligence;
-- not consciousness;
-- not semantic understanding;
-- not universal AI safety;
-- not complete cybersecurity;
-- not complete identity management;
-- not production-grade distributed enforcement;
-- not autonomous governance of arbitrary AI systems.
+Do **not** infer: general intelligence, consciousness, semantic understanding, universal AI safety, complete cybersecurity, complete identity management, production-grade distributed enforcement, or autonomous governance of arbitrary AI systems.
 
 «Do not claim what the code cannot demonstrate.»
 
 Status: `docs/IMPLEMENTATION_STATUS.md` · `docs/EVIDENCE_MATRIX.md` · `docs/KNOWN_LIMITATIONS.md`
 
-## Foundation milestone
+## Foundation
 
-What “done” means for 00–10 (prove, detect, stop): [`docs/FOUNDATION_MILESTONE.md`](docs/FOUNDATION_MILESTONE.md)
+[`docs/FOUNDATION_MILESTONE.md`](docs/FOUNDATION_MILESTONE.md) · [`docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md`](docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md)
 
-Module 05 migration notes: [`docs/MODULE_05_KERNEL_MIGRATION.md`](docs/MODULE_05_KERNEL_MIGRATION.md)
-
-Foundation completion (Seal 5 path): [`docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md`](docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md)
+Modules **11–19** blocked until Foundation Seal 5. Active migration target: **Module 06** (when authorized).

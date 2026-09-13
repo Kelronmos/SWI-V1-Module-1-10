@@ -1,25 +1,29 @@
 # Known Limitations
 
-## Module 02 Security Probe
-- Pattern matching only; misses novel/paraphrased injection.
-- False positives on security-research discussion of the same phrases.
-- Kernel pilot validates input/output **contract**, not detection completeness.
+## Module 02 — Security Probe (SEALED enforcement)
 
-## Module 05 Redaction
-- First-pass structured redaction; not complete PII coverage.
+- Heuristic regex/base64 signals only; not semantic prompt-injection defense.
+- False positives possible on legitimate discussion of attack phrases.
+- Default `block_threshold` 0.5 and weights are implementation defaults, not calibrated guarantees.
+- **Contract failure → HALT**; **heuristic block → `allowed=False`** — different signals.
+- Seal does **not** mean complete cybersecurity. See `docs/MODULE_02_SEAL_RECORD.md`.
 
-## Module 06 Drift
-- Lexical/syntactic similarity style signals — not workflow/authority/objective drift.
+## Module 03 — Context Sync (SEALED)
 
-## Module 07 / 09 chains
-- **Tamper-evident**, not tamper-proof.
+- Temporal flags only; no content truth; clock not authenticated.
+- `stale` / `out_of_order` are advisory to the pipeline.
 
-## Module 10 Sandbox
-- Resource-controlled subprocess boundary.
-- **Not** a hardened sandbox, complete isolation, or secure multi-tenant runtime.
+## Module 05 — Redaction (SEALED)
 
-## Configuration
-- Range validation is partial (Module 02 threshold validated at construction).
+- Structured patterns only (EMAIL, PHONE, CREDIT_CARD, BW_OMANG).
+- Not complete PII / not NLP entity recognition.
 
-## Kernel rollout
-- Only Module 02 is kernel-wrapped. Trainer does not yet map `ModuleKernelError` into a structured PipelineResult field (failure raises).
+## Module 06 — Drift (not kernel-migrated)
+
+- Bag-of-words cosine only; empty baseline → similarity 0 / often drifted.
+- Advisory only; threshold not config-wired.
+
+## General
+
+- No CEK, SAD-DFU, Vector Memory, Alita, Sovereign Mesh as implemented systems.
+- Modules 11–19 blocked until Foundation Seal 5.
