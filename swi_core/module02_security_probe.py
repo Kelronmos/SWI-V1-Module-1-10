@@ -7,6 +7,10 @@ and instruction-override attempts ("ignore previous instructions", role-play
 jailbreak framing, base64-encoded payloads, zero-width character smuggling)
 and returns a risk score plus which patterns fired.
 
+Module Kernel (pilot):
+  scan() is wrapped with fail-closed pre/post checks (input type/size,
+  threshold range, ProbeResult contract). Detection logic is unchanged.
+
 WHAT THIS DOES NOT DO:
 This is pattern-matching, not semantic understanding. It will miss novel or
 paraphrased injection attempts and will false-positive on legitimate text
@@ -21,6 +25,8 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from typing import List
+
+from .module_kernel import CheckResult, ModuleKernel
 
 
 _PATTERNS = {
@@ -47,6 +53,8 @@ _RISK_WEIGHTS = {
     "base64_payload": 0.2,
 }
 
+_MAX_INPUT_CHARS = 100_000
+
 
 @dataclass
 class ProbeResult:
@@ -59,11 +67,105 @@ class ProbeResult:
         return self.risk_score >= self.block_threshold
 
 
+def _input_is_string(value) -> CheckResult:
+    return CheckResult(
+        name="input_is_string",
+        passed=isinstance(value, str),
+        reason="input must be a string",
+    )
+
+
+def _input_has_reasonable_size(value) -> CheckResult:
+    if not isinstance(value, str):
+        return CheckResult(
+            name="input_size",
+            passed=False,
+            reason="input is not a string",
+        )
+    return CheckResult(
+        name="input_size",
+        passed=len(value) <= _MAX_INPUT_CHARS,
+        reason=f"input exceeds {_MAX_INPUT_CHARS} characters",
+    )
+
+
+def _result_is_probe_result(result) -> CheckResult:
+    return CheckResult(
+        name="probe_result_type",
+        passed=isinstance(result, ProbeResult),
+        reason="unexpected result type",
+    )
+
+
+def _risk_score_is_valid(result) -> CheckResult:
+    if not isinstance(result, ProbeResult):
+        return CheckResult(
+            name="risk_score",
+            passed=False,
+            reason="unexpected result type",
+        )
+    score = result.risk_score
+    ok = isinstance(score, (int, float)) and 0.0 <= float(score) <= 1.0
+    return CheckResult(
+        name="risk_score",
+        passed=ok,
+        reason="risk_score must be between 0 and 1",
+    )
+
+
+def _triggered_is_valid(result) -> CheckResult:
+    if not isinstance(result, ProbeResult):
+        return CheckResult(
+            name="triggered",
+            passed=False,
+            reason="unexpected result type",
+        )
+    ok = isinstance(result.triggered, list) and all(
+        isinstance(item, str) for item in result.triggered
+    )
+    return CheckResult(
+        name="triggered",
+        passed=ok,
+        reason="triggered must be a list of strings",
+    )
+
+
+def _blocked_consistency(result) -> CheckResult:
+    """If blocked, at least one pattern should have fired (score path consistency)."""
+    if not isinstance(result, ProbeResult):
+        return CheckResult(
+            name="blocked_consistency",
+            passed=False,
+            reason="unexpected result type",
+        )
+    if result.blocked and not result.triggered and result.risk_score > 0:
+        return CheckResult(
+            name="blocked_consistency",
+            passed=False,
+            reason="blocked with positive score but empty triggered list",
+        )
+    return CheckResult(name="blocked_consistency", passed=True)
+
+
 class SecurityProbe:
     """Module 02: heuristic shadow-prompt / injection detector."""
 
     def __init__(self, block_threshold: float = 0.5):
-        self.block_threshold = block_threshold
+        if not isinstance(block_threshold, (int, float)):
+            raise ValueError("block_threshold must be numeric")
+        if not 0.0 <= float(block_threshold) <= 1.0:
+            raise ValueError("block_threshold must be between 0 and 1")
+        self.block_threshold = float(block_threshold)
+        self.kernel = ModuleKernel(
+            name="module_02_security_probe",
+            pre_checks=[_input_is_string, _input_has_reasonable_size],
+            post_checks=[
+                _result_is_probe_result,
+                _risk_score_is_valid,
+                _triggered_is_valid,
+                _blocked_consistency,
+            ],
+        )
 
     @staticmethod
     def _looks_like_base64_payload(text: str) -> bool:
@@ -76,7 +178,7 @@ class SecurityProbe:
                 continue
         return False
 
-    def scan(self, text: str) -> ProbeResult:
+    def _scan_impl(self, text: str) -> ProbeResult:
         normalized = unicodedata.normalize("NFKC", text)
         triggered = []
         score = 0.0
@@ -88,4 +190,11 @@ class SecurityProbe:
             triggered.append("base64_payload")
             score += _RISK_WEIGHTS["base64_payload"]
         score = min(score, 1.0)
-        return ProbeResult(risk_score=score, triggered=triggered, block_threshold=self.block_threshold)
+        return ProbeResult(
+            risk_score=score,
+            triggered=triggered,
+            block_threshold=self.block_threshold,
+        )
+
+    def scan(self, text: str) -> ProbeResult:
+        return self.kernel.run(text, self._scan_impl)
