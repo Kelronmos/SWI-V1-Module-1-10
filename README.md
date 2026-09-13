@@ -18,6 +18,7 @@ Package: `swi_core` (Modules 00–10, `config_loader`, `module_kernel`).
 ## Module Kernel (pilot)
 
 Module **02 Security Probe** is wrapped with fail-closed pre/post checks via `swi_core/module_kernel.py`.
+If the kernel contract fails, **Trainer stops**, records a halt reason, and re-raises — it does not continue the pipeline.
 Other modules are not yet migrated. See `docs/VOLUME_1_PART_2_MODULE_KERNEL_REBUILD_MANUAL.md`.
 
 ## Configuration
@@ -46,3 +47,7 @@ The following should **not** be inferred (explicitly **not claimed**):
 «Do not claim what the code cannot demonstrate.»
 
 Status: `docs/IMPLEMENTATION_STATUS.md` · `docs/EVIDENCE_MATRIX.md` · `docs/KNOWN_LIMITATIONS.md`
+
+## Foundation milestone
+
+What “done” means for 00–10 (prove, detect, stop): [`docs/FOUNDATION_MILESTONE.md`](docs/FOUNDATION_MILESTONE.md)
