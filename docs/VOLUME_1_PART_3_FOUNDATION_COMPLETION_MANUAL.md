@@ -3,191 +3,301 @@
 ## VOLUME 1, PART 3 — FOUNDATION COMPLETION & VERIFICATION MANUAL
 
 **Modules 00–10**  
-Kernel Migration, Adversarial Verification, CI Evidence & Foundation Seal  
+A step-by-step technical guide for completing, testing, documenting and sealing the SWI foundation  
+
+**PART A — Policy, order & seals**  
+**PART B — Build procedures, test protocols & release control**  
 
 Keletso Ronald Mosidila — Lead Architect & Author — Trusts Motion  
 Gaborone, Botswana — 2026  
 
 ---
 
+## PART A — POLICY, ORDER & SEALS
+
 ### 1. PURPOSE
 
-This manual defines the work required to complete and independently verify the SWI V1 Modules 00–10 foundation **before** beginning Modules 11–19.
+This manual is a construction guide for what must be implemented, tested and verified **now**.
 
-Governing rule:
+> Finish the foundation before building another floor.
 
-> Claim → Implementation → Test → Result → Limitation → Next Iteration  
+Governing chain:
 
-No feature should be described more strongly than its implementation and evidence permit.
+> Claim → Implementation → Test → Result → Limitation → Next iteration  
 
----
+If a component cannot demonstrate that chain, it remains unfinished.  
+Modules **11–19 stay BLOCKED** until Foundation Seal 5.
 
-### 2. CURRENT FOUNDATION STATUS (as of Module 05 landing)
+### 2. CURRENT FOUNDATION POSITION
 
-```text
-Modules 00–10
-       │
-       ├── Existing implementations + tests + docs
-       └── ModuleKernel foundation
-                    │
-         ┌──────────┴──────────┐
-         ▼                     ▼
-    Module 02              Module 05
-     SEALED              KERNEL-ENFORCED
-   (CI witness)        (await CI on M05 commits)
+| Module | Status |
+|--------|--------|
+| 02 Security Probe | **SEALED** (kernel + Trainer halt + local + CI) |
+| 05 Redaction | **KERNEL-ENFORCED** (structured PII only; confirm CI on M05 commits) |
+| 03, 06, 07, 09, 01, 04, 08, 10 | Not yet kernel-migrated |
+| 00 Trainer | Halt on M02/M05; final integration after remaining seams |
+
+**Module 05 meaning (preserved):** EMAIL, PHONE, CREDIT_CARD, BW_OMANG — not complete PII, not NLP.
+
+### 3. SIX QUESTIONS BEFORE EVERY MODULE
+
+1. What does this module actually do?  
+2. What does it receive?  
+3. What does it return?  
+4. What can go wrong?  
+5. What must never happen?  
+6. What evidence will prove it?  
+
+### 4. MIGRATION PATTERN
+
+```python
+self.kernel = ModuleKernel(
+    name="module_xx_name",
+    pre_checks=(self._input_is_valid, ...),
+    post_checks=(self._result_is_valid, ...),
+)
+
+def process(self, value):
+    return self.kernel.run(value, self._process_impl)
 ```
 
-**Module 05** remains a **structured PII first-pass** (email, phone, card-shaped, BW Omang). It does **not** claim complete PII detection.
+Preserve behaviour first. Harden the boundary second. Improve functionality later.
 
-Modules 11–19 remain **BLOCKED** until Foundation Seal 5.
-
----
-
-### 3. ZERO-GROUND RULE
-
-Before modifying any module:
-
-1. Read current implementation  
-2. Read current tests  
-3. Identify behavior, claims, limitations  
-4. Add enforcement around behavior  
-5. Do **not** silently redefine the module  
-
-Migration is: existing behavior → explicit contract → kernel → adversarial tests → Trainer boundary → documentation → CI evidence.
-
----
-
-### 4. WHAT KERNEL MIGRATION MEANS
+### 5. MIGRATION ORDER (one module at a time)
 
 ```text
-INPUT → PRECONDITIONS → OPERATION → POSTCONDITIONS → OUTPUT
+02 SEALED → 05 KERNEL-ENFORCED → 03 NEXT → 06 → 07 → 09
+→ 01 → 04 → 08 → 10 → 00 final → adversarial → CI/verify/clean clone
+→ FOUNDATION SEAL 5 → only then Modules 11–19
 ```
 
-Pre-fail → operation does not run → halt.  
-Post-fail → output not released → halt.  
+After each module: `pytest` → `./scripts/verify.sh` → commit → push → **wait for CI** → next.
 
-A kernel is an **enforcement boundary**, not proof that the underlying algorithm is universally safe.
+### 6. MODULE 05 — COMPLETED PATTERN (reference)
 
-Use: *fail-closed contract enforcement*.  
-Avoid: *universally secure* / *impossible to bypass*.
-
----
-
-### 5. MIGRATION ORDER
-
-| Order | Module | Status |
-|-------|--------|--------|
-| 1 | 02 Security Probe | **SEALED** (local + CI) |
-| 2 | 05 Redaction | **KERNEL-ENFORCED** (structured PII only) |
-| 3 | 03 Context Sync | NEXT |
-| 4 | 06 Drift | pending |
-| 5 | 07 Memory Validator | pending |
-| 6 | 09 Audit Logger | pending |
-| 7 | 01 Node Scanner | pending |
-| 8 | 04 Encryption | pending |
-| 9 | 08 Access Auth | pending |
-| 10 | 10 External Sandbox | pending |
-| 11 | 00 Trainer final review | after seams |
-| — | Full adversarial + CI verify.sh + clean clone | then **Seal 5** |
-| — | Modules 11–19 | **only after Seal 5** |
-
----
-
-### 6. MODULE 05 CONTRACT (completed pattern)
-
-| Layer | Requirements |
-|-------|----------------|
-| Pre | `str`; length ≤ 100_000 |
-| Operation | existing `_redact_impl` detection meaning |
-| Post | `RedactionResult`; matches are `RedactionMatch`; categories ⊆ {EMAIL, PHONE, CREDIT_CARD, BW_OMANG}; valid ordered non-overlapping spans |
-| Trainer | `halted_by_module_05_kernel` → record → re-raise; drift must not run |
+| Layer | Contract |
+|-------|----------|
+| Pre | `str`; `len ≤ 100_000` |
+| Op | existing `_redact_impl` (regex order unchanged) |
+| Post | `RedactionResult`; matches valid, ordered, non-overlapping; categories ⊆ allowed set |
+| Trainer | `halted_by_module_05_kernel` → record → re-raise; drift not called |
 
 Evidence: `docs/MODULE_05_KERNEL_MIGRATION.md`, `test/test_redaction_kernel.py`, `test/test_trainer_module05_halt.py`, adversarial boundaries.
 
----
+**Limitation (must stay visible):** structured pattern detection ≠ complete PII removal.
 
-### 7. PER-MODULE CONTRACT THEMES (remaining)
+### 7. REMAINING MODULE THEMES
 
-| Module | Focus |
-|--------|--------|
-| **03 Context Sync** | input/timestamp/staleness/output; deterministic timestamps in tests |
-| **06 Drift** | exact Green/Yellow/Red boundary values; malformed inputs |
-| **07 Memory Validator** | structure, types, tamper-evident hash behavior (not “tamper-proof”) |
-| **09 Audit Logger** | record shape; logging failure must never convert halt → success |
-| **01 Node Scanner** | path/hash integrity; tamper-*evident* language |
-| **04 Encryption** | encrypt/decrypt round-trip; wrong key/nonce/tag fail closed |
-| **08 Access Auth** | deny unauthorized; no “warn and continue” |
-| **10 Sandbox** | timeout/exception/resource; do not claim OS isolation unless proven |
-| **00 Trainer** | every sealed seam: failure stops pipeline; no silent continue |
+| Module | Contract focus |
+|--------|----------------|
+| **03 Context Sync** | input/timestamp/staleness; deterministic timestamps; X−1 / X / X+1 boundaries |
+| **06 Drift** | score range; exact band boundaries (e.g. 0.02 / 0.08); reject non-numeric/NaN/bool-as-int traps |
+| **07 Memory** | structural validity only — not “truth”; corruption → reject |
+| **09 Audit** | record shape; audit failure ≠ erase security halt |
+| **01 Node Scanner** | SHA-256 mismatch detection; tamper-*evident*, not tamper-proof |
+| **04 Encryption** | AES-GCM round-trip; altered ciphertext/tag/key → fail closed |
+| **08 Access Auth** | negative auth matrix; never default-allow |
+| **10 Sandbox** | tested execution boundary only; no hardened isolation claim without proof |
+| **00 Trainer** | every seam: halt + downstream not called |
 
----
-
-### 8. MIGRATION TEMPLATE (every module)
-
-1. Inventory implementation + tests + limitations  
-2. Write pre/post contract  
-3. Wrap with `ModuleKernel`; keep `_impl` for existing meaning  
-4. Precondition / postcondition / “operation never ran” tests  
-5. Adversarial boundary tests  
-6. Trainer halt + downstream-not-called tests  
-7. Update IMPLEMENTATION_STATUS, EVIDENCE_MATRIX, KNOWN_LIMITATIONS  
-8. `pytest` + `./scripts/verify.sh`  
-9. Push → wait for CI → inspect  
-10. Only then next module  
-
----
-
-### 9. TRAINER BOUNDARY RULE
+### 8. TRAINER BOUNDARY RULE
 
 ```text
 try:
-    result = module.operation(...)
+    result = module.op(...)
 except ModuleKernelError as exc:
     reason = f"halted_by_module_XX_kernel:{exc}"
-    self._record_halt(reason)   # best-effort
+    self._record_halt(reason)  # best-effort
     raise ModuleKernelError(reason) from exc
 ```
 
-Best-effort audit/memory **must never** swallow the halt.
+Best-effort audit/memory must **never** convert halt into success.
 
----
+### 9. SECURITY LANGUAGE
 
-### 10. VERIFICATION
+Use: *fail-closed contract enforcement*, *tamper-evident*, *structured PII first-pass*.  
+Avoid unsupported: *universally secure*, *tamper-proof*, *complete PII*, *cannot be bypassed*, *solves AI safety*.
 
-**Local:** `python -m pytest -q` then `./scripts/verify.sh`  
+### 10. FOUNDATION SEAL 5 CHECKLIST
 
-**CI:** pytest matrix 3.10–3.12 + doc/claim checks; prefer also running `./scripts/verify.sh`  
-
-**Clean clone:** fresh venv, install, pytest, verify.sh must reproduce.
-
-`verify.sh` reports evidence. It does **not** prove universal security, complete PII, or production readiness.
-
----
-
-### 11. FOUNDATION SEAL 5 CHECKLIST
-
-- [x] M02 kernel sealed (+ CI)  
-- [x] M05 kernel-enforced (+ local tests; confirm CI)  
+- [x] M02 sealed (+ CI)  
+- [x] M05 kernel-enforced (+ local; confirm CI)  
 - [ ] M03, M06, M07, M09 kernel-sealed  
 - [ ] M01, M04, M08, M10 boundary-reviewed  
-- [ ] Trainer final integration  
+- [ ] Trainer final integration + e2e happy/failure paths  
 - [ ] Adversarial suite green  
-- [ ] Full pytest + verify.sh green  
-- [ ] CI green (prefer full verify.sh)  
+- [ ] pytest + `./scripts/verify.sh` green  
+- [ ] CI green (includes verify.sh on 3.12)  
 - [ ] Clean clone reproduces  
-- [ ] Evidence matrix + known limitations current  
+- [ ] Evidence matrix + limitations + claim review current  
 - [ ] No unsupported security claims  
 
-Until complete: **MODULES 11–19 = BLOCKED**.
+**Seal 5 failure is useful** — fix the foundation; do not weaken the gate.
+
+### 11. MODULES 11–19 ENTRY
+
+Only after Seal 5. Do not start CEK, SAD-DFU, Vector Memory, global SWI Kernel, Alita, or universal safety as “implemented” until separately proven.
 
 ---
 
-### 12. FINAL PRINCIPLE
+## PART B — BUILD PROCEDURES, TEST PROTOCOLS & RELEASE CONTROL
 
-> Build only what can be explained, tested, and defended.  
+### 12. SESSION START
 
-A module is a foundation component when:
+```bash
+git branch --show-current
+git status
+git log --oneline -10
+python -m pytest -q
+./scripts/verify.sh
+```
 
-code + contract + tests + failure path + integration + CI + documented limitations  
+Record baseline commit, Python version, test count, result.  
+If baseline fails, fix or document **before** attributing failures to the new change.
 
-Do not outrun the evidence.
+### 13. INSPECT BEFORE EDIT
+
+```bash
+# implementation
+sed -n '1,260p' swi_core/moduleXX_....py
+# callers
+grep -R "ClassName" -n swi_core test
+# existing tests
+grep -R "method(" -n test
+```
+
+Discover dependencies before changing the contract.
+
+### 14. SAFE MIGRATION SEQUENCE (per module)
+
+1. Baseline green  
+2. Copy behaviour into `_impl`  
+3. Add `ModuleKernel` + pre/post  
+4. Run **existing** tests  
+5. Add kernel + adversarial tests  
+6. Trainer halt + downstream-not-called tests  
+7. Full suite + `verify.sh`  
+8. Update IMPLEMENTATION_STATUS, EVIDENCE_MATRIX, KNOWN_LIMITATIONS  
+9. Review `git diff`  
+10. Small commits → push → **CI** → only then next module  
+
+### 15. CRITICAL TEST PROPERTIES
+
+| Property | How to prove |
+|----------|----------------|
+| Pre-fail → op never runs | spy / `called is False` |
+| Post-fail → no release | result never returned |
+| Trainer halt | `ModuleKernelError` with `halted_by_module_XX` |
+| Downstream blocked | mock assert_not_called |
+| Audit fail ≠ success | raise still occurs |
+| Boundary values | exact threshold ± epsilon |
+
+### 16. MODULE 03 BUILD NOTES
+
+- Deterministic `timestamp=` in tests; no reliance on wall clock alone  
+- Staleness: test `X-1`, `X`, `X+1` from config  
+- Invalid time: missing, wrong type, malformed, future — policy from **code**, not invention  
+
+### 17. MODULE 06 BUILD NOTES
+
+Explicit band table (adjust to implementation if different):
+
+| Score | Expected (if contract uses 0.02 / 0.08) |
+|-------|----------------------------------------|
+| 0.00 | Green |
+| 0.019999 | Green |
+| 0.020000 | Yellow |
+| 0.079999 | Yellow |
+| 0.080000 | Red |
+
+Reject: `<0`, `>1`, NaN, inf; consider rejecting `bool` (`isinstance(True, int)` is True in Python).
+
+### 18. MODULE 07 / 09 NOTES
+
+- **07:** structure only, not truth; valid → accept; one-field corruption → reject  
+- **09:** record contract from real fields; logger failure must not erase halt  
+
+### 19. MODULE 01 / 04 / 08 / 10 NOTES
+
+- **01:** known-good → match; one-byte change → mismatch; language = tamper-evident  
+- **04:** round-trip + altered ciphertext/tag/key fail; key management is separate  
+- **08:** negative matrix only; no default allow  
+- **10:** document real boundary; failed escape tests → limitations, not marketing  
+
+### 20. TRAINER FINAL REVIEW
+
+For each sealed module:
+
+```text
+inject failure → Trainer raises → downstream.mock.assert_not_called()
+```
+
+End-to-end: one happy path + failure injection at each boundary.
+
+### 21. ADVERSARIAL CLASSES
+
+Input (empty, huge, wrong type, encoding) · Structural (missing/extra fields, overlap) · Security (override patterns, path traversal) · Failure (op/check/logger/memory exceptions).
+
+### 22. TEST THE TESTS
+
+Temporarily break a pre-check / halt / audit-swallow; suite **must** go red. Restore immediately.
+
+### 23. ModuleKernel EDGE CASES
+
+Pre/post fail · check exception · bad CheckResult type · op exception · multiple checks.  
+Do **not** merge blindly with `security/self_check.py` — different `CheckResult` semantics until deliberately unified.
+
+### 24. CONFIGURATION
+
+Every security-sensitive config field: type, range, consumer, failure behaviour. Existence in YAML ≠ enforcement.
+
+### 25. CI & CLEAN CLONE
+
+- Local and CI should share `./scripts/verify.sh` (CI runs it on Python 3.12).  
+- Clean clone: fresh venv → `pip install -r requirements.txt` → pytest → verify.sh.  
+- No secrets in tree; dependencies declared in repo.
+
+### 26. WHEN THINGS DISAGREE
+
+| Conflict | Rule |
+|----------|------|
+| Docs vs code | Code wins; fix docs |
+| Tests vs code | Decide intended contract; fix the wrong side — never weaken tests for green vanity |
+| CI vs local | Reproduce, classify (code/test/env/dep/CI config), fix cause |
+
+### 27. COMMIT DISCIPLINE
+
+One logical change per commit. Example:
+
+```text
+feat: kernel-wrap Module 03
+test: Module 03 contract + adversarial
+feat: Trainer halt on Module 03 kernel failure
+docs: Module 03 evidence + limitations
+```
+
+### 28. FINAL SEAL RECORD
+
+When ready, create `docs/FOUNDATION_SEAL_5.md` with: commit, date, test/CI/clean-clone results, limitations, non-claims, decision SEALED / NOT SEALED.
+
+Failed seal attempts are retained as engineering history.
+
+### 29. IMMEDIATE NEXT ACTION
+
+**Module 05 is already migrated.** Do not re-do it unless CI is red.
+
+Next authorized work:
+
+1. Confirm CI green for Module 05 + Part 3 commits  
+2. **Module 03 Context Sync** — inspect source/tests → contract → kernel → tests → Trainer halt → verify → CI  
+3. Then 06 → 07 → 09 → 01 → 04 → 08 → 10 → 00 final  
+
+One module. One contract. One evidence chain. One verified step at a time.
+
+---
+
+## CLOSING
+
+SWI becomes stronger when a claim survives code, tests, failure, verification, review and reproducibility — not when documentation sounds complete.
+
+> Do not rush the architecture. Verify the ground first.
