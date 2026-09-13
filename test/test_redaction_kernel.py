@@ -84,3 +84,57 @@ def test_empty_string_ok():
     r = RedactionEngine().redact("")
     assert r.redacted_text == ""
     assert r.matches == []
+
+
+def test_exact_max_input_accepted():
+    r = RedactionEngine().redact("z" * 100_000)
+    assert isinstance(r.redacted_text, str)
+    assert r.matches == [] or isinstance(r.matches, list)
+
+
+def test_postcheck_rejects_invalid_span_start_gt_end(monkeypatch):
+    engine = RedactionEngine()
+
+    def bad(text):
+        return RedactionResult(
+            redacted_text="ab",
+            matches=[
+                RedactionMatch(category="EMAIL", original="ba", start=1, end=0),
+            ],
+        )
+
+    monkeypatch.setattr(engine, "_redact_impl", bad)
+    with pytest.raises(ModuleKernelError):
+        engine.redact("ab")
+
+
+def test_postcheck_rejects_zero_length_span(monkeypatch):
+    engine = RedactionEngine()
+
+    def bad(text):
+        return RedactionResult(
+            redacted_text="ab",
+            matches=[
+                RedactionMatch(category="EMAIL", original="", start=1, end=1),
+            ],
+        )
+
+    monkeypatch.setattr(engine, "_redact_impl", bad)
+    with pytest.raises(ModuleKernelError):
+        engine.redact("ab")
+
+
+def test_postcheck_rejects_negative_start(monkeypatch):
+    engine = RedactionEngine()
+
+    def bad(text):
+        return RedactionResult(
+            redacted_text="ab",
+            matches=[
+                RedactionMatch(category="EMAIL", original="a", start=-1, end=1),
+            ],
+        )
+
+    monkeypatch.setattr(engine, "_redact_impl", bad)
+    with pytest.raises(ModuleKernelError):
+        engine.redact("ab")
