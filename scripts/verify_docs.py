@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Check that required foundation documentation files exist."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,16 +20,17 @@ REQUIRED = [
     "docs/MODULE_03_MIGRATION.md",
     "docs/MODULE_06_INSPECTION.md",
     "docs/MODULE_06_DECISION.md",
+    "docs/MODULE_06_MIGRATION.md",
     "docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md",
 ]
 
 
 def main() -> None:
-    missing = [path for path in REQUIRED if not (ROOT / path).is_file()]
+    missing = [p for p in REQUIRED if not (ROOT / p).is_file()]
     if missing:
         print("Missing documentation:")
-        for path in missing:
-            print(f" - {path}")
+        for p in missing:
+            print(f" - {p}")
         raise SystemExit(1)
     print("Documentation structure: PASS")
 
