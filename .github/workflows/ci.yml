@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/repo-hygiene, feature/module-kernel-pilot]
   pull_request:
     branches: [main]
 
@@ -31,7 +31,15 @@ jobs:
         run: mkdir -p logs .swi_temp
 
       - name: Run tests
-        run: python -m pytest -v --cov=swi_core --cov-report=term --cov-report=xml
+        run: python -m pytest -q --cov=swi_core --cov-report=term --cov-report=xml
+
+      - name: Documentation structure
+        if: matrix.python-version == '3.12'
+        run: python scripts/verify_docs.py
+
+      - name: Claim language review
+        if: matrix.python-version == '3.12'
+        run: python scripts/check_claim_language.py
 
       - name: Upload coverage
         if: always()
