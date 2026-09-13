@@ -1,12 +1,12 @@
 # Implementation Status — Modules 00–10
 
-Classification key: IMPLEMENTED · TESTED · KERNEL · ARCHITECTURAL · HISTORICAL · NOT CLAIMED
+Classification: IMPLEMENTED · TESTED · KERNEL · INSPECTED · ARCHITECTURAL · NOT CLAIMED
 
 ## Package
 
 | Component | Status |
 |-----------|--------|
-| `swi_core` package | IMPLEMENTED + TESTED |
+| `swi_core` | IMPLEMENTED + TESTED |
 | `config_loader` | IMPLEMENTED + TESTED |
 | `module_kernel` | IMPLEMENTED + TESTED |
 
@@ -14,23 +14,24 @@ Classification key: IMPLEMENTED · TESTED · KERNEL · ARCHITECTURAL · HISTORIC
 
 | Module | Role | Status |
 |--------|------|--------|
-| 00 Trainer | Pipeline orchestration | IMPLEMENTED + TESTED; halt on M02/M05 kernel failure |
+| 00 Trainer | Pipeline | IMPLEMENTED + TESTED; halt on M02/M05 kernel failure |
 | 01 Node Scanner | Presence scan | IMPLEMENTED + TESTED; not kernel-migrated |
-| 02 Security Probe | Heuristic risk scan | **KERNEL-ENFORCED** (pilot SEALED + CI) |
-| 03 Context Sync | Staleness / turn timing | IMPLEMENTED + TESTED; not kernel-migrated |
-| 04 Encryption Handler | Local crypto helper | IMPLEMENTED + TESTED; not kernel-migrated |
-| 05 Redaction Engine | Structured PII mask | **KERNEL-ENFORCED** (structured patterns only) |
-| 06 Drift Analyzer | Baseline similarity | IMPLEMENTED + TESTED; not kernel-migrated |
-| 07 Memory Validator | Hash-chained memory | IMPLEMENTED + TESTED; not kernel-migrated |
-| 08 Access Auth | Simple auth gate | IMPLEMENTED + TESTED; not kernel-migrated |
+| 02 Security Probe | Heuristic risk | **SEALED** (kernel + CI) |
+| 03 Context Sync | Temporal flags | IMPLEMENTED + TESTED; **INSPECTED** (`docs/MODULE_03_INSPECTION.md`); not kernel-migrated |
+| 04 Encryption | Local crypto | IMPLEMENTED + TESTED; not kernel-migrated |
+| 05 Redaction | Structured PII | **SEALED** (kernel + CI) |
+| 06 Drift | Similarity bands | IMPLEMENTED + TESTED; not kernel-migrated |
+| 07 Memory Validator | Hash chain | IMPLEMENTED + TESTED; not kernel-migrated |
+| 08 Access Auth | Auth gate | IMPLEMENTED + TESTED; not kernel-migrated |
 | 09 Audit Logger | Event log | IMPLEMENTED + TESTED; not kernel-migrated |
 | 10 External Sandbox | Subprocess boundary | IMPLEMENTED + TESTED; not kernel-migrated |
 
 ## Kernel migration
 
-- Module 02: SEALED (pilot + Trainer halt + CI)
-- Module 05: kernel-enforced; Trainer halt on contract failure
-- Remaining modules: not yet migrated
+- Module 02: **SEALED**
+- Module 05: **SEALED**
+- Module 03: inspection complete; migration **not started**
+- Remaining: not migrated
 
 ## Explicitly not claimed
 

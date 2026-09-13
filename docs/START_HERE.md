@@ -40,16 +40,15 @@ python -m pytest -q
 2. `docs/KNOWN_LIMITATIONS.md`
 3. `docs/EVIDENCE_MATRIX.md`
 4. `docs/TESTING_AND_VERIFICATION.md`
-5. `docs/VOLUME_1_PART_2_MODULE_KERNEL_REBUILD_MANUAL.md` — kernel rebuild path
-6. `docs/FOUNDATION_MILESTONE.md` — what “finished foundation” means
-7. `docs/MODULE_05_KERNEL_MIGRATION.md` — Module 05 kernel contract
-   · `docs/MODULE_05_EVIDENCE.md` — Module 05 evidence package
-   · `docs/MODULE_05_SEAL_RECORD.md` — Module 05 seal record (CI status)
-8. `docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md` — path to Seal 5 (11–19 blocked)
+5. `docs/VOLUME_1_PART_2_MODULE_KERNEL_REBUILD_MANUAL.md`
+6. `docs/FOUNDATION_MILESTONE.md`
+7. Module 05: `MODULE_05_KERNEL_MIGRATION.md` · `MODULE_05_EVIDENCE.md` · `MODULE_05_SEAL_RECORD.md` (**SEALED**)
+8. Module 03: `docs/MODULE_03_INSPECTION.md` — **inspected only; not sealed**
+9. `docs/VOLUME_1_PART_3_FOUNDATION_COMPLETION_MANUAL.md` — Seal 5 path (11–19 blocked)
 
 ## Module Kernel status
 
-- **Pilot:** Modules **02** and **05** are wrapped with pre/post checks.
-- **Trainer:** kernel failure on Module 02 or 05 → halt, record reason, re-raise (no silent continue).
-- **Not yet:** Full migration of modules 00–01, 03–04, 06–10 to ModuleKernel.
-- **Future:** Global SWI Kernel registry — only after foundation Seal 5.
+- **02** SEALED · **05** SEALED  
+- **03** inspected (see inspection doc); not kernel-migrated  
+- Others: not yet migrated  
+- Trainer halt on Module 02 / 05 kernel failure only (today)
