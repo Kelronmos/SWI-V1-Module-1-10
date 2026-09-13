@@ -11,19 +11,36 @@ FORBIDDEN_AS_CURRENT = [
     "semantic understanding",
 ]
 SAFE_MARKERS = (
-    "not ", "never ", "rather than", "instead of", "without ",
-    "does not", "do not", "should not", "must not", "cannot ",
-    "can't ", "not claimed", "— not", "- not", "not a ", "not an ",
-    "**not**", "no claim", "not:",
+    "not ",
+    "never ",
+    "rather than",
+    "instead of",
+    "without ",
+    "does not",
+    "do not",
+    "should not",
+    "must not",
+    "cannot ",
+    "can't ",
+    "not claimed",
+    "— not",
+    "- not",
+    "not a ",
+    "not an ",
+    "**not**",
+    "no claim",
+    "not:",
 )
+
 
 def _line_is_safe(line: str) -> bool:
     lower = line.lower().strip()
     if any(m in lower for m in SAFE_MARKERS):
         return True
-    if lower.startswith("|') and ("not claimed" in lower or "—" in lower):
+    if lower.startswith("|") and ("not claimed" in lower or "—" in lower):
         return True
     return False
+
 
 def main() -> None:
     findings = []
@@ -49,6 +66,7 @@ def main() -> None:
             print(f" - {finding}")
         raise SystemExit(1)
     print("Claim-language scan: PASS")
+
 
 if __name__ == "__main__":
     main()
