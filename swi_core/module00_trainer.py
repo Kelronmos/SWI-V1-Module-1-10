@@ -8,23 +8,16 @@ security-scanned (02), checked for context staleness (03), redacted for PII
 written to the hash-chained audit log (09) and memory chain (07). It returns
 a structured `PipelineResult` reporting what happened at each stage.
 
-If Module 02's kernel contract fails (pre/post-check), the pipeline STOPS:
-it does not continue to redaction/drift. The failure is recorded on the
-audit/memory path when those writers remain usable, then re-raised as
+Kernel contract failures on Module 02 or Module 05 STOP the pipeline:
+the failure is recorded best-effort on audit/memory, then re-raised as
 ModuleKernelError so callers cannot treat a contract failure as success.
 
 If `config_path` is given, `security_probe.block_threshold` and
-`context_sync.staleness_seconds` are read from it via `config_loader`. Any
-other setting in `swi_config.yaml` is still not read by this or any other
-module -- only these two are wired. `process()` also accepts an optional
-`timestamp` to pass through to `ContextSync`.
+`context_sync.staleness_seconds` are read from it via `config_loader`.
 
 WHAT THIS DOES NOT DO:
-It does not call out to Modules 11-46. It does not make autonomous decisions
-beyond block/allow logic defined by the modules it calls. It does not claim
-CEK, SAD-DFU, Vector Memory, or Sovereign Mesh. It does not validate that
-config values are in sensible ranges beyond what individual modules enforce
-at construction (e.g. SecurityProbe threshold).
+It does not call Modules 11-46. It does not claim CEK, SAD-DFU, Vector Memory,
+or Sovereign Mesh. It does not expand Module 05 beyond structured PII patterns.
 """
 from __future__ import annotations
 import datetime as _dt
@@ -99,7 +92,13 @@ class Trainer:
             self._record_halt(reason)
             raise ModuleKernelError(reason) from exc
 
-        redaction_result = self.redaction.redact(text)
+        # --- Module 05: kernel-wrapped; contract failure => STOP ---
+        try:
+            redaction_result = self.redaction.redact(text)
+        except ModuleKernelError as exc:
+            reason = f"halted_by_module_05_kernel:{exc}"
+            self._record_halt(reason)
+            raise ModuleKernelError(reason) from exc
 
         drift_result = None
         allowed = True
