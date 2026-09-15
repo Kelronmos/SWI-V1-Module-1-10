@@ -1,54 +1,31 @@
-# SWI Roadmap (locked)
+# SWI Roadmap (dependency-driven)
 
-## Phase A — V1 Foundation (current)
+See also: `docs/UPGRADE_AND_PROGRESSIVE_INTEGRATION_MANUAL.md`
 
-```text
-M06 sealed (evidence recorded)
-  → M07 / M09 decisions + evidence package
-  → M01 / M04 / M08 / M10 boundary review
-  → M00 final integration evidence
-  → adversarial + claim audit
-  → clean clone + exact-tip CI
-  → FOUNDATION_SEAL_5_RECORD.md
-  → binary: PASSED | NOT READY
-```
+## Rule
 
-**Current decision: FOUNDATION SEAL 5 — NOT READY**
+Progress by **validated dependency boundaries**, not module-count symmetry.  
+Supporting repos need their **own** contracts — not a forced Modules 00–10 clone.
 
-## Phase B — Trust Boundary (after or parallel to A, no Seal 5 claim)
+## Phase A — V1 Foundation (current priority)
 
-```text
-CA / cert profile freeze
-  → task envelope + canonical serialization
-  → key lifecycle / rotation / revocation / replay
-  → CRTG implement + negative tests + CI
-```
+M07/M09 evidence · M00 integration · adversarial · claim audit · clean-clone · exact-tip CI · **Seal 5 decision**
 
-Status: **PROPOSED / DESIGN PENDING**
+**Seal 5: NOT READY**
+
+## Phase B — Trust (parallel design, does not block A)
+
+TaskEnvelope · cert profile · trust policy · CRTG · Ed25519 already a **primitive** only
 
 ## Phase C — V1 → V2
 
-```text
-Real V1 Foundation Evidence export
-  → CRTG
-  → M11 against real evidence (not fixtures only)
-  → AdmittedInput
-  → V2 Kernel
-```
-
-Blocked until Seal 5 PASS + contract derived from V1.
+Real evidence (+ later signed envelope) → M11 → AdmittedInput → Kernel
 
 ## Phase D — V2 modules
 
-```text
-M12 → test → freeze → M13 → … → M22
-```
-
-One module at a time. No parallel “finish 12–22.”
+One at a time: M12 → freeze → M13 → …  
+**No bulk M12–22.**
 
 ## Anti-goals
 
-- More modules instead of evidence  
-- Certificates as truth engine  
-- V2 claiming V1 verified what V1 did not  
-- “Almost sealed”
+Calendar-driven “22+” · every repo must be V1 · certificates as truth · seal by percentage alone
