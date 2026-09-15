@@ -1,3 +1,0 @@
-# Moved
-
-Canonical location: **[`docs/MODULE_INTEGRATION_DEPENDENCY_MATRIX.md`](docs/MODULE_INTEGRATION_DEPENDENCY_MATRIX.md)**
