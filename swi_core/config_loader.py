@@ -1,28 +1,17 @@
 """
-Shared Config Loader (Module 00 dependency)
+Shared configuration loader for SWI Modules 00-10.
 
-WHAT THIS ACTUALLY DOES:
-Loads a YAML config file into a plain dict, applies documented defaults
-for any missing keys, and optionally overrides values from environment
-variables using a documented naming convention (SWI_<SECTION>_<KEY>).
-Raises on malformed YAML rather than silently ignoring it.
+Runtime-wired Trainer settings (validated):
+  - security_probe.block_threshold  (finite, 0.0–1.0)
+  - context_sync.staleness_seconds  (finite, >= 0)
+  - drift_analyzer.drift_threshold  (finite, 0.0–1.0)
 
-`Trainer` (module00_trainer.py) calls this to configure the
-SecurityProbe block_threshold and ContextSync staleness_seconds it
-constructs. No other module in this package reads it directly --
-Modules 01/04/08/10 are still configured only via constructor
-arguments when used standalone.
-
-WHAT THIS DOES NOT DO:
-It does not watch the file for changes, does not support multiple
-config files merged together, and does not validate values against
-each module's actual accepted ranges (e.g. it will happily load
-block_threshold: 5.0 even though SecurityProbe expects roughly 0-1;
-range validation is left to the caller for now).
+Other YAML sections may exist as documentation/reference only until wired.
 """
 
 from __future__ import annotations
 
+import math
 import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
@@ -32,6 +21,7 @@ import yaml
 DEFAULTS: Dict[str, Dict[str, Any]] = {
     "security_probe": {"block_threshold": 0.5},
     "context_sync": {"staleness_seconds": 1800.0},
+    "drift_analyzer": {"drift_threshold": 0.35},
     "encryption": {"key_length_bytes": 32},
     "access_auth": {"token_ttl_seconds": 3600.0},
     "sandbox": {
@@ -49,7 +39,6 @@ class ConfigLoadResult:
     env_overrides_applied: List[str] = field(default_factory=list)
 
     def get(self, section: str, key: str) -> Any:
-        """Convenience accessor: get('security_probe', 'block_threshold')."""
         return self.values[section][key]
 
 
@@ -88,13 +77,51 @@ def _apply_env_overrides(values: Dict[str, Dict[str, Any]]) -> List[str]:
     return applied
 
 
+def _require_finite_number(section: str, key: str, value: Any) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ConfigError(
+            f"{section}.{key} must be numeric, got {type(value).__name__}"
+        )
+    fv = float(value)
+    if not math.isfinite(fv):
+        raise ConfigError(f"{section}.{key} must be finite, got {value!r}")
+    return fv
+
+
+def _validate_runtime_values(values: Dict[str, Dict[str, Any]]) -> None:
+    bt = _require_finite_number(
+        "security_probe", "block_threshold", values["security_probe"]["block_threshold"]
+    )
+    if bt < 0.0 or bt > 1.0:
+        raise ConfigError(
+            f"security_probe.block_threshold must be in [0.0, 1.0], got {bt}"
+        )
+    values["security_probe"]["block_threshold"] = bt
+
+    ss = _require_finite_number(
+        "context_sync",
+        "staleness_seconds",
+        values["context_sync"]["staleness_seconds"],
+    )
+    if ss < 0.0:
+        raise ConfigError(
+            f"context_sync.staleness_seconds must be >= 0, got {ss}"
+        )
+    values["context_sync"]["staleness_seconds"] = ss
+
+    dt = _require_finite_number(
+        "drift_analyzer",
+        "drift_threshold",
+        values["drift_analyzer"]["drift_threshold"],
+    )
+    if dt < 0.0 or dt > 1.0:
+        raise ConfigError(
+            f"drift_analyzer.drift_threshold must be in [0.0, 1.0], got {dt}"
+        )
+    values["drift_analyzer"]["drift_threshold"] = dt
+
+
 def load_config(path: Optional[str] = None, apply_env: bool = True) -> ConfigLoadResult:
-    """
-    Load config from `path` if given and it exists, else use defaults only.
-    Missing keys within a present section are filled from DEFAULTS.
-    Unknown sections in the file are ignored (not merged, not erroring) --
-    only sections named in DEFAULTS are recognized.
-    """
     loaded: Dict[str, Any] = {}
     if path is not None and os.path.exists(path):
         with open(path, "r") as f:
@@ -107,6 +134,7 @@ def load_config(path: Optional[str] = None, apply_env: bool = True) -> ConfigLoa
 
     merged = _deep_merge_defaults(loaded)
     applied = _apply_env_overrides(merged) if apply_env else []
+    _validate_runtime_values(merged)
 
     return ConfigLoadResult(
         values=merged,
