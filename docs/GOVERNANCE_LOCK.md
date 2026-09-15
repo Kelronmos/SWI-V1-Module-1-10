@@ -1,46 +1,24 @@
 # SWI Governance Lock
 
-**Date:** 15 September 2026  
-**Status:** CONSTITUTIONAL FOR THIS PHASE
+**Date:** 15 September 2026
 
-## Progression rule
+## Rules
 
-> Advance when the required **dependency boundary** is validated — not because every repository has reached the same module number.
+1. Advance when the required **dependency boundary** is validated — not module-count symmetry.  
+2. A readiness **percentage never overrides** a failed critical dependency or integrity gate.
 
-## Constitutional override rule
-
-> A readiness percentage may authorize investigation or integration preparation, but it can **never** override a failed critical dependency or integrity gate.
-
-Examples:
-
-- Reported 94% but evidence seam broken → **NOT READY**
-- Engine overall 70% but the **exact interface** M12 needs is implemented, tested, documented, reproducible → that **dependency** may be READY
-
-Distinguish **project completeness** from **dependency readiness**.
-
-## Do not change the architecture again this phase
+## Freeze architecture this phase
 
 ```text
-V1 Foundation → Seal 5 path → Foundation Evidence
-        → V2 M11 → V2 Kernel
-              ├── M12+ (one at a time)
-              └── CRTG design (parallel, not bulk-code)
+V1 → Foundation Evidence → M11 → AdmittedInput → Kernel
+         (Track A — evidence)
+TaskEnvelope → CRTG          (Track B — design only)
 ```
-
-Supporting engines (math, Rust, Firefly, adapters) progress on **their contracts** — they do not impersonate V1 Modules 00–10.
 
 ## Priorities
 
-| Priority | Work |
-|----------|------|
-| **1 — V1** | Seal 5 evidence: M07/M09/M00, adversarial, docs/claims, clean-clone, exact-tip CI, Seal 5 record |
-| **2 — V2** | M11 + Kernel: invalid → HALT; valid → AdmittedInput; failed admission never reaches downstream; then **freeze** |
-| **3 — Parallel** | CRTG **design** freeze only (envelope, profile, trust policy, lifecycle, failure codes, adversarial matrix) — no implementation rush |
+1. **Foundation Bridge / Seal 5 evidence** — see `FOUNDATION_BRIDGE_AND_SEAL5_REMEDIATION_MANUAL.md`  
+2. V2 M11 + Kernel isolation  
+3. CRTG **design** freeze — no implementation rush  
 
-## Explicit non-goals this phase
-
-- Bulk M13–M22
-- Redesigning the pipeline to absorb certificates into every module
-- Claiming Seal 5 or CRTG complete without evidence
-
-**Next move: prove the foundation, don't add another layer.**
+**No bulk M13–M22.** Next: prove the foundation, don't add another layer.

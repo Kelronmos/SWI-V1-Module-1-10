@@ -1,35 +1,46 @@
 # V1 Foundation Evidence Producer
 
-**Status:** IMPLEMENTED / TESTED · **not** Foundation Seal 5 · **not** signed (CRTG pending)
-
-## Module
-
-`swi_core/foundation_evidence.py`
+**Status:** IMPLEMENTED / TESTED · unsigned · **not** Seal 5 · **not** CRTG
 
 ## Flow
 
 ```text
-Trainer.process() → PipelineResult
-        → export_foundation_evidence(result)
-        → FoundationEvidenceEnvelope
+Trainer.process() → PipelineResult → export_foundation_evidence()
+  → FoundationEvidenceEnvelope
 ```
 
-Do **not** export after `ModuleKernelError` / HALT.
+Do not export after HALT / `ModuleKernelError`.
 
-## Envelope
+## Integrity-covered fields (SHA-256 canonical JSON)
 
-| Field | Value |
-|-------|--------|
-| foundation_version | `1.0-proposed` |
-| evidence_schema_version | `1.0-proposed` |
-| verification_status | `v1_trainer_pipeline_completed` |
-| source_reference | `Kelronmos/SWI-V1-Module-1-10:Trainer.process` |
-| integrity_reference | SHA-256 canonical JSON (matches V2 M11) |
+| Included in digest |
+|--------------------|
+| payload |
+| foundation_version |
+| evidence_schema_version |
+| evidence_id |
+| source_reference |
 
-## Not claimed
+| **Excluded from digest** |
+|--------------------------|
+| **`created_at`** — export metadata only; changing it must **not** be required to match `integrity_reference` |
 
-Certificates · CRTG · truth · Seal 5 · production certification
+## Status string
 
-## Tests
+`verification_status = v1_trainer_pipeline_completed`
 
-`test/test_foundation_evidence_export.py`
+Means: V1 Trainer pipeline completed and produced this envelope.  
+Does **not** mean: authenticated sender, universal truth, or safe action.
+
+## vs test fixtures (V2)
+
+| Kind | `verification_status` |
+|------|------------------------|
+| Real V1 export | `v1_trainer_pipeline_completed` |
+| Unit-test fixture only | `foundation_verified_test_fixture` |
+
+Hash match proves field integrity, **not** that V1 produced the object. Sender authenticity requires future TaskEnvelope + signature + CRTG.
+
+## Module
+
+`swi_core/foundation_evidence.py` · tests: `test/test_foundation_evidence_export.py`

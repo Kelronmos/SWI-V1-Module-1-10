@@ -4,14 +4,14 @@ V1 Foundation Evidence Producer
 Produces a versioned FoundationEvidenceEnvelope from a successful PipelineResult
 for cross-repository consumption (V2 M11).
 
-This does NOT:
-- sign the envelope (CRTG / certificates = DESIGN PENDING)
-- prove universal truth or safety
-- export private Trainer internals beyond the declared payload fields
-- replace Foundation Seal 5
+Integrity (SHA-256) covers ONLY:
+  payload, foundation_version, evidence_schema_version,
+  evidence_id, source_reference
 
-Integrity algorithm matches the V2 proposed contract (SHA-256 over canonical
-JSON of payload + version fields + evidence_id + source_reference).
+created_at is export metadata and is NOT included in the integrity digest.
+
+This does NOT: sign the envelope (CRTG pending); prove truth/safety;
+authenticate the sender; replace Foundation Seal 5.
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ SOURCE_REFERENCE = "Kelronmos/SWI-V1-Module-1-10:Trainer.process"
 
 @dataclass(frozen=True)
 class FoundationEvidenceEnvelope:
-    """Versioned V1→V2 foundation evidence object (producer side)."""
+    """Versioned V1→V2 foundation evidence (producer side)."""
 
     payload: Any
     foundation_version: str
@@ -41,7 +41,7 @@ class FoundationEvidenceEnvelope:
     integrity_reference: str
     verification_status: str
     source_reference: str
-    created_at: float
+    created_at: float  # metadata only — not part of integrity digest
 
 
 def compute_integrity_reference(
@@ -51,6 +51,7 @@ def compute_integrity_reference(
     evidence_id: str,
     source_reference: str,
 ) -> str:
+    """Digest of integrity-covered fields only (excludes created_at)."""
     material = {
         "payload": payload,
         "foundation_version": foundation_version,
@@ -63,7 +64,6 @@ def compute_integrity_reference(
 
 
 def _payload_from_pipeline(result: PipelineResult) -> dict:
-    """Bounded public payload — not full internal object graphs."""
     security = None
     if result.security is not None:
         sec = result.security
@@ -106,10 +106,6 @@ def export_foundation_evidence(
     evidence_id: Optional[str] = None,
     source_reference: str = SOURCE_REFERENCE,
 ) -> FoundationEvidenceEnvelope:
-    """Export FoundationEvidenceEnvelope from a completed PipelineResult.
-
-    Call only after Trainer.process returns successfully (no ModuleKernelError).
-    """
     if not isinstance(result, PipelineResult):
         raise TypeError(
             f"export requires PipelineResult, got {type(result).__name__}"
@@ -136,5 +132,4 @@ def export_foundation_evidence(
 
 
 def envelope_to_dict(envelope: FoundationEvidenceEnvelope) -> dict:
-    """Serializable form for tests / future signing (no private keys)."""
     return asdict(envelope)
