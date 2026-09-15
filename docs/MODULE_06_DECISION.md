@@ -2,20 +2,10 @@
 
 | Field | Value |
 |-------|--------|
-| **Module** | 06 — Drift Analyzer |
-| **Decision** | **MIGRATE** |
-| **Rebuild** | NO |
-| **Primary boundary** | `DriftAnalyzer.check()` |
-| **Secondary** | `set_baseline()` — review only |
-| **Input** | `str` (production: M05 redacted text) |
-| **Output** | `DriftResult` |
+| **Decision** | MIGRATE → **EXECUTED** (kernel on main) |
+| **Seal** | **PENDING CI** |
+| **Kernel** | `module_06_drift` |
+| **Trainer halt** | `halted_by_module_06_kernel` |
 | **Policy** | `drifted` remains advisory |
-| **Kernel** | Required when authorized |
-| **Trainer halt** | On `ModuleKernelError` only |
-| **Config wiring** | Deferred |
-| **Algorithm** | Preserve |
-| **Implementation** | **NOT EXECUTED** |
-| **Procedure** | `docs/MODULE_06_MIGRATION.md` |
-| **Seal** | **BLOCKED** |
 
-Authorize with: **kernel Module 06**
+See `docs/MODULE_06_SEAL_RECORD.md`.
