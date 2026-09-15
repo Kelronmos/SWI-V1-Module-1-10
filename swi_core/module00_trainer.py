@@ -8,11 +8,13 @@ checked for context staleness (03), security-scanned (02), redacted for PII
 written to the hash-chained audit log (09) and memory chain (07). It returns
 a structured `PipelineResult` reporting what happened at each stage.
 
-Kernel contract failures on Module 03, Module 02, or Module 05 STOP the pipeline:
-the failure is recorded best-effort on audit/memory, then re-raised as
-ModuleKernelError so callers cannot treat a contract failure as success.
+Kernel contract failures on Module 03, Module 02, Module 05, or Module 06 STOP
+the pipeline: the failure is recorded best-effort on audit/memory, then
+re-raised as ModuleKernelError so callers cannot treat a contract failure as
+success.
 
-stale / out_of_order on SyncResult remain flags — they do not by themselves halt.
+stale / out_of_order on SyncResult and drifted on DriftResult remain flags —
+they do not by themselves halt.
 
 If `config_path` is given, `security_probe.block_threshold` and
 `context_sync.staleness_seconds` are read from it via `config_loader`.
@@ -86,7 +88,6 @@ class Trainer:
         self._turn_counter += 1
 
         # --- Module 03: kernel-wrapped; contract failure => STOP ---
-        # Note: stale/out_of_order flags do not raise; only type/shape contract does.
         try:
             sync_result = self.sync.record_turn(
                 self._turn_counter, timestamp=timestamp
@@ -120,7 +121,14 @@ class Trainer:
             allowed = False
             reason = f"blocked_by_security_probe:{security_result.triggered}"
         else:
-            drift_result = self.drift.check(redaction_result.redacted_text)
+            # --- Module 06: kernel-wrapped; contract failure => STOP ---
+            # Note: drifted=True is advisory and does not raise.
+            try:
+                drift_result = self.drift.check(redaction_result.redacted_text)
+            except ModuleKernelError as exc:
+                reason = f"halted_by_module_06_kernel:{exc}"
+                self._record_halt(reason)
+                raise ModuleKernelError(reason) from exc
 
         self.memory.append(
             {
