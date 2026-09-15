@@ -1,27 +1,14 @@
 """
 Module 00: The Trainer (The Master Orchestrator)
 
-WHAT THIS ACTUALLY DOES:
-Wires Modules 01-09 into a single request pipeline: an incoming message is
-checked for context staleness (03), security-scanned (02), redacted for PII
-(05), checked for output drift against a baseline (06), and every step is
-written to the hash-chained audit log (09) and memory chain (07). It returns
-a structured `PipelineResult` reporting what happened at each stage.
+Kernel contract failures on Module 03, 02, 05, or 06 STOP the pipeline.
+M07/M09 normal-path integrity/persistence failures also STOP (ModuleKernelError).
+Halt recording remains best-effort and never converts failure into success.
 
-Kernel contract failures on Module 03, Module 02, Module 05, or Module 06 STOP
-the pipeline: the failure is recorded best-effort on audit/memory, then
-re-raised as ModuleKernelError so callers cannot treat a contract failure as
-success.
+stale / out_of_order / drifted remain advisory flags.
 
-stale / out_of_order on SyncResult and drifted on DriftResult remain flags —
-they do not by themselves halt.
-
-If `config_path` is given, `security_probe.block_threshold` and
-`context_sync.staleness_seconds` are read from it via `config_loader`.
-
-WHAT THIS DOES NOT DO:
-It does not call Modules 11-46. It does not claim CEK, SAD-DFU, Vector Memory,
-or Sovereign Mesh. It does not expand Module 05 beyond structured PII patterns.
+Runtime config: security_probe.block_threshold, context_sync.staleness_seconds,
+drift_analyzer.drift_threshold.
 """
 from __future__ import annotations
 import datetime as _dt
@@ -60,13 +47,14 @@ class Trainer:
             staleness_seconds=self.config.get("context_sync", "staleness_seconds")
         )
         self.redaction = RedactionEngine()
-        self.drift = DriftAnalyzer()
+        self.drift = DriftAnalyzer(
+            drift_threshold=self.config.get("drift_analyzer", "drift_threshold")
+        )
         self.memory = MemoryValidator()
         self.audit = AuditLogger(audit_log_path)
         self._turn_counter = 0
 
     def _record_halt(self, reason: str) -> None:
-        """Best-effort evidence of a controlled stop. Must not hide the halt."""
         payload = {
             "turn": self._turn_counter,
             "allowed": False,
@@ -87,7 +75,6 @@ class Trainer:
     ) -> PipelineResult:
         self._turn_counter += 1
 
-        # --- Module 03: kernel-wrapped; contract failure => STOP ---
         try:
             sync_result = self.sync.record_turn(
                 self._turn_counter, timestamp=timestamp
@@ -97,7 +84,6 @@ class Trainer:
             self._record_halt(reason)
             raise ModuleKernelError(reason) from exc
 
-        # --- Module 02: kernel-wrapped; contract failure => STOP ---
         try:
             security_result = self.security.scan(text)
         except ModuleKernelError as exc:
@@ -105,7 +91,6 @@ class Trainer:
             self._record_halt(reason)
             raise ModuleKernelError(reason) from exc
 
-        # --- Module 05: kernel-wrapped; contract failure => STOP ---
         try:
             redaction_result = self.redaction.redact(text)
         except ModuleKernelError as exc:
@@ -121,8 +106,6 @@ class Trainer:
             allowed = False
             reason = f"blocked_by_security_probe:{security_result.triggered}"
         else:
-            # --- Module 06: kernel-wrapped; contract failure => STOP ---
-            # Note: drifted=True is advisory and does not raise.
             try:
                 drift_result = self.drift.check(redaction_result.redacted_text)
             except ModuleKernelError as exc:
@@ -130,23 +113,62 @@ class Trainer:
                 self._record_halt(reason)
                 raise ModuleKernelError(reason) from exc
 
-        self.memory.append(
-            {
-                "turn": self._turn_counter,
-                "allowed": allowed,
-                "reason": reason,
-                "risk_score": security_result.risk_score,
-            }
-        )
-        self.audit.log_event(
-            {
-                "turn": self._turn_counter,
-                "allowed": allowed,
-                "reason": reason,
-                "security_triggered": security_result.triggered,
-                "redaction_categories": [m.category for m in redaction_result.matches],
-            }
-        )
+        mem_check = self.memory.validate_chain()
+        if not mem_check.valid:
+            reason = f"halted_by_module_07_integrity:broken_at_{mem_check.broken_at_index}"
+            self._record_halt(reason)
+            raise ModuleKernelError(reason)
+
+        memory_payload = {
+            "turn": self._turn_counter,
+            "allowed": allowed,
+            "reason": reason,
+            "risk_score": security_result.risk_score,
+        }
+        try:
+            self.memory.append(memory_payload)
+        except Exception as exc:
+            reason = f"halted_by_module_07_persistence:{exc}"
+            self._record_halt(reason)
+            raise ModuleKernelError(reason) from exc
+
+        mem_after = self.memory.validate_chain()
+        if not mem_after.valid:
+            reason = (
+                f"halted_by_module_07_integrity:post_write_broken_at_{mem_after.broken_at_index}"
+            )
+            self._record_halt(reason)
+            raise ModuleKernelError(reason)
+
+        audit_check = self.audit.verify_log()
+        if not audit_check.valid:
+            reason = (
+                f"halted_by_module_09_integrity:broken_at_line_{audit_check.broken_at_line}"
+            )
+            self._record_halt(reason)
+            raise ModuleKernelError(reason)
+
+        audit_event = {
+            "turn": self._turn_counter,
+            "allowed": allowed,
+            "reason": reason,
+            "security_triggered": security_result.triggered,
+            "redaction_categories": [m.category for m in redaction_result.matches],
+        }
+        try:
+            self.audit.log_event(audit_event)
+        except Exception as exc:
+            reason = f"halted_by_module_09_persistence:{exc}"
+            self._record_halt(reason)
+            raise ModuleKernelError(reason) from exc
+
+        audit_after = self.audit.verify_log()
+        if not audit_after.valid:
+            reason = (
+                f"halted_by_module_09_integrity:post_write_broken_at_line_{audit_after.broken_at_line}"
+            )
+            self._record_halt(reason)
+            raise ModuleKernelError(reason)
 
         return PipelineResult(
             allowed=allowed,
