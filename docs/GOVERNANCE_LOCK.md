@@ -4,21 +4,25 @@
 
 ## Rules
 
-1. Advance when the required **dependency boundary** is validated — not module-count symmetry.  
-2. A readiness **percentage never overrides** a failed critical dependency or integrity gate.
+1. Advance by validated **dependency boundaries**, not module-count symmetry.  
+2. Readiness **% never overrides** a failed critical gate.  
+3. V1 produces a versioned evidence contract; V2 consumes **serialized** evidence — **not** `import` of V1.
 
-## Freeze architecture this phase
+## Status
+
+| Item | State |
+|------|--------|
+| Cross-repo travel (local boundary) | **PROVEN** |
+| Live two-checkout CI | **PENDING** |
+| Foundation Seal 5 | **NOT READY** |
+| CRTG | DESIGN PENDING |
+| Bulk M13–22 | **Not authorized** |
+
+## Architecture freeze
 
 ```text
-V1 → Foundation Evidence → M11 → AdmittedInput → Kernel
-         (Track A — evidence)
-TaskEnvelope → CRTG          (Track B — design only)
+V1 → Foundation Evidence → serialize → M11 → AdmittedInput → Kernel
+TaskEnvelope / CRTG = design track only
 ```
 
-## Priorities
-
-1. **Foundation Bridge / Seal 5 evidence** — see `FOUNDATION_BRIDGE_AND_SEAL5_REMEDIATION_MANUAL.md`  
-2. V2 M11 + Kernel isolation  
-3. CRTG **design** freeze — no implementation rush  
-
-**No bulk M13–M22.** Next: prove the foundation, don't add another layer.
+Next: two-checkout proof + Seal 5 evidence — **not** another architecture layer.

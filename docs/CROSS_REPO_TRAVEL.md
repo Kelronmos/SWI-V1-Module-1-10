@@ -1,49 +1,54 @@
 # Cross-Repository Travel Boundary
 
-**Status:** IMPLEMENTED (envelope + JSON-capable fields) · REAL two-repo CI proof still open  
 **Date:** 15 September 2026
 
-## Correct path (not M10 → M11)
+## Status (locked)
+
+| Gate | State |
+|------|--------|
+| **CROSS-REPO TRAVEL — BOUNDARY PROVEN LOCALLY** | YES (`f7be9d1`+) |
+| Live two-checkout reproducibility | **PENDING** |
+| CRTG | DESIGN PENDING |
+| Foundation Seal 5 | **NOT READY** |
+
+## Architecture (do not redesign this seam)
 
 ```text
 V1 Trainer (M03→M02→M05→M06→M07/M09)
-        → PipelineResult
-        → export_foundation_evidence()
-        → FoundationEvidenceEnvelope
-        → SERIALIZE (JSON / transfer)
-        → V2 parse
-        → M11 Admission
-        → AdmittedInput
-        → V2 Kernel
-        → M12+
+  → PipelineResult
+  → export_foundation_evidence()
+  → FoundationEvidenceEnvelope
+  → SERIALIZE (JSON)
+  → transfer
+  → V2 M11 → AdmittedInput → Kernel → M12+
 ```
 
-**M10 External Sandbox is standalone.** It is **not** the V1 handoff point. Do not modify M10 to emit pipeline results for V2.
+**M10 is not the handoff.** Do not force M10 to emit pipeline results for V2.
 
-## Zero-base V2
+## Independence rule
 
-V2 must **not** require:
+> V1 produces a **versioned evidence contract**. V2 consumes the **serialized contract** independently of the V1 implementation.
 
-- import of the V1 Python package
-- shared process / singleton / ambient Trainer state
-- live V1 objects in memory
+Do **not** say “V2 imports V1.” No shared process, singleton, or ambient Trainer state.
 
-V2 consumes a **serialized contract**, not V1’s runtime classes.
+## Two evidence levels
 
-## Evidence vs derived state
+**V1 (local):** Trainer → exporter → JSON → integrity survives / tamper breaks digest  
+**V2 (local):** V1-shaped serialized evidence → M11 accept/reject → no downstream on rejection
 
-V2 must **not** silently mutate the V1 envelope or rewrite its provenance.  
-V2 **may** create **new** derived records (admission result, trust result, task state). Those must remain distinguishable from original V1 evidence.
+**Still open:** one CI (or documented script) with **two clean checkouts** so a real V1 build produces bytes a separate V2 tree admits.
 
-Prefer: **admitted evidence** + **derived V2 state** — not “immutable claims” as the only vocabulary.
+## Provenance language
+
+Do not silently mutate the V1 envelope. V2 may create **derived** state (admission, trust, task) that stays **distinguishable** from original V1 evidence. Prefer “admitted evidence” + “derived V2 state.”
 
 ## Integrity
 
-Covered: `payload`, `foundation_version`, `evidence_schema_version`, `evidence_id`, `source_reference`  
+Covered: payload, foundation_version, evidence_schema_version, evidence_id, source_reference  
 **Not covered:** `created_at` (metadata only)
 
-Integrity ≠ authenticated sender (CRTG / signatures still DESIGN PENDING).
+## Next work
 
-## Next proof
-
-Real: Trainer → export → serialize → V2 M11 → AdmittedInput → Kernel isolation on reject.
+1. Live two-checkout travel proof  
+2. Remaining V1 Seal 5 evidence path  
+3. CRTG design freeze only — no implementation rush  
