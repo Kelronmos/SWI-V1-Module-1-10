@@ -1,31 +1,50 @@
 # SWI Roadmap (dependency-driven)
 
-See also: `docs/UPGRADE_AND_PROGRESSIVE_INTEGRATION_MANUAL.md`
+See: `docs/UPGRADE_AND_PROGRESSIVE_INTEGRATION_MANUAL.md`
 
-## Rule
+## Constitutional rule
 
-Progress by **validated dependency boundaries**, not module-count symmetry.  
-Supporting repos need their **own** contracts — not a forced Modules 00–10 clone.
+> A readiness percentage may authorize investigation or integration preparation, but it can **never** override a failed critical dependency or integrity gate.
 
-## Phase A — V1 Foundation (current priority)
+Example: reported 94% with a broken evidence seam → **NOT READY**.  
+Example: engine 70% overall, but the exact interface M12 needs is implemented, tested, documented, and verifiable → that **dependency** may be READY.
 
-M07/M09 evidence · M00 integration · adversarial · claim audit · clean-clone · exact-tip CI · **Seal 5 decision**
+Advance when the **required dependency boundary** is validated — not because every repository reached the same module number.
 
-**Seal 5: NOT READY**
+## Do not change the architecture again
 
-## Phase B — Trust (parallel design, does not block A)
+Current direction is locked:
 
-TaskEnvelope · cert profile · trust policy · CRTG · Ed25519 already a **primitive** only
+```text
+V1 Foundation → Foundation Evidence → V2 M11 → V2 Kernel
+                      ├─ M12+ (one at a time)
+                      └─ CRTG design (parallel, not bulk-coded)
+```
 
-## Phase C — V1 → V2
+Math / Rust / Firefly / adapters: **their** contracts only — they do not impersonate V1.
 
-Real evidence (+ later signed envelope) → M11 → AdmittedInput → Kernel
+## Priority 1 — V1 Foundation Seal path
 
-## Phase D — V2 modules
+1. M06 CI evidence (recorded where available)  
+2. M07 / M09 boundaries  
+3. M00 integration  
+4. Adversarial / failure testing  
+5. Documentation / claim reconciliation  
+6. Clean-clone verification  
+7. Exact-tip CI evidence  
+8. `FOUNDATION_SEAL_5_RECORD.md` + binary decision  
 
-One at a time: M12 → freeze → M13 → …  
-**No bulk M12–22.**
+**Foundation Seal 5: NOT READY**
+
+## Priority 2 — V2 M11 + Kernel (downstream)
+
+Invalid evidence → HALT · valid → AdmittedInput · failed admission never reaches downstream · then freeze.
+
+## Priority 3 — CRTG design only
+
+Freeze TaskEnvelope, canonical bytes, cert profile, trust policy, key lifecycle, revocation, replay/expiry, failure codes, adversarial tests.  
+**No implementation rush.**
 
 ## Anti-goals
 
-Calendar-driven “22+” · every repo must be V1 · certificates as truth · seal by percentage alone
+Bulk M13–M22 · every repo must implement 00–10 · percentage overrides integrity · certificates as truth
