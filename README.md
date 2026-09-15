@@ -2,7 +2,7 @@
 
 Structured Workflow Intelligence foundation modules.
 
-**Start here:** [`docs/START_HERE.md`](docs/START_HERE.md) · [`docs/00_READ_ME_FIRST.md`](docs/00_READ_ME_FIRST.md)
+**Start:** [`docs/START_HERE.md`](docs/START_HERE.md) · **Governance:** [`docs/GOVERNANCE_LOCK.md`](docs/GOVERNANCE_LOCK.md)
 
 ## Verify
 
@@ -13,50 +13,31 @@ python -m pytest -q
 ./scripts/verify.sh
 ```
 
-Package: `swi_core` (Modules 00–10, `config_loader`, `module_kernel`).
-
-## Production pipeline
+## Pipeline
 
 ```text
 M03 → M02 → M05 → M06 → M07 / M09 → PipelineResult
+        → export_foundation_evidence() → FoundationEvidenceEnvelope
 ```
 
-| Outcome | Meaning |
-|---------|---------|
-| Kernel contract failure | **HALT** (`ModuleKernelError`) |
-| M02 `allowed=False` | Policy/block result — not “system is secure” |
-| M03 stale / M06 drifted | **Advisory** flags — not automatic HALT |
+Kernel contract failure → **HALT**. M02 block / M03 stale / M06 drifted remain policy or **advisory** as documented.
 
-Standalone (not in that linear path): M01, M04, M08, M10.
+## Status (honest)
 
-## Module status
+| Item | State |
+|------|--------|
+| M02 / M03 / M05 / M06 | **SEALED** (bounded contracts) |
+| M07 / M09 | Trainer integrity · not kernel-sealed |
+| Foundation evidence export | IMPLEMENTED / TESTED · **unsigned** |
+| Ed25519 helper | Primitive only · **not CRTG** |
+| **Foundation Seal 5** | **NOT READY** |
+| CRTG | PROPOSED / design track |
 
-| Module | Status |
-|--------|--------|
-| **02** Security Probe | **SEALED** — heuristic; contract fail → HALT; detection not complete |
-| **03** Context Sync | **SEALED** — temporal; contract fail → HALT |
-| **05** Redaction | **SEALED** — structured PII only |
-| **06** Drift | **SEALED** — lexical cosine; `drifted` advisory; CI evidence on `8a44c52` (run 34968919030) |
-| **07** Memory | TRAINER integrity/persistence · not kernel-sealed |
-| **09** Audit | TRAINER integrity/persistence · not kernel-sealed |
-| **00** Trainer | Fail-closed on kernel + integrity paths · **not foundation-sealed** |
-| **01 / 04 / 08 / 10** | STANDALONE |
+## Progression rule
 
-## Foundation Seal 5
-
-**NOT READY**
-
-See `docs/FOUNDATION_SEAL_5_COMPLETION_MANUAL.md`, `docs/FOUNDATION_REPAIR_AND_V1_V2_ADMISSION_MANUAL.md`, `docs/ROADMAP.md`.
-
-## Cross-repository trust (certificates)
-
-**PROPOSED / DESIGN PENDING** — `docs/CROSS_REPOSITORY_TRUST_SPECIFICATION.md`  
-Not implemented. Not injected into M02–M06.
-
-## Scope of claims
-
-Do **not** infer: AGI, universal AI safety, complete cybersecurity, complete PII removal, CEK, Modules 11–46 as implemented, tamper-proof storage, or production certification from green tests alone.
+Advance when the **dependency boundary** is validated — not by matching another repo’s module count.  
+Readiness % never overrides a failed critical gate.
 
 «Do not claim what the code cannot demonstrate.»
 
-Status: `docs/IMPLEMENTATION_STATUS.md` · `docs/EVIDENCE_MATRIX.md` · `docs/KNOWN_LIMITATIONS.md`
+Next: **prove the foundation** (Seal 5 path), not another architecture layer.
