@@ -27,7 +27,7 @@ def test_memory_append_failure_fails_closed(tmp_path, monkeypatch):
     monkeypatch.setattr(trainer.memory, "append", boom)
     with pytest.raises(ModuleKernelError) as exc:
         trainer.process("hello")
-    assert "halted_by_module_07_persistence" in str(exc.value)
+    assert "halted_by_module_07_integrity" in str(exc.value)
 
 
 def test_corrupt_audit_chain_fails_closed(tmp_path):
