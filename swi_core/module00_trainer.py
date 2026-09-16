@@ -2,13 +2,19 @@
 Module 00: The Trainer (The Master Orchestrator)
 
 Kernel contract failures on Module 03, 02, 05, or 06 STOP the pipeline.
-M07/M09 normal-path integrity/persistence failures also STOP (ModuleKernelError).
+M07 normal-path integrity failures and M09 integrity/persistence failures
+also STOP (ModuleKernelError).
 Halt recording remains best-effort and never converts failure into success.
 
 stale / out_of_order / drifted remain advisory flags.
 
 Runtime config: security_probe.block_threshold, context_sync.staleness_seconds,
 drift_analyzer.drift_threshold.
+
+Terminology note:
+- M07 is an in-process, in-memory hash-chain (integrity only).
+- M09 is the on-disk audit log (persistence + integrity).
+Do not describe an M07 failure as a "persistence" failure.
 """
 from __future__ import annotations
 import datetime as _dt
@@ -128,7 +134,9 @@ class Trainer:
         try:
             self.memory.append(memory_payload)
         except Exception as exc:
-            reason = f"halted_by_module_07_persistence:{exc}"
+            # M07 is in-memory only; an append failure is still an integrity/chain
+            # path failure, not disk persistence (that language is reserved for M09).
+            reason = f"halted_by_module_07_integrity:{exc}"
             self._record_halt(reason)
             raise ModuleKernelError(reason) from exc
 

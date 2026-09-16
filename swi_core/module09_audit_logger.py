@@ -13,6 +13,10 @@ filesystem write access and the ability to regenerate hashes can still
 rewrite the entire file. True immutability requires write-once storage,
 remote mirroring, or a separate service outside the agent's own write
 access -- none of which this module provides on its own.
+
+Fail-closed: malformed JSON or missing required fields on a line yield
+valid=False with broken_at_line set; JSONDecodeError / KeyError must not
+escape verify_log().
 """
 from __future__ import annotations
 import hashlib
@@ -53,7 +57,12 @@ class AuditLogger:
                 line = line.strip()
                 if not line:
                     continue
-                last = json.loads(line)["hash"]
+                try:
+                    last = json.loads(line)["hash"]
+                except Exception:
+                    # Malformed prior line: treat as genesis so a subsequent
+                    # write does not crash; verify_log will still report the break.
+                    return GENESIS_HASH
         return last
 
     def log_event(self, event: Any) -> str:
@@ -74,9 +83,17 @@ class AuditLogger:
                 if not line:
                     continue
                 count += 1
-                record = json.loads(line)
-                expected = _line_hash(record["prev_hash"], record["timestamp"], record["event"])
-                if record["prev_hash"] != prev_hash or record["hash"] != expected:
+                try:
+                    record = json.loads(line)
+                    if not isinstance(record, dict):
+                        return VerifyLogResult(valid=False, broken_at_line=count, lines_checked=count)
+                    required = ("prev_hash", "timestamp", "event", "hash")
+                    if any(k not in record for k in required):
+                        return VerifyLogResult(valid=False, broken_at_line=count, lines_checked=count)
+                    expected = _line_hash(record["prev_hash"], record["timestamp"], record["event"])
+                    if record["prev_hash"] != prev_hash or record["hash"] != expected:
+                        return VerifyLogResult(valid=False, broken_at_line=count, lines_checked=count)
+                    prev_hash = record["hash"]
+                except Exception:
                     return VerifyLogResult(valid=False, broken_at_line=count, lines_checked=count)
-                prev_hash = record["hash"]
         return VerifyLogResult(valid=True, lines_checked=count)

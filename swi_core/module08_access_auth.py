@@ -12,6 +12,9 @@ This is a token issuer/verifier, not a full identity provider -- it does
 not do password storage, MFA, or biometric verification (the manual's
 "Biometric Handshake" is Module 34, out of scope for this volume). Secret
 key custody is the caller's responsibility.
+
+Fail-closed: any parse/decode/structure failure yields valid=False with
+reason="malformed_token". Unexpected exceptions must not escape.
 """
 from __future__ import annotations
 import base64
@@ -20,13 +23,14 @@ import hmac
 import json
 import time
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
 class VerifyResult:
     valid: bool
-    subject: str = None
-    reason: str = None
+    subject: Optional[str] = None
+    reason: Optional[str] = None
 
 
 class AccessAuth:
@@ -46,8 +50,12 @@ class AccessAuth:
         return token.decode("ascii")
 
     def verify_token(self, token: str) -> VerifyResult:
+        """Verify token. Always returns VerifyResult; never raises on bad input."""
         try:
-            payload_b64, sig_b64 = token.encode("ascii").split(b".")
+            parts = token.encode("ascii").split(b".")
+            if len(parts) != 2:
+                return VerifyResult(valid=False, reason="malformed_token")
+            payload_b64, sig_b64 = parts
             payload_bytes = base64.urlsafe_b64decode(payload_b64)
             signature = base64.urlsafe_b64decode(sig_b64)
         except Exception:
@@ -57,8 +65,20 @@ class AccessAuth:
         if not hmac.compare_digest(signature, expected_sig):
             return VerifyResult(valid=False, reason="bad_signature")
 
-        payload = json.loads(payload_bytes)
-        if time.time() > payload["exp"]:
-            return VerifyResult(valid=False, subject=payload["sub"], reason="expired")
+        try:
+            payload = json.loads(payload_bytes)
+            if not isinstance(payload, dict):
+                return VerifyResult(valid=False, reason="malformed_token")
+            if "exp" not in payload or "sub" not in payload:
+                return VerifyResult(valid=False, reason="malformed_token")
+            exp = payload["exp"]
+            sub = payload["sub"]
+            if not isinstance(exp, (int, float)):
+                return VerifyResult(valid=False, reason="malformed_token")
+        except Exception:
+            return VerifyResult(valid=False, reason="malformed_token")
 
-        return VerifyResult(valid=True, subject=payload["sub"])
+        if time.time() > exp:
+            return VerifyResult(valid=False, subject=str(sub), reason="expired")
+
+        return VerifyResult(valid=True, subject=str(sub))
