@@ -23,6 +23,24 @@
 - Bag-of-words cosine only; empty baseline → similarity 0 / often drifted.
 - Advisory only; threshold not config-wired.
 
+## Module 07 — Memory Validator (in-process only)
+
+- The hash-chained "scar" log is a **plain in-memory Python list** held on the
+  `MemoryValidator` instance. Nothing is written to disk, a database, or any
+  durable store.
+- A fresh instance (process restart, or Trainer re-instantiation) starts with
+  an empty chain and reports that empty chain as `valid=True`. Cross-process
+  or cross-restart tampering / data loss is therefore invisible to
+  `validate_chain()`.
+- In-process tampering *is* detected (see `tamper_for_testing()` and the
+  existing tests); that is the actual scope of the current implementation.
+- Docstring previously used "storage medium" language that implied a durable
+  store existed. That framing has been corrected; this limitation is now
+  explicit. Contrast with Module 09, which does persist to an append-only file.
+- Decision still open: keep as pure in-process structure, or later add
+  disk-backed persistence mirroring Module 09. Until then, do not claim
+  durability.
+
 ## General
 
 - No CEK, SAD-DFU, Vector Memory, Alita, Sovereign Mesh as implemented systems.

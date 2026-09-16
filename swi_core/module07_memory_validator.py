@@ -8,15 +8,27 @@ Each record's hash includes the previous record's hash, so altering or
 deleting any past record breaks the chain from that point forward, and
 `validate_chain()` will detect exactly where it broke. This is the same
 core idea as a blockchain's block-linking, minus consensus or distribution
--- it is a local tamper-evidence log, not a distributed ledger.
+-- it is a local, in-process tamper-evidence structure, not a distributed
+ledger and not a durable log.
 
 WHAT THIS DOES NOT DO:
-It does not prevent someone with write access to the storage medium from
-regenerating the entire chain from scratch (tamper-evidence, not
-tamper-proofness). Genuine tamper-*proofness* requires the chain to be
-anchored somewhere the operator cannot rewrite (e.g. append-only remote
-storage, a separate audit service, or actual distributed consensus) -- that
-anchoring is not implemented here and any claim that it is would be false.
+- It does **not** persist the chain to disk, a database, or any other durable
+  store. The entire chain lives only in the MemoryValidator instance's
+  memory (`self._chain: List[MemoryRecord]`). A new instance (e.g. after
+  process restart or Trainer re-instantiation) starts with an empty chain
+  and reports that empty chain as valid.
+- It therefore cannot detect tampering or data loss that occurs *between*
+  process lifetimes; it only detects in-process mutation of the live list
+  (as demonstrated by `tamper_for_testing()` and the test suite).
+- It does not provide tamper-proofness. Even if persistence were added,
+  genuine tamper-proofness would still require the chain to be anchored
+  somewhere the operator cannot rewrite (append-only remote storage, a
+  separate audit service, or distributed consensus). That anchoring is not
+  implemented here.
+
+Contrast with Module 09 (Audit Logger), which *does* write an append-only
+file on disk and verifies against that file. Module 07 does not currently
+do the same; any claim that it does would be false.
 """
 from __future__ import annotations
 import hashlib
@@ -53,7 +65,11 @@ class ValidationResult:
 
 
 class MemoryValidator:
-    """Module 07: hash-chained append-only memory log."""
+    """Module 07: in-process hash-chained append-only memory log.
+
+    Scope: detects in-process tampering of the live chain only.
+    Does not persist; does not survive process restart.
+    """
 
     GENESIS_HASH = "0" * 64
 
@@ -80,7 +96,9 @@ class MemoryValidator:
     def tamper_for_testing(self, index: int, new_payload: Any) -> None:
         """Test-only helper: mutates a past record's payload WITHOUT
         recomputing its hash, simulating an attacker editing stored data
-        directly. Used to prove validate_chain() detects the tamper."""
+        directly. Used to prove validate_chain() detects the tamper.
+        Only meaningful while the same process holds the chain.
+        """
         self._chain[index].payload = new_payload
 
     @property
