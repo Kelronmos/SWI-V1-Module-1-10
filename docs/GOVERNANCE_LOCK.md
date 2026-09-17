@@ -16,23 +16,21 @@ Supersedes the 15 September 2026 status row that listed live two-checkout CI as 
 | Item | State |
 |------|--------|
 | Cross-repo travel (local boundary) | **PROVEN** |
-| Live two-checkout CI | **DONE** — V2 workflow run **#50** / ID `35253244912` (2026-09-17); V1 producer tip at seal time `e0c6a521d7965c46c18464edc5dc6fbd8f9e254c` |
-| Evidence authority for that run | See V2 `docs/M11_SEAL_RECORD.md` (not this file alone) |
-| Foundation Seal 5 | **NOT READY** — envelope export still **unsigned** at source; primary architectural debt |
-| CRTG | DESIGN PENDING (minimal v0 only when Seal 5 path exists) |
-| Bulk M12–22 / M13–22 | **Not authorized** from V1 governance |
+| Live two-checkout CI | **DONE** — V2 run **#50** / ID `35253244912`; V1 tip at seal time `e0c6a521…` |
+| Evidence authority for that run | V2 `docs/M11_SEAL_RECORD.md` |
+| Foundation Seal 5 | **PATH OPEN / NOT SEALED** — optional sign/verify v0 wired; pin + CI verify pending (`docs/FOUNDATION_SEAL_5_STATUS.md`) |
+| CRTG | DESIGN PENDING |
+| Bulk M12–22 | **Not authorized** from V1 governance |
 
 ## Architecture freeze
 
 ```text
 V1 → Foundation Evidence → serialize → M11 → AdmittedInput → Kernel
-TaskEnvelope / CRTG = design track only until Seal 5
+TaskEnvelope / CRTG = design track only until Seal 5 complete
 ```
 
-## Next (dependency order)
+## Next
 
-1. **Foundation Seal 5** — sign `FoundationEvidenceEnvelope` at export; pin verification public key in-repo; CI verifies signature.
-2. Keep M12+ blocked until V2 independent evidence rediscovery + controlled module manuals.
-3. Do **not** open network/Stage-2 Node Access Boundary before Seal 5.
-
-Stale claim removed: “Live two-checkout CI: PENDING” is no longer accurate as of run `35253244912`.
+1. CI verifies Seal 5 signatures; pin public key when ready.
+2. M12+ remains governed by V2 controlled sequence (not this lock alone).
+3. Do **not** open NAB Stage 2 before Seal 5 is complete.
