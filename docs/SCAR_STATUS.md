@@ -104,25 +104,19 @@ Integrity root detects silent mutation of **active content hashes in this store*
 
 ---
 
-## 6. Seam for future Firefly work (design only)
+## 6. SCAR → Firefly seam (design frozen)
 
-Before any Firefly implementation, define explicitly:
+The consume/refuse boundary is frozen on V2:
 
-**What Firefly may consume from SCAR**
+**Canonical contract:**  
+`Kelronmos/SWI-V2-Modules-11-22` → `docs/SCAR_FIREFLY_ADAPTER_CONTRACT.md`  
+**Status:** DESIGN / PROPOSED — not implemented.
 
-- Scar identity, class, status, content hash, integrity-root snapshot at a point in time  
-- Explicit provenance fields (created_by, source_event_id, timestamps)  
-- Status labels (ACTIVE / PRUNED / SUSPECT) without upgrading them  
+**Firefly may consume (when an adapter exists):** identity, class, status, content hash, integrity-root snapshot, provenance fields — without upgrading status labels.
 
-**What Firefly must refuse to infer from SCAR**
+**Firefly must refuse to infer:** factual truth, global tamper-proofing, M11 admission, replay success, or that SCAR supersedes any other layer.
 
-- That a Scar content is factually true  
-- That the store is globally tamper-proof  
-- That M11 admission is satisfied  
-- That replay has succeeded  
-- That SCAR equals or supersedes any other memory layer  
-
-That seam is the next design audit — **not** an invitation to write Firefly code yet.
+This is **not** authorization to write Firefly code until the implementation gate in that contract is satisfied.
 
 ---
 
@@ -132,7 +126,9 @@ That seam is the next design audit — **not** an invitation to write Firefly co
 - `docs/IMPLEMENTATION_STATUS.md`  
 - `swi_core/scar.py` (module docstring)  
 - `swi_core/module07_memory_validator.py`  
-- V2: `docs/M11_SEAL_RECORD.md`, trust/sequence manuals (Firefly deferred; no M11 bypass)  
+- V2: `docs/SCAR_FIREFLY_ADAPTER_CONTRACT.md`  
+- V2: `docs/V2_MEMORY_WEB_STATUS.md`  
+- V2: `docs/M11_SEAL_RECORD.md`  
 
 ---
 
