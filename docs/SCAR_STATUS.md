@@ -104,19 +104,21 @@ Integrity root detects silent mutation of **active content hashes in this store*
 
 ---
 
-## 6. SCAR → Firefly seam (design frozen)
+## 6. SCAR → Firefly seam (design frozen on V2)
 
-The consume/refuse boundary is frozen on V2:
+| Document | Role |
+|----------|------|
+| `docs/SCAR_FIREFLY_CONSUME_REFUSE_CONTRACT.md` | Four-question seam + field ambiguity audit |
+| `docs/SCAR_FIREFLY_ADAPTER_CONTRACT.md` | Adapter I/O shape, REJECT/HALT, implementation gate |
 
-**Canonical contract:**  
-`Kelronmos/SWI-V2-Modules-11-22` → `docs/SCAR_FIREFLY_ADAPTER_CONTRACT.md`  
+**Repo:** `Kelronmos/SWI-V2-Modules-11-22`  
 **Status:** DESIGN / PROPOSED — not implemented.
 
 **Firefly may consume (when an adapter exists):** identity, class, status, content hash, integrity-root snapshot, provenance fields — without upgrading status labels.
 
 **Firefly must refuse to infer:** factual truth, global tamper-proofing, M11 admission, replay success, or that SCAR supersedes any other layer.
 
-This is **not** authorization to write Firefly code until the implementation gate in that contract is satisfied.
+This is **not** authorization to write Firefly code until the implementation gate is satisfied and remaining policy ambiguities are resolved.
 
 ---
 
@@ -126,6 +128,7 @@ This is **not** authorization to write Firefly code until the implementation gat
 - `docs/IMPLEMENTATION_STATUS.md`  
 - `swi_core/scar.py` (module docstring)  
 - `swi_core/module07_memory_validator.py`  
+- V2: `docs/SCAR_FIREFLY_CONSUME_REFUSE_CONTRACT.md`  
 - V2: `docs/SCAR_FIREFLY_ADAPTER_CONTRACT.md`  
 - V2: `docs/V2_MEMORY_WEB_STATUS.md`  
 - V2: `docs/M11_SEAL_RECORD.md`  
