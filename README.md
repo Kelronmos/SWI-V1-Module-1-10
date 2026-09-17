@@ -2,7 +2,9 @@
 
 Structured Workflow Intelligence foundation modules.
 
-**Start:** [`docs/START_HERE.md`](docs/START_HERE.md) · **Governance:** [`docs/GOVERNANCE_LOCK.md`](docs/GOVERNANCE_LOCK.md)
+**Licence:** [Apache License 2.0](LICENSE)  
+**Start:** [`docs/START_HERE.md`](docs/START_HERE.md) · **Governance:** [`docs/GOVERNANCE_LOCK.md`](docs/GOVERNANCE_LOCK.md)  
+**Contribute:** [`CONTRIBUTING.md`](CONTRIBUTING.md) · **Provenance:** [`AUTHORS_AND_LEGACY.md`](AUTHORS_AND_LEGACY.md) · [`NOTICE`](NOTICE)
 
 ## Verify
 
@@ -41,3 +43,11 @@ Readiness % never overrides a failed critical gate.
 «Do not claim what the code cannot demonstrate.»
 
 Next: **prove the foundation** (Seal 5 path), not another architecture layer.
+
+## Collaboration
+
+SWI is open for collaboration under Apache-2.0.  
+Contribution does not rewrite provenance.  
+Evidence is required before claims are accepted.
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full policy, including the Evidence Before Claims hierarchy and attribution rules.
