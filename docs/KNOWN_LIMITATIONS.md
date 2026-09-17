@@ -1,4 +1,4 @@
-# Known Limitations
+# Known Limitations — SWI v1.1
 
 ## Module 02 — Security Probe (SEALED enforcement)
 
@@ -23,25 +23,21 @@
 - Bag-of-words cosine only; empty baseline → similarity 0 / often drifted.
 - Advisory only; threshold not config-wired.
 
-## Module 07 — Memory Validator (in-process only)
+## Module 07 — Memory Validator + ScarStore
 
-- The hash-chained "scar" log is a **plain in-memory Python list** held on the
-  `MemoryValidator` instance. Nothing is written to disk, a database, or any
-  durable store.
-- A fresh instance (process restart, or Trainer re-instantiation) starts with
-  an empty chain and reports that empty chain as `valid=True`. Cross-process
-  or cross-restart tampering / data loss is therefore invisible to
-  `validate_chain()`.
-- In-process tampering *is* detected (see `tamper_for_testing()` and the
-  existing tests); that is the actual scope of the current implementation.
-- Docstring previously used "storage medium" language that implied a durable
-  store existed. That framing has been corrected; this limitation is now
-  explicit. Contrast with Module 09, which does persist to an append-only file.
-- Decision still open: keep as pure in-process structure, or later add
-  disk-backed persistence mirroring Module 09. Until then, do not claim
-  durability.
+- Legacy hash-chained log remains in-process unless a persistent ScarStore is attached.
+- ScarStore can use SQLite for durability within one deployment; this is still not a distributed ledger or external anchor.
+- Embeddings are optional; no built-in embedding model or similarity search is claimed.
+- Does **not** constitute full Vector Memory or Foundation Seal 5.
+
+## Module 11 — Continuity Lock
+
+- Bounded state tags only (default max 10).
+- Optional file persistence; not multi-process safe without external locking.
+- No semantic understanding of tags.
 
 ## General
 
-- No CEK, SAD-DFU, Vector Memory, Alita, Sovereign Mesh as implemented systems.
-- Modules 11–19 blocked until Foundation Seal 5.
+- No CEK, SAD-DFU, full Vector Memory, Alita, or Sovereign Mesh as complete systems.
+- Modules beyond 11 remain design-level until Foundation Seal 5 and evidence gates are satisfied.
+- «Do not claim what the code cannot demonstrate.»
