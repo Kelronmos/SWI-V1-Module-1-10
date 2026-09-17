@@ -10,8 +10,9 @@ Integrity (SHA-256) covers ONLY:
 
 created_at is export metadata and is NOT included in the integrity digest.
 
-This does NOT: sign the envelope (CRTG pending); prove truth/safety;
-authenticate the sender; replace Foundation Seal 5.
+Seal 5 path (v0): optional Ed25519 over integrity-bound material.
+Does NOT: prove truth/safety; CRTG; production key custody; HSM.
+Private keys must never be committed.
 """
 from __future__ import annotations
 
@@ -133,3 +134,83 @@ def export_foundation_evidence(
 
 def envelope_to_dict(envelope: FoundationEvidenceEnvelope) -> dict:
     return asdict(envelope)
+
+
+# --- Foundation Seal 5 v0 (optional signature path) ---
+
+SEAL5_VERSION = "0.1-proposed"
+# Pinned verification key (hex). Empty = pin not established; verify still works with key on artifact.
+SEAL5_PINNED_PUBLIC_KEY_HEX = ""
+
+
+@dataclass(frozen=True)
+class SignedFoundationEvidence:
+    """Envelope plus Seal 5 signature material (producer-side)."""
+
+    envelope: FoundationEvidenceEnvelope
+    signature_hex: str
+    public_key_hex: str
+    seal5_version: str = SEAL5_VERSION
+
+
+def seal5_sign_material(envelope: FoundationEvidenceEnvelope) -> dict:
+    """Fields covered by Seal 5 signature (deterministic)."""
+    return {
+        "evidence_id": envelope.evidence_id,
+        "foundation_version": envelope.foundation_version,
+        "evidence_schema_version": envelope.evidence_schema_version,
+        "integrity_reference": envelope.integrity_reference,
+        "source_reference": envelope.source_reference,
+        "verification_status": envelope.verification_status,
+        "seal5_version": SEAL5_VERSION,
+    }
+
+
+def sign_foundation_evidence(
+    envelope: FoundationEvidenceEnvelope,
+    private_key: bytes,
+) -> SignedFoundationEvidence:
+    """Sign integrity-bound material. Private key from env/CI only — never from git."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+    from .ed25519_sig import canonical_message, sign_ed25519
+
+    material = seal5_sign_material(envelope)
+    msg = canonical_message(material)
+    sig = sign_ed25519(private_key, msg)
+    if isinstance(private_key, Ed25519PrivateKey):
+        pub = private_key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    else:
+        pub = Ed25519PrivateKey.from_private_bytes(bytes(private_key)).public_key().public_bytes(
+            Encoding.Raw, PublicFormat.Raw
+        )
+    return SignedFoundationEvidence(
+        envelope=envelope,
+        signature_hex=sig.hex(),
+        public_key_hex=pub.hex(),
+        seal5_version=SEAL5_VERSION,
+    )
+
+
+def verify_signed_foundation_evidence(signed: SignedFoundationEvidence) -> bool:
+    """Verify Seal 5 signature. Raises SignatureVerificationError on failure."""
+    from .ed25519_sig import SignatureVerificationError, canonical_message, verify_ed25519
+
+    if signed.seal5_version != SEAL5_VERSION:
+        raise SignatureVerificationError("seal5_version mismatch")
+    material = seal5_sign_material(signed.envelope)
+    msg = canonical_message(material)
+    pub = bytes.fromhex(signed.public_key_hex)
+    sig = bytes.fromhex(signed.signature_hex)
+    return verify_ed25519(pub, msg, sig)
+
+
+def signed_to_dict(signed: SignedFoundationEvidence) -> dict:
+    d = envelope_to_dict(signed.envelope)
+    d["seal5"] = {
+        "version": signed.seal5_version,
+        "signature_hex": signed.signature_hex,
+        "public_key_hex": signed.public_key_hex,
+    }
+    return d
