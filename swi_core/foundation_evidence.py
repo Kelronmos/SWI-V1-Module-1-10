@@ -163,14 +163,22 @@ def seal5_sign_material(envelope: FoundationEvidenceEnvelope) -> dict:
 def sign_foundation_evidence(
     envelope: FoundationEvidenceEnvelope,
     private_key: bytes,
-    public_key: bytes,
+    public_key: bytes | None = None,
 ) -> SignedFoundationEvidence:
-    """Optional Seal 5 Ed25519 signature over integrity-bound material."""
+    """Optional Seal 5 Ed25519 signature over integrity-bound material.
+
+    If public_key is omitted, it is derived from private_key (Seal 5 v0 helper).
+    """
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
     from .ed25519_sig import canonical_message, sign_ed25519
 
     material = seal5_sign_material(envelope)
     msg = canonical_message(material)
     sig = sign_ed25519(private_key, msg)
+    if public_key is None:
+        priv_obj = Ed25519PrivateKey.from_private_bytes(private_key)
+        public_key = priv_obj.public_key().public_bytes_raw()
     return SignedFoundationEvidence(
         envelope=envelope,
         signature_hex=sig.hex(),
