@@ -16,8 +16,6 @@ Private keys must never be committed.
 """
 from __future__ import annotations
 
-import hashlib
-import json
 import time
 import uuid
 from dataclasses import asdict, dataclass
@@ -52,16 +50,19 @@ def compute_integrity_reference(
     evidence_id: str,
     source_reference: str,
 ) -> str:
-    """Digest of integrity-covered fields only (excludes created_at)."""
-    material = {
-        "payload": payload,
-        "foundation_version": foundation_version,
-        "evidence_schema_version": evidence_schema_version,
-        "evidence_id": evidence_id,
-        "source_reference": source_reference,
-    }
-    encoded = json.dumps(material, sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+    """Digest of integrity-covered fields only (excludes created_at).
+
+    Delegates to swi_core.canonical (Lane B canonicalization_v0).
+    """
+    from .canonical import compute_integrity_reference as _canonical_integrity
+
+    return _canonical_integrity(
+        payload,
+        foundation_version,
+        evidence_schema_version,
+        evidence_id,
+        source_reference,
+    )
 
 
 def _payload_from_pipeline(result: PipelineResult) -> dict:
@@ -76,21 +77,24 @@ def _payload_from_pipeline(result: PipelineResult) -> dict:
         }
     redaction = None
     if result.redaction is not None:
+        red = result.redaction
         redaction = {
-            "redacted_text": result.redaction.redacted_text,
-            "match_categories": [m.category for m in result.redaction.matches],
+            "redacted_text": red.redacted_text,
+            "match_count": len(red.matches),
+            "categories": sorted({m.category for m in red.matches}),
         }
     drift = None
     if result.drift is not None:
-        drift = {
-            "similarity": result.drift.similarity,
-            "drifted": result.drift.drifted,
+        d = result.drift
+        drift = {"similarity": d.similarity, "drifted": d.drifted}
+    sync = None
+    if result.sync is not None:
+        s = result.sync
+        sync = {
+            "stale": s.stale,
+            "out_of_order": s.out_of_order,
+            "gap_seconds": s.gap_seconds,
         }
-    sync = {
-        "gap_seconds": result.sync.gap_seconds,
-        "stale": result.sync.stale,
-        "out_of_order": result.sync.out_of_order,
-    }
     return {
         "allowed": result.allowed,
         "reason": result.reason,
@@ -108,17 +112,15 @@ def export_foundation_evidence(
     source_reference: str = SOURCE_REFERENCE,
 ) -> FoundationEvidenceEnvelope:
     if not isinstance(result, PipelineResult):
-        raise TypeError(
-            f"export requires PipelineResult, got {type(result).__name__}"
-        )
-    eid = evidence_id or f"v1-evidence-{uuid.uuid4().hex[:16]}"
+        raise TypeError("export_foundation_evidence requires a PipelineResult")
     payload = _payload_from_pipeline(result)
+    eid = evidence_id or str(uuid.uuid4())
     integrity = compute_integrity_reference(
-        payload=payload,
-        foundation_version=FOUNDATION_VERSION,
-        evidence_schema_version=EVIDENCE_SCHEMA_VERSION,
-        evidence_id=eid,
-        source_reference=source_reference,
+        payload,
+        FOUNDATION_VERSION,
+        EVIDENCE_SCHEMA_VERSION,
+        eid,
+        source_reference,
     )
     return FoundationEvidenceEnvelope(
         payload=payload,
@@ -132,85 +134,5 @@ def export_foundation_evidence(
     )
 
 
-def envelope_to_dict(envelope: FoundationEvidenceEnvelope) -> dict:
-    return asdict(envelope)
-
-
-# --- Foundation Seal 5 v0 (optional signature path) ---
-
-SEAL5_VERSION = "0.1-proposed"
-# Pinned verification key (hex). Empty = pin not established; verify still works with key on artifact.
-SEAL5_PINNED_PUBLIC_KEY_HEX = ""
-
-
-@dataclass(frozen=True)
-class SignedFoundationEvidence:
-    """Envelope plus Seal 5 signature material (producer-side)."""
-
-    envelope: FoundationEvidenceEnvelope
-    signature_hex: str
-    public_key_hex: str
-    seal5_version: str = SEAL5_VERSION
-
-
-def seal5_sign_material(envelope: FoundationEvidenceEnvelope) -> dict:
-    """Fields covered by Seal 5 signature (deterministic)."""
-    return {
-        "evidence_id": envelope.evidence_id,
-        "foundation_version": envelope.foundation_version,
-        "evidence_schema_version": envelope.evidence_schema_version,
-        "integrity_reference": envelope.integrity_reference,
-        "source_reference": envelope.source_reference,
-        "verification_status": envelope.verification_status,
-        "seal5_version": SEAL5_VERSION,
-    }
-
-
-def sign_foundation_evidence(
-    envelope: FoundationEvidenceEnvelope,
-    private_key: bytes,
-) -> SignedFoundationEvidence:
-    """Sign integrity-bound material. Private key from env/CI only — never from git."""
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-
-    from .ed25519_sig import canonical_message, sign_ed25519
-
-    material = seal5_sign_material(envelope)
-    msg = canonical_message(material)
-    sig = sign_ed25519(private_key, msg)
-    if isinstance(private_key, Ed25519PrivateKey):
-        pub = private_key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-    else:
-        pub = Ed25519PrivateKey.from_private_bytes(bytes(private_key)).public_key().public_bytes(
-            Encoding.Raw, PublicFormat.Raw
-        )
-    return SignedFoundationEvidence(
-        envelope=envelope,
-        signature_hex=sig.hex(),
-        public_key_hex=pub.hex(),
-        seal5_version=SEAL5_VERSION,
-    )
-
-
-def verify_signed_foundation_evidence(signed: SignedFoundationEvidence) -> bool:
-    """Verify Seal 5 signature. Raises SignatureVerificationError on failure."""
-    from .ed25519_sig import SignatureVerificationError, canonical_message, verify_ed25519
-
-    if signed.seal5_version != SEAL5_VERSION:
-        raise SignatureVerificationError("seal5_version mismatch")
-    material = seal5_sign_material(signed.envelope)
-    msg = canonical_message(material)
-    pub = bytes.fromhex(signed.public_key_hex)
-    sig = bytes.fromhex(signed.signature_hex)
-    return verify_ed25519(pub, msg, sig)
-
-
-def signed_to_dict(signed: SignedFoundationEvidence) -> dict:
-    d = envelope_to_dict(signed.envelope)
-    d["seal5"] = {
-        "version": signed.seal5_version,
-        "signature_hex": signed.signature_hex,
-        "public_key_hex": signed.public_key_hex,
-    }
-    return d
+def envelope_to_dict(env: FoundationEvidenceEnvelope) -> dict:
+    return asdict(env)
