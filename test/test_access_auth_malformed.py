@@ -38,7 +38,6 @@ def test_access_auth_rejects_malformed_json():
 
 
 def test_access_auth_rejects_malformed_but_signed_json():
-    """Payload is valid base64 JSON object but missing required semantic fields."""
     auth = AccessAuth(secret_key=b"test-secret-key-32bytes-long!!!!")
     token = _signed_token(auth, {"not_exp": 123, "not_sub": "x"})
     result = auth.verify_token(token)
@@ -48,7 +47,7 @@ def test_access_auth_rejects_malformed_but_signed_json():
 
 def test_access_auth_rejects_missing_fields():
     auth = AccessAuth(secret_key=b"test-secret-key-32bytes-long!!!!")
-    token = _signed_token(auth, {"sub": "alice"})  # missing exp
+    token = _signed_token(auth, {"sub": "alice"})
     result = auth.verify_token(token)
     assert result.valid is False
     assert result.reason == "malformed_token"
@@ -107,3 +106,31 @@ def test_access_auth_rejects_forged_signature():
     result = auth.verify_token(token)
     assert result.valid is False
     assert result.reason == "bad_signature"
+
+
+def test_boolean_exp_is_rejected():
+    """bool is a subclass of int; must not pass isinstance(exp, (int, float))."""
+    auth = AccessAuth(secret_key=b"k" * 32)
+    for exp in (True, False):
+        payload = {"sub": "alice", "exp": exp}
+        pb = json.dumps(payload, sort_keys=True).encode()
+        sig = auth._sign(pb)
+        token = (
+            base64.urlsafe_b64encode(pb) + b"." + base64.urlsafe_b64encode(sig)
+        ).decode()
+        result = auth.verify_token(token)
+        assert result.valid is False
+        assert result.reason == "malformed_token"
+
+
+def test_non_string_sub_is_rejected():
+    auth = AccessAuth(secret_key=b"k" * 32)
+    payload = {"sub": 123, "exp": time.time() + 3600}
+    pb = json.dumps(payload, sort_keys=True).encode()
+    sig = auth._sign(pb)
+    token = (
+        base64.urlsafe_b64encode(pb) + b"." + base64.urlsafe_b64encode(sig)
+    ).decode()
+    result = auth.verify_token(token)
+    assert result.valid is False
+    assert result.reason == "malformed_token"
