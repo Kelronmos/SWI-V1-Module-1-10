@@ -1,0 +1,53 @@
+[
+  {
+    "name": "simple_object",
+    "input": {"a": 1, "b": 2},
+    "expected_digest": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"
+  },
+  {
+    "name": "reordered_equivalent",
+    "input": {"b": 2, "a": 1},
+    "expected_digest": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"
+  },
+  {
+    "name": "nested",
+    "input": {"z": {"b": 1, "a": 2}, "y": 0},
+    "expected_digest": "00b04662c2a3a6e1f9ea1af59ec0fc4929e2e9671ad5e06e573319a962af9a4b"
+  },
+  {
+    "name": "empty_object",
+    "input": {},
+    "expected_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  {
+    "name": "empty_array",
+    "input": [],
+    "expected_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+    "name": "unicode",
+    "input": {"t": "é漢😀"},
+    "expected_digest": "e04e4408c330655e030a4e084e82e7acbffccff7ec5d7dea6f69cfe9a10459d0"
+  },
+  {
+    "name": "bool_null",
+    "input": {"t": true, "n": null},
+    "expected_digest": "ebfd793364626e30e8560062ff548a67c65aa04405ee16cbc52f2b5e2b0a041e"
+  },
+  {
+    "name": "list_order",
+    "input": ["a", "b"],
+    "expected_digest": "0473ef2dc0d324ab659d3580c1134e9d812035905c4781fdd6d529b0c6860e13"
+  },
+  {
+    "name": "foundation_material",
+    "input": {
+      "payload": {"allowed": true},
+      "foundation_version": "1.0-proposed",
+      "evidence_schema_version": "1.0-proposed",
+      "evidence_id": "vec-1",
+      "source_reference": "fixture"
+    },
+    "expected_digest": "f6771befc26298dcfdfc50b8232ecbb96775be34410eb47230795e837bccce1d"
+  }
+]
