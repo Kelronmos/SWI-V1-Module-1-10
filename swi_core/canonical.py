@@ -5,7 +5,8 @@ STATUS: IMPLEMENTED / TESTED (not sealed).
 Contract id: canonicalization_v0
 
 Rules:
-  - json.dumps(..., sort_keys=True, separators=(",", ":"), default=str)
+  - reject non-finite floats (NaN / ±Infinity) before dumps
+  - json.dumps(..., sort_keys=True, separators=(",", ":"), default=str, allow_nan=False)
   - UTF-8 encode then SHA-256 hex digest
   - List order preserved; object keys sorted at every level
   - Does NOT establish truth, admission, authorization, or action rights
@@ -24,9 +25,27 @@ CANONICALIZATION_VERSION = "canonicalization_v0"
 _SEPARATORS = (",", ":")
 
 
+def _reject_nonfinite(obj: Any, path: str = "$") -> None:
+    """Fail closed: NaN/Infinity are not valid integrity material."""
+    if isinstance(obj, float):
+        if obj != obj or obj in (float("inf"), float("-inf")):
+            raise ValueError(
+                f"non-finite float at {path} is not allowed in canonical material"
+            )
+    elif isinstance(obj, dict):
+        for k, v in obj.items():
+            _reject_nonfinite(v, f"{path}.{k}")
+    elif isinstance(obj, (list, tuple)):
+        for i, v in enumerate(obj):
+            _reject_nonfinite(v, f"{path}[{i}]")
+
+
 def canonical_dumps(obj: Any) -> str:
     """Deterministic JSON string for integrity hashing."""
-    return json.dumps(obj, sort_keys=True, separators=_SEPARATORS, default=str)
+    _reject_nonfinite(obj)
+    return json.dumps(
+        obj, sort_keys=True, separators=_SEPARATORS, default=str, allow_nan=False
+    )
 
 
 def canonical_bytes(obj: Any) -> bytes:
