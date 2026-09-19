@@ -6,15 +6,20 @@ M07 normal-path integrity failures and M09 integrity/persistence failures
 also STOP (ModuleKernelError).
 Halt recording remains best-effort and never converts failure into success.
 
-Admission: Trainer.process requires a valid AdmissionDecision before any
-state formation (turn counter, module calls, M07/M09 writes).
+Admission: Trainer.process requires keyword-only admission: AdmissionDecision
+before any state formation (turn counter, module calls, M07/M09 writes).
+There is no admission=None production fallback.
+
+_record_halt is only reachable after admission has succeeded (post-admission
+kernel/integrity failures). Pre-admission rejection performs no M07/M09 writes.
+
 This does not gate direct module APIs (scan/redact/…); Universal Gate is
-not proven for those surfaces.
+not proven for those residual surfaces.
 """
 from __future__ import annotations
 import datetime as _dt
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from .config_loader import load_config
 from .module02_security_probe import SecurityProbe, ProbeResult
@@ -24,6 +29,9 @@ from .module06_drift_analyzer import DriftAnalyzer, DriftResult
 from .module07_memory_validator import MemoryValidator
 from .module09_audit_logger import AuditLogger
 from .module_kernel import AdmissionRequiredError, ModuleKernelError
+
+if TYPE_CHECKING:
+    from .admission_boundary import AdmissionDecision
 
 # Pipeline module identity for admission binding
 TRAINER_MODULE_ID = "00"
@@ -66,6 +74,7 @@ class Trainer:
         self.expected_commit = expected_commit
 
     def _require_admission(self, admission: Any) -> None:
+        """Fail closed before any pipeline formation."""
         if admission is None:
             raise AdmissionRequiredError(
                 "Trainer.process: STATE_FORMATION_WITHOUT_ADMISSION"
@@ -84,6 +93,10 @@ class Trainer:
             )
 
     def _record_halt(self, reason: str) -> None:
+        """Post-admission best-effort halt evidence only.
+
+        Must never be invoked on the pre-admission rejection path.
+        """
         payload = {
             "turn": self._turn_counter,
             "allowed": False,
@@ -104,9 +117,14 @@ class Trainer:
         text: str,
         timestamp: Optional[_dt.datetime] = None,
         *,
-        admission: Any = None,
+        admission: AdmissionDecision,
     ) -> PipelineResult:
-        # Admission before any formation (including turn counter).
+        """Run the pipeline only after a valid AdmissionDecision.
+
+        ``admission`` is required (keyword-only). Omitting it is a TypeError.
+        Passing an invalid decision is AdmissionRequiredError before turn++.
+        """
+        # First executable boundary — before turn counter and all side effects.
         self._require_admission(admission)
 
         self._turn_counter += 1
