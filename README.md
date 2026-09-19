@@ -2,9 +2,13 @@
 
 Structured Workflow Intelligence reference implementation.
 
+> **Repository identity:** GitHub name `SWI-V1-Module-1-10` is retained for historical continuity.
+> The current reference implementation is **V1.1 / Modules 00–11** (Foundation + ScarStore + continuity helpers).
+> It is **not** limited to modules 1–10 despite the repository slug.
+
 **Licence:** [Apache License 2.0](LICENSE)  
 **Start:** [`docs/START_HERE.md`](docs/START_HERE.md) · **Governance:** [`docs/GOVERNANCE_LOCK.md`](docs/GOVERNANCE_LOCK.md)  
-**Contribute:** [`CONTRIBUTING.md`](CONTRIBUTING.md) · **Provenance:** [`AUTHORS_AND_LEGACY.md`](AUTHORS_AND_LEGACY.md) · [`NOTICE`](NOTICE)
+**Tip CI:** [`docs/TIP_CI_STATUS.md`](docs/TIP_CI_STATUS.md) · **Contribute:** [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ## Verify
 
@@ -33,9 +37,12 @@ Kernel contract failure → **HALT**. M02 block / M03 stale / M06 drifted remain
 | ScarStore | **IMPLEMENTED / TESTED** |
 | M11 Continuity Lock | **IMPLEMENTED / TESTED** |
 | Foundation evidence export | IMPLEMENTED / TESTED · **unsigned** |
+| Authority boundary | IMPLEMENTED / TESTED · tip CI · **not sealed** |
 | Ed25519 helper | Primitive only · **not CRTG** |
 | **Foundation Seal 5** | **NOT READY** |
 | CRTG | PROPOSED / design track |
+| Tip CI (Actions) | See `docs/TIP_CI_STATUS.md` |
+| Bidirectional verified return path | **Not in V1** — experimental **pre-R** on V2 only |
 
 ## v1.1 upgrade
 
@@ -52,7 +59,8 @@ Readiness % never overrides a failed critical gate.
 
 «Do not claim what the code cannot demonstrate.»
 
-Next: **prove the foundation** (Seal 5 path), then progressive admission of higher modules under evidence discipline.
+Next: **prove the foundation** (Seal 5 path), then progressive admission of higher modules under evidence discipline.  
+Do not treat green CI as Seal 5 or as a verified return path.
 
 ## Collaboration
 
