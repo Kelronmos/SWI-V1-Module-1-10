@@ -1,19 +1,7 @@
-"""Architecture-boundary attack suite.
+"""Architecture-boundary attack suite + Phase 7 input hardening.
 
 These tests make anti-overclaim rules executable.
-
 They do NOT prove Module 10 or any other proposed component is admitted.
-They prove that common promotion / laundering attacks are rejected.
-
-Governing chain that must never be short-circuited:
-
-  DOCUMENTATION → CLAIM → EVIDENCE → VERIFY → ADMISSION → SEAL
-
-Never:
-  README says SEALED → SEALED
-  test passes → SEALED
-  hash exists → AUTHORITY
-  module number exists → MODULE ADMITTED
 """
 
 from __future__ import annotations
@@ -45,18 +33,19 @@ def test_attack_01_fake_seal_missing_module():
     assert result["reason"] == "SEAL_CLAIM_MISSING_MODULE"
 
 
+def test_attack_01_empty_seal_record_rejected():
+    claim = {"module": "10", "status": "SEALED"}
+    result = evaluate_claim(claim, seal_records={"10": {}})
+    assert result["ok"] is False
+    assert result["reason"] in ("SEAL_WITHOUT_SEAL_RECORD", "SEAL_RECORD_EMPTY")
+
+
 # ---------------------------------------------------------------------------
 # Attack 2 — Documentation injection
 # ---------------------------------------------------------------------------
 
 def test_attack_02_documentation_cannot_seal():
-    claim = {
-        "module": "10",
-        "status": "SEALED",
-        "source": "documentation",
-    }
-    # Even if a seal record existed, documentation source is still insufficient
-    # for the primary rejection path when no proper evidence is bound.
+    claim = {"module": "10", "status": "SEALED", "source": "documentation"}
     result = evaluate_claim(claim, seal_records={})
     assert result["ok"] is False
     assert result["reason"] in (
@@ -66,11 +55,7 @@ def test_attack_02_documentation_cannot_seal():
 
 
 def test_attack_02_readme_source_rejected_for_sealed():
-    claim = {
-        "module": "M05",
-        "status": "SEALED",
-        "source": "readme",
-    }
+    claim = {"module": "M05", "status": "SEALED", "source": "readme"}
     result = evaluate_claim(claim, seal_records={})
     assert result["ok"] is False
 
@@ -83,13 +68,13 @@ def test_attack_03_old_ci_does_not_seal_new_commit():
     claim = {
         "module": "10",
         "status": "SEALED",
-        "seal_commit": "aaaa",
-        "ci_commit": "aaaa",  # old green run
+        "seal_commit": "aaaaaaa",
+        "ci_commit": "aaaaaaa",
     }
     result = evaluate_claim(
         claim,
-        seal_records={"10": {"commit": "aaaa"}},
-        current_commit="bbbb",  # tip has moved
+        seal_records={"10": {"commit": "aaaaaaa"}},
+        current_commit="bbbbbbb",
     )
     assert result["ok"] is False
     assert result["reason"] in (
@@ -124,7 +109,6 @@ def test_attack_05_synthetic_upstream_receipts_rejected():
         "upstream_receipts": [
             {"hash": "a" * 64, "synthetic": True},
             {"hash": "b" * 64, "synthetic": True},
-            {"hash": "c" * 64, "synthetic": True},
         ],
     }
     result = evaluate_claim(claim)
@@ -135,9 +119,7 @@ def test_attack_05_synthetic_upstream_receipts_rejected():
 def test_attack_05_receipt_missing_provenance_rejected():
     claim = {
         "module": "10",
-        "upstream_receipts": [
-            {"hash": "a" * 64},  # no produced_by_module, no evidence_ref
-        ],
+        "upstream_receipts": [{"hash": "a" * 64}],
     }
     result = evaluate_claim(claim)
     assert result["ok"] is False
@@ -161,7 +143,7 @@ def test_attack_06_hash_laundering_rejected():
 
 
 # ---------------------------------------------------------------------------
-# Attack 7 — Seal laundering (domain / module rebinding)
+# Attack 7 — Seal laundering
 # ---------------------------------------------------------------------------
 
 def test_attack_07_seal_laundering_rejected():
@@ -173,15 +155,15 @@ def test_attack_07_seal_laundering_rejected():
     }
     result = evaluate_claim(
         claim,
-        seal_records={"10": {"commit": "tip"}},
-        current_commit="tip",
+        seal_records={"10": {"commit": "abcdef0"}},
+        current_commit="abcdef0",
     )
     assert result["ok"] is False
     assert result["reason"] == "SEAL_DOMAIN_MISMATCH"
 
 
 # ---------------------------------------------------------------------------
-# Attack 8 — Authority laundering (verified → authorized → executable)
+# Attack 8 — Authority laundering
 # ---------------------------------------------------------------------------
 
 def test_attack_08_verified_does_not_imply_executable():
@@ -190,7 +172,6 @@ def test_attack_08_verified_does_not_imply_executable():
         "verified": True,
         "authorized": True,
         "executable": True,
-        # no admission_artifact, no execution_authority_record
     }
     result = evaluate_claim(claim)
     assert result["ok"] is False
@@ -198,11 +179,7 @@ def test_attack_08_verified_does_not_imply_executable():
 
 
 def test_attack_08_verified_alone_is_not_authority():
-    claim = {
-        "module": "10",
-        "verified": True,
-        "executable": True,
-    }
+    claim = {"module": "10", "verified": True, "executable": True}
     result = evaluate_claim(claim)
     assert result["ok"] is False
     assert result["reason"] == "AUTHORITY_LAUNDERING"
@@ -213,54 +190,37 @@ def test_attack_08_verified_alone_is_not_authority():
 # ---------------------------------------------------------------------------
 
 def test_attack_09_blocked_path_cannot_execute():
-    claim = {
-        "module": "10",
-        "status": "BLOCKED",
-        "force_execute": True,
-    }
+    claim = {"module": "10", "status": "BLOCKED", "force_execute": True}
     result = evaluate_claim(claim)
     assert result["ok"] is False
     assert result["reason"] == "BLOCKED_PATH_BYPASS"
+    assert "required_evidence" in result
 
 
 def test_attack_09_proposed_not_admitted_cannot_execute():
-    claim = {
-        "module": "10",
-        "status": "PROPOSED",
-        "executable": True,
-    }
+    claim = {"module": "10", "status": "PROPOSED", "executable": True}
     result = evaluate_claim(claim)
     assert result["ok"] is False
     assert result["reason"] == "BLOCKED_PATH_BYPASS"
 
 
 def test_attack_09_module_10_admission_status_is_blocked():
-    """Living check against the governance decision record."""
-    # Module 10 BoundaryExporter remains PROPOSED / NOT ADMITTED
-    claim = {
-        "module": "10",
-        "status": "NOT ADMITTED",
-        "executable": True,
-    }
+    claim = {"module": "10", "status": "NOT ADMITTED", "executable": True}
     result = evaluate_claim(claim)
     assert result["ok"] is False
     assert result["reason"] == "BLOCKED_PATH_BYPASS"
 
 
 # ---------------------------------------------------------------------------
-# Attack 10 — Seal mutation (implementation changed after seal)
+# Attack 10 — Seal mutation
 # ---------------------------------------------------------------------------
 
 def test_attack_10_old_seal_does_not_cover_new_tip():
-    claim = {
-        "module": "M05",
-        "status": "SEALED",
-        "seal_commit": "oldsha",
-    }
+    claim = {"module": "M05", "status": "SEALED", "seal_commit": "oldsha1"}
     result = evaluate_claim(
         claim,
-        seal_records={"M05": {"commit": "oldsha"}},
-        current_commit="newsha",
+        seal_records={"M05": {"commit": "oldsha1"}},
+        current_commit="newsha2",
     )
     assert result["ok"] is False
     assert result["reason"] in ("SEAL_COMMIT_MISMATCH", "SEAL_MUTATION")
@@ -270,7 +230,95 @@ def test_is_module_sealed_requires_record_and_tip():
     result = is_module_sealed(
         "10",
         seal_records={},
-        current_commit="abc",
+        current_commit="abc1234",
         documentation_says_sealed=True,
     )
     assert result["ok"] is False
+
+
+# ---------------------------------------------------------------------------
+# Phase 7 — Input / type / encoding attacks (fail closed)
+# ---------------------------------------------------------------------------
+
+def test_phase7_claim_not_a_mapping():
+    result = evaluate_claim("not-a-dict")  # type: ignore[arg-type]
+    assert result["ok"] is False
+    assert result["reason"] == "CLAIM_NOT_A_MAPPING"
+
+
+def test_phase7_module_id_not_string():
+    result = evaluate_claim({"module": 10, "status": "IMPLEMENTED"})
+    assert result["ok"] is False
+    assert result["reason"] == "MODULE_ID_NOT_A_STRING"
+
+
+def test_phase7_module_id_empty():
+    result = evaluate_claim({"module": "", "status": "IMPLEMENTED"})
+    assert result["ok"] is False
+    assert result["reason"] == "MODULE_ID_EMPTY"
+
+
+def test_phase7_module_id_whitespace():
+    result = evaluate_claim({"module": " 10 ", "status": "IMPLEMENTED"})
+    assert result["ok"] is False
+    assert result["reason"] == "MODULE_ID_HAS_SURROUNDING_WHITESPACE"
+
+
+def test_phase7_status_not_string():
+    result = evaluate_claim({"module": "10", "status": True})
+    assert result["ok"] is False
+    assert result["reason"] == "STATUS_NOT_A_STRING"
+
+
+def test_phase7_unknown_status_token():
+    result = evaluate_claim({"module": "10", "status": "SUPER_SEALED"})
+    assert result["ok"] is False
+    assert result["reason"] == "UNKNOWN_STATUS_TOKEN"
+
+
+def test_phase7_boolean_string_confusion_verified():
+    result = evaluate_claim({"module": "10", "verified": "true", "executable": True})
+    assert result["ok"] is False
+    assert result["reason"] == "BOOLEAN_STRING_CONFUSION"
+
+
+def test_phase7_commit_not_hex():
+    result = evaluate_claim(
+        {"module": "10", "status": "SEALED", "seal_commit": "not-hex!!!"},
+        seal_records={"10": {"commit": "abcdef0"}},
+        current_commit="abcdef0",
+    )
+    assert result["ok"] is False
+    assert result["reason"] == "COMMIT_NOT_HEX"
+
+
+def test_phase7_commit_empty():
+    result = evaluate_claim(
+        {"module": "10", "seal_commit": ""},
+    )
+    assert result["ok"] is False
+    assert result["reason"] == "COMMIT_EMPTY"
+
+
+def test_phase7_current_commit_malformed():
+    result = evaluate_claim(
+        {"module": "10", "status": "IMPLEMENTED"},
+        current_commit="zzz",
+    )
+    assert result["ok"] is False
+    assert result["reason"] == "COMMIT_NOT_HEX"
+
+
+def test_phase7_case_variant_status_sealed_still_requires_record():
+    # "sealed" lower-case must normalize and still require seal record
+    result = evaluate_claim({"module": "10", "status": "sealed"}, seal_records={})
+    assert result["ok"] is False
+    assert result["reason"] == "SEAL_WITHOUT_SEAL_RECORD"
+
+
+def test_phase7_upstream_not_sequence():
+    result = evaluate_claim(
+        {"module": "10", "upstream_receipts": {"hash": "a" * 64}}
+    )
+    assert result["ok"] is False
+    assert result["reason"] == "UPSTREAM_RECEIPTS_NOT_A_SEQUENCE"
