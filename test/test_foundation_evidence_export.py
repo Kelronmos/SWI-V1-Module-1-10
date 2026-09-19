@@ -11,7 +11,7 @@ from swi_core.foundation_evidence import (
 )
 from swi_core.module00_trainer import Trainer
 from swi_core.module_kernel import ModuleKernelError
-from test.helpers_admission import TEST_COMMIT, export_admission, pipeline_admission
+from swi_test_helpers.admission import TEST_COMMIT, export_admission, pipeline_admission
 
 
 @pytest.fixture
@@ -40,7 +40,6 @@ def test_export_from_successful_pipeline(trainer):
 
 
 def test_created_at_not_in_integrity_digest(trainer):
-    """created_at is metadata; digest ignores it."""
     result = trainer.process("meta check", admission=pipeline_admission())
     env = export_foundation_evidence(
         result,

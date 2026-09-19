@@ -32,6 +32,7 @@ Repository = "https://github.com/Kelronmos/SWI-V1-Module-1-10"
 
 [tool.setuptools.packages.find]
 include = ["swi_core*"]
+exclude = ["swi_test_helpers*", "test*", "tests*"]
 
 [tool.setuptools.package-data]
 swi_core = ["py.typed"]
@@ -47,6 +48,5 @@ markers = [
     "adversarial: Negative and hostile-input tests",
 ]
 
-# Coverage threshold is configuration only until release workflow enforces it.
 [tool.coverage.report]
 fail_under = 0

@@ -12,7 +12,8 @@ from swi_core.foundation_evidence import (
     sign_foundation_evidence,
     verify_signed_foundation_evidence,
 )
-from test.helpers_admission import TEST_COMMIT, sign_admission
+from swi_core.module_kernel import AdmissionRequiredError
+from swi_test_helpers.admission import TEST_COMMIT, sign_admission
 
 
 def _sample_envelope() -> FoundationEvidenceEnvelope:
@@ -93,8 +94,6 @@ def test_seal5_wrong_key_fails():
 
 
 def test_seal5_sign_rejects_without_admission():
-    from swi_core.module_kernel import AdmissionRequiredError
-
     priv, _ = generate_keypair()
     env = _sample_envelope()
     with pytest.raises(AdmissionRequiredError):

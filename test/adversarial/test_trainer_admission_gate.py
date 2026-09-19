@@ -10,7 +10,7 @@ from swi_core.admission_boundary import AdmissionDecision
 from swi_core.foundation_evidence import export_foundation_evidence
 from swi_core.module00_trainer import Trainer
 from swi_core.module_kernel import AdmissionRequiredError
-from test.helpers_admission import (
+from swi_test_helpers.admission import (
     TEST_COMMIT,
     export_admission,
     pipeline_admission,
@@ -20,7 +20,6 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_process_requires_admission_keyword():
-    """Omitting admission is a TypeError — no silent ungated path."""
     sig = inspect.signature(Trainer.process)
     param = sig.parameters["admission"]
     assert param.kind is inspect.Parameter.KEYWORD_ONLY
@@ -145,16 +144,13 @@ def test_claim_only_decision_cannot_run_process(tmp_path):
 
 
 def test_source_order_admission_before_turn_counter():
-    """Regression: admission check must appear before _turn_counter in process()."""
     src = (ROOT / "swi_core" / "module00_trainer.py").read_text(encoding="utf-8")
-    # Narrow to process method body
     start = src.index("def process(")
     body = src[start : src.index("return PipelineResult", start)]
     assert body.index("_require_admission") < body.index("_turn_counter += 1")
 
 
 def test_child_module_kernels_still_default_ungated():
-    """Residual surface: Universal Gate remains NOT PROVEN until these change."""
     from swi_core.module02_security_probe import SecurityProbe
 
     probe = SecurityProbe()

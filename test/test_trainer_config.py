@@ -2,7 +2,7 @@
 import datetime as dt
 
 from swi_core.module00_trainer import Trainer
-from test.helpers_admission import TEST_COMMIT, pipeline_admission
+from swi_test_helpers.admission import TEST_COMMIT, pipeline_admission
 
 
 def test_trainer_uses_default_config_when_no_path_given(tmp_path):

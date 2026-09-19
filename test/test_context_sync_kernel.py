@@ -6,7 +6,7 @@ import pytest
 from swi_core.module00_trainer import Trainer
 from swi_core.module03_context_sync import ContextSync
 from swi_core.module_kernel import ModuleKernelError
-from test.helpers_admission import TEST_COMMIT, pipeline_admission
+from swi_test_helpers.admission import TEST_COMMIT, pipeline_admission
 
 
 def test_first_turn_not_stale_gap_zero():

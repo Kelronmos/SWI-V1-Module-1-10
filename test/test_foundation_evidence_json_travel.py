@@ -10,7 +10,7 @@ from swi_core.foundation_evidence import (
     export_foundation_evidence,
 )
 from swi_core.module00_trainer import Trainer
-from test.helpers_admission import TEST_COMMIT, export_admission, pipeline_admission
+from swi_test_helpers.admission import TEST_COMMIT, export_admission, pipeline_admission
 
 
 def test_json_roundtrip_preserves_integrity(tmp_path):
