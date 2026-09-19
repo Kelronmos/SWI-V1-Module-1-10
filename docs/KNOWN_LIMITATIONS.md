@@ -1,6 +1,6 @@
 # Known Limitations — SWI V1
 
-**Status date:** 18 September 2026  
+**Status date:** 19 September 2026  
 **Rule:** Do not claim what the code cannot demonstrate.
 
 ## Module 07 — Memory Validator
@@ -20,10 +20,19 @@
 - Fail-closed on malformed lines.
 - Not a multi-node consensus log.
 
-## Module 10 — External Sandbox
+## Module 10 — External Sandbox (existing)
 
 - Subprocess with timeout; optional resource limits where the platform provides them.
 - Not a complete security sandbox or isolation guarantee.
+
+## Module 10 — Proposed Boundary / Evidence Handoff (BoundaryExporter)
+
+- **Status: PROPOSED / NOT ADMITTED** (see `docs/MODULE_10_ADMISSION_STATUS.md`).
+- Not part of the current canonical pipeline.
+- Any synthetic M07→M08→M09→M10 chain is unproven against the live architecture.
+- SHA-256 integrity digest ≠ digital signature ≠ non-repudiation.
+- In-memory duplicate-export flag ≠ durable replay protection.
+- Must not compete with or silently replace `FoundationEvidenceEnvelope` / `export_foundation_evidence()` without explicit reconciliation.
 
 ## Foundation evidence
 
@@ -47,3 +56,4 @@
 - No CEK, SAD-DFU, full Vector Memory, Alita, or Sovereign Mesh as complete systems.
 - Modules beyond 11 remain design-level until Foundation Seal 5 and evidence gates are satisfied.
 - «Do not claim what the code cannot demonstrate.»
+- MODULE NUMBER ≠ PERMISSION. MAPPED ≠ FROZEN ≠ SEALED ≠ AUTHORIZED.

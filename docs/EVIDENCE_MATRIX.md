@@ -9,5 +9,9 @@
 | CRTG / certificates | Spec only | **PROPOSED** |
 | V1 evidence export for V2 | — | **NOT IMPLEMENTED** |
 | Modules 11–46 in V1 | — | **BLOCKED** |
+| Proposed Module 10 BoundaryExporter (M07→M08→M09→M10 chain) | Red-team review 2026-09-19; no integration with canonical path | **PROPOSED / NOT ADMITTED** |
+| Existing Module 10 External Sandbox | Code + tests (subprocess isolation) | IMPLEMENTED / LIMITED (see KNOWN_LIMITATIONS) |
 
 Latest tip CI: re-check Actions for the exact SHA before sealing any new change. An older green run does not seal a newer commit.
+
+**Rule:** Module number is not permission. Proposed components remain construction references until the full evidence chain is satisfied.
