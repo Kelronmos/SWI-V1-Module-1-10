@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Kelronmos/SWI-V1-Module-1-10/schemas/swi_validation_evidence.schema.json",
+  "title": "SWI Validation Evidence Record",
+  "description": "Machine-readable evidence package. Does not assert legal compliance or certification.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "repository",
+    "commit",
+    "generated_at",
+    "status_vocabulary",
+    "control_assessments",
+    "framework_mappings",
+    "hard_non_claims",
+    "evidence_hash"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "repository": { "type": "string" },
+    "branch": { "type": ["string", "null"] },
+    "commit": { "type": "string" },
+    "tree": { "type": ["string", "null"] },
+    "generated_at": { "type": "string" },
+    "package": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "status_vocabulary": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "PASS",
+          "FAIL",
+          "BLOCKED",
+          "NOT_TESTED",
+          "NOT_PROVEN",
+          "PARTIAL",
+          "OPEN",
+          "PROPOSED",
+          "SEALED"
+        ]
+      }
+    },
+    "control_assessments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["control_id", "title", "status", "evidence_basis"],
+        "properties": {
+          "control_id": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "string" },
+          "evidence_basis": { "type": "string" },
+          "limitations": { "type": "string" }
+        }
+      }
+    },
+    "framework_mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "framework",
+          "reference",
+          "theme",
+          "swi_surface",
+          "status",
+          "notes"
+        ],
+        "properties": {
+          "framework": { "type": "string" },
+          "reference": { "type": "string" },
+          "theme": { "type": "string" },
+          "swi_surface": { "type": "string" },
+          "status": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "hard_non_claims": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "evidence_hash": {
+      "type": "string",
+      "description": "SHA-256 of canonical JSON excluding this field"
+    }
+  }
+}
