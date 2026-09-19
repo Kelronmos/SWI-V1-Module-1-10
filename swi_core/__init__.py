@@ -18,15 +18,29 @@ from .module_kernel import (
     ModuleKernel,
     ModuleKernelError,
 )
+from .security_maze import (
+    AccessState,
+    GateId,
+    GateOutcome,
+    MazeRun,
+    SecurityMaze,
+    MAZE_VERSION,
+)
 
 __version__ = "0.1.0a1"
 
 __all__ = [
+    "AccessState",
     "AdmissionDecision",
     "AdmissionRequiredError",
     "CheckResult",
+    "GateId",
+    "GateOutcome",
+    "MAZE_VERSION",
+    "MazeRun",
     "ModuleKernel",
     "ModuleKernelError",
+    "SecurityMaze",
     "evaluate_claim",
     "issue_admission_decision",
     "is_module_sealed",
