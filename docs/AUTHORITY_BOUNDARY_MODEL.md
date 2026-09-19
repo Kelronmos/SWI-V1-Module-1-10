@@ -1,7 +1,7 @@
 # Authority Boundary Model (V1)
 
-**Status:** DESIGNED → IMPLEMENTED → TESTED → **CI-VERIFIED pending green Actions on this tip**  
-**Date:** 18 September 2026  
+**Status:** DESIGNED → IMPLEMENTED → TESTED → **CI-VERIFIED on tip** · **NOT SEALED**  
+**Date:** 19 September 2026  
 **Contract id:** `authority_boundary_v0`  
 **Pair:** V2 `docs/AUTHORITY_BOUNDARY_MODEL.md` + `swi_v2.kernel.authority`
 
@@ -34,18 +34,19 @@ Implementation: `swi_core.authority`
 | Field | Value |
 |-------|--------|
 | Repository | Kelronmos/SWI-V1-Module-1-10 |
-| Authority SHA | `0ee6d349cdd5e023a44954036720380cf7d36d52` |
-| Prior CI run | `35325880471` — failure (claim-language; 3.10/3.11 green) |
+| Tip (maintenance) | `f1f6e266d4ac49698369752e4653b9c11e9a2d73` |
+| Tip CI run | [35342332253](https://github.com/Kelronmos/SWI-V1-Module-1-10/actions/runs/35342332253) — **success** |
+| Detail | `docs/TIP_CI_STATUS.md` |
 | Workflow | CI (`ci.yml`) |
-| Conclusion | **CI-VERIFIED** only after Actions success on **this** restore tip |
 
 ```text
 TESTED ≠ CI-VERIFIED ≠ AUDITED ≠ SEALED
 ```
 
-Lane A is **frozen**. Next: **Lane B — canonicalization** (same meaning → same canonical form → same digest). Canonicalization must not become an authority mechanism.
+Authority is **not** a production trust seal. Canonicalization must not become an authority mechanism. Bidirectional return path is **not** part of V1 (see V2 pre-R design only).
 
 ## Non-claims
 
 Does not seal M00–M10, Foundation Seal 5, CRTG, or factual truth.  
-Does not authorize M12 or unrestricted action.
+Does not authorize M12 or unrestricted action.  
+Does not implement a verified return / response gate.
