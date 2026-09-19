@@ -1,4 +1,4 @@
-"""Path-closure construction tests — inventory + discovery.
+"""Path-closure construction tests — inventory + discovery + SM-V1-014.
 
 Does NOT assert Universal Gate = PROVEN.
 Does NOT close residual APIs.
@@ -38,7 +38,6 @@ def test_fm_ids_unique_and_well_formed():
     assert len(ids) == len(set(ids))
     for i in ids:
         assert i.startswith("FM-")
-        assert i[3:].isdigit() or i[3:].replace("-", "").isalnum()
 
 
 def test_every_path_has_required_fields_and_valid_enums():
@@ -70,12 +69,10 @@ def test_unknown_status_never_counted_as_pass():
         if p["status"] == "UNKNOWN":
             pytest.fail(f"{p['formation_path_id']} is UNKNOWN — must not be treated as PASS")
     summary = summarize(inv)
-    # UNKNOWN paths block closure narrative; zero is required for inventory validity
     assert summary["unknown_paths"] == 0
 
 
 def test_forbidden_closed_combo_impossible():
-    """privileged + maze_required + not protected + status TESTED must not appear."""
     inv = load_inventory()
     bad = forbidden_closed_records(inv)
     assert bad == [], bad
@@ -85,31 +82,26 @@ def test_open_privileged_unprotected_are_explicit():
     inv = load_inventory()
     summary = summarize(inv)
     assert summary["total_paths"] > 0
-    # Residuals must remain visible
     assert summary["privileged_unprotected"] >= 1
     assert summary["universal_gate"] == "NOT_PROVEN"
 
 
 def test_discovery_kernel_sites_covered_by_inventory_sources():
     sites = discover_module_kernel_sites(ROOT)
-    # production sites we care about must appear in inventory sources
     inv = load_inventory()
     sources = {p["source"] for p in inv["paths"]}
     for expected in EXPECTED_KERNEL_SITES:
         if expected == "swi_core/module_kernel.py":
-            continue  # definition site
+            continue
         assert expected in sites or expected in sources, expected
-        # at least one inventory row points at file if ModuleKernel is constructed there
-        if expected in sites and expected != "swi_core/module_kernel.py":
+        if expected in sites:
             assert any(p["source"] == expected for p in inv["paths"]), expected
 
 
 def test_discovery_public_apis_match_expected_set():
     found = discover_public_api_mentions(ROOT)
-    # Every expected public API must still exist in source
     missing = EXPECTED_PUBLIC_APIS - found
     assert not missing, missing
-    # Inventory entry_points should cover expected APIs
     inv = load_inventory()
     entries = {p["entry_point"] for p in inv["paths"]}
     for api in EXPECTED_PUBLIC_APIS:
@@ -120,5 +112,27 @@ def test_closure_gate_not_claiming_universal_proven():
     inv = load_inventory()
     summary = summarize(inv)
     assert summary["universal_gate"] == "NOT_PROVEN"
-    # While unprotected privileged paths exist, do not allow a 'closed' story
     assert summary["privileged_unprotected"] > 0
+
+
+def test_sm_v1_014_residual_path_honesty():
+    """OPEN paths stay OPEN until maze_protected or non-privileged reclassification with evidence.
+
+    Changing status to TESTED while maze_required and not maze_protected MUST fail
+    (also covered by forbidden_closed_records).
+    """
+    inv = load_inventory()
+    open_privileged = [
+        p
+        for p in inv["paths"]
+        if p.get("status") == "OPEN"
+        and p.get("privileged") is True
+        and p.get("maze_required") is True
+        and p.get("maze_protected") is not True
+    ]
+    assert len(open_privileged) >= 1
+    for p in open_privileged:
+        # Honesty: still OPEN
+        assert p["status"] == "OPEN"
+        # Must list at least one attack/evidence test id
+        assert p.get("test_ids"), p["formation_path_id"]

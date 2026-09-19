@@ -1,9 +1,11 @@
 {
   "schema_version": "1",
-  "baseline_note": "Inventory validated against repository source; tip may advance after maze commits c6c004 / db5d63 / 1170f48 / c2db399",
+  "path_closure_baseline": "0e15fc96791cc97ab712dcdc1b76aab6dc66ee7e",
+  "baseline_note": "Path-closure inventory baseline; attack phase documents OPEN without reclassification",
   "universal_gate": "NOT_PROVEN",
   "security_maze_seal": "NOT_READY",
   "foundation_seal_5": "NOT_READY",
+  "sm_v1_014": "OPEN rows require maze enforcement or explicit non-privileged reclassification before status TESTED",
   "paths": [
     {
       "formation_path_id": "FM-001",
@@ -71,9 +73,9 @@
       "maze_required": true,
       "maze_protected": false,
       "classification": "COMPATIBILITY",
-      "test_ids": ["test_universal_gate_construction", "test_security_maze_v1"],
+      "test_ids": ["test_fm_005_default_kernel_unadmitted_run_forms_output_not_maze_authority"],
       "status": "OPEN",
-      "notes": "Default require_admission=False; strict mode tested when enabled"
+      "notes": "Default require_admission=False; unadmitted run forms output; not maze authority grant"
     },
     {
       "formation_path_id": "FM-006",
@@ -85,9 +87,9 @@
       "maze_required": true,
       "maze_protected": false,
       "classification": "PRIVILEGED",
-      "test_ids": ["test_residual_security_probe_scan_without_admission"],
+      "test_ids": ["test_fm_006_scan_without_admission_no_maze_authority"],
       "status": "OPEN",
-      "notes": "PRODUCTION residual; forms ProbeResult without admission"
+      "notes": "Unadmitted scan returns ProbeResult; maze_protected=false"
     },
     {
       "formation_path_id": "FM-007",
@@ -99,9 +101,9 @@
       "maze_required": true,
       "maze_protected": false,
       "classification": "PRIVILEGED",
-      "test_ids": ["test_residual_context_sync_record_turn_without_admission"],
+      "test_ids": ["test_fm_007_record_turn_without_admission_no_maze_authority"],
       "status": "OPEN",
-      "notes": "PRODUCTION residual; mutates history without admission"
+      "notes": "Unadmitted record_turn mutates history; maze_protected=false"
     },
     {
       "formation_path_id": "FM-008",
@@ -113,9 +115,9 @@
       "maze_required": true,
       "maze_protected": false,
       "classification": "PRIVILEGED",
-      "test_ids": ["test_residual_redaction_engine_redact_without_admission"],
+      "test_ids": ["test_fm_008_redact_without_admission_no_maze_authority"],
       "status": "OPEN",
-      "notes": "PRODUCTION residual"
+      "notes": "Unadmitted redact forms output; maze_protected=false"
     },
     {
       "formation_path_id": "FM-009",
@@ -127,9 +129,9 @@
       "maze_required": true,
       "maze_protected": false,
       "classification": "PRIVILEGED",
-      "test_ids": ["test_residual_drift_analyzer_check_without_admission"],
+      "test_ids": ["test_fm_009_check_without_admission_no_maze_authority"],
       "status": "OPEN",
-      "notes": "PRODUCTION residual"
+      "notes": "Unadmitted check forms result; maze_protected=false"
     },
     {
       "formation_path_id": "FM-010",
