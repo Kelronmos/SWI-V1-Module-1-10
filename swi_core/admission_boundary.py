@@ -9,26 +9,22 @@ Governing rules (must remain true):
   OLD CI / OLD SEAL ≠ CURRENT TIP
   SYNTHETIC RECEIPT ≠ REAL UPSTREAM PRODUCTION
 
-This module is a pure checker. It does not grant execution authority.
-It only answers: is this claim admissible under the current evidence?
-
-Input contract is fail-closed: malformed types, empty identifiers,
-non-hex commits, and boolean/string confusion are rejected.
+This module is a pure checker plus an AdmissionDecision object.
+It does not grant execution authority by itself.
+Universal gate is NOT proven until every formation path requires a valid decision.
 """
 
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import Any, Mapping, Optional
 
 
-# States that may never be self-asserted without a matching seal record + tip evidence.
 SEALED_REQUIRES_EVIDENCE = frozenset({"SEALED", "ADMITTED", "SYSTEM_VERIFIED", "RELEASED"})
 
-# States that block downstream execution paths.
 BLOCKED_STATES = frozenset({"BLOCKED", "PROPOSED", "NOT ADMITTED", "NOT READY", "REJECTED"})
 
-# Known governance states (others are rejected when a status is supplied).
 KNOWN_STATES = SEALED_REQUIRES_EVIDENCE | BLOCKED_STATES | frozenset(
     {
         "IMPLEMENTED",
@@ -54,6 +50,40 @@ _HEX_COMMIT_RE = re.compile(r"^[0-9a-fA-F]{7,64}$")
 _MODULE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._\-]{0,63}$")
 
 
+@dataclass(frozen=True)
+class AdmissionDecision:
+    """Non-boolean admission proof.
+
+    A plain True is never sufficient. Callers must hold this object and
+    pass is_valid_for(module, commit) before state formation when the
+    formation path is under the universal-gate construction regime.
+    """
+
+    ok: bool
+    module: Optional[str]
+    commit: Optional[str]
+    decision: str
+    reason: str
+    request_identity: Optional[str] = None
+    evidence_identity: Optional[str] = None
+    execution_authority: bool = False
+    architectural_admission: bool = False
+    seal: bool = False
+
+    def is_valid_for(
+        self,
+        module: Optional[str] = None,
+        commit: Optional[str] = None,
+    ) -> bool:
+        if not self.ok or not self.execution_authority:
+            return False
+        if module is not None and self.module is not None and str(module) != str(self.module):
+            return False
+        if commit is not None and self.commit is not None and str(commit) != str(self.commit):
+            return False
+        return True
+
+
 def _reject(reason: str, **extra: Any) -> dict[str, Any]:
     out: dict[str, Any] = {
         "ok": False,
@@ -69,7 +99,6 @@ def _accept(note: str = "ADMISSIBLE_AS_CLAIM_ONLY") -> dict[str, Any]:
         "ok": True,
         "action": "ACCEPT_CLAIM_ONLY",
         "note": note,
-        # Explicitly not executable authority
         "execution_authority": False,
         "architectural_admission": False,
         "seal": False,
@@ -77,12 +106,10 @@ def _accept(note: str = "ADMISSIBLE_AS_CLAIM_ONLY") -> dict[str, Any]:
 
 
 def _require_boolish_true(value: Any, field: str) -> Optional[dict[str, Any]]:
-    """Only Python True counts as true. String 'true' / 1 / '1' are rejected."""
     if value is True:
         return None
     if value is False or value is None:
         return None
-    # Anything else used as a truthy authority signal is type confusion
     if value in ("true", "True", "TRUE", 1, "1", "yes", "YES"):
         return _reject(
             "BOOLEAN_STRING_CONFUSION",
@@ -129,18 +156,13 @@ def evaluate_claim(
     current_commit: Optional[str] = None,
     evidence_index: Optional[Mapping[str, Any]] = None,
 ) -> dict[str, Any]:
-    """Evaluate whether a claim object is admissible.
-
-    Returns a structured decision. Never silently returns True for authority.
-    Fail-closed on malformed inputs.
-    """
+    """Evaluate whether a claim object is admissible. Fail-closed on malformed inputs."""
     if not isinstance(claim, Mapping):
         return _reject("CLAIM_NOT_A_MAPPING", observed=type(claim).__name__)
 
     seal_records = seal_records or {}
     evidence_index = evidence_index or {}
 
-    # Fail closed if seal_records / evidence_index are wrong types
     if not isinstance(seal_records, Mapping):
         return _reject("SEAL_RECORDS_NOT_A_MAPPING")
     if not isinstance(evidence_index, Mapping):
@@ -167,24 +189,26 @@ def evaluate_claim(
         return _reject("SOURCE_NOT_A_STRING", observed=type(source_raw).__name__)
     source = source_raw.lower().strip()
 
-    # Boolean/string confusion on authority flags
-    for field in ("verified", "authorized", "executable", "force_execute",
-                  "payload_modified", "hash_recalculated", "synthetic"):
+    for field in (
+        "verified",
+        "authorized",
+        "executable",
+        "force_execute",
+        "payload_modified",
+        "hash_recalculated",
+        "synthetic",
+    ):
         if field in claim:
             err = _require_boolish_true(claim.get(field), field)
             if err:
                 return err
 
-    # Commit fields on the claim itself
     for field in ("seal_commit", "evidence_commit", "ci_commit", "ci_success_commit"):
         if field in claim:
             err = _validate_commit(claim.get(field), field)
             if err:
                 return err
 
-    # ------------------------------------------------------------------
-    # Attack 2 / documentation injection
-    # ------------------------------------------------------------------
     if source in {"documentation", "readme", "docs", "markdown", "comment"}:
         if status in SEALED_REQUIRES_EVIDENCE:
             return _reject(
@@ -194,9 +218,6 @@ def evaluate_claim(
                 detail="DOCUMENTATION ≠ ADMISSION ≠ SEAL",
             )
 
-    # ------------------------------------------------------------------
-    # Attack 1 — fake seal
-    # ------------------------------------------------------------------
     if status in SEALED_REQUIRES_EVIDENCE:
         if not module:
             return _reject("SEAL_CLAIM_MISSING_MODULE", status=status)
@@ -223,9 +244,6 @@ def evaluate_claim(
                 detail="OLD SEAL ≠ CURRENT IMPLEMENTATION",
             )
 
-    # ------------------------------------------------------------------
-    # Attack 3 — old CI substitution
-    # ------------------------------------------------------------------
     seal_commit = claim.get("seal_commit") or claim.get("evidence_commit")
     ci_commit = claim.get("ci_commit") or claim.get("ci_success_commit")
     if current_commit and seal_commit and ci_commit:
@@ -237,15 +255,9 @@ def evaluate_claim(
                 ci_commit=ci_commit,
             )
 
-    # ------------------------------------------------------------------
-    # Attack 4 — module-number injection
-    # ------------------------------------------------------------------
     if module is not None and not status:
         return _accept(note="MODULE_NUMBER_IS_CONSTRUCTION_REFERENCE")
 
-    # ------------------------------------------------------------------
-    # Attack 5 — fake upstream receipt chain
-    # ------------------------------------------------------------------
     upstream = claim.get("upstream_receipts") or claim.get("receipt_chain")
     if upstream is not None:
         if not isinstance(upstream, (list, tuple)):
@@ -258,25 +270,18 @@ def evaluate_claim(
                     "SYNTHETIC_UPSTREAM_RECEIPT",
                     detail="Valid hash strings do not establish real module production",
                 )
-            # string "true" on synthetic also rejected via boolean confusion above if present
             if not item.get("produced_by_module") and not item.get("evidence_ref"):
                 return _reject(
                     "UPSTREAM_RECEIPT_MISSING_PROVENANCE",
                     detail="Receipt must bind to a real module or evidence_ref",
                 )
 
-    # ------------------------------------------------------------------
-    # Attack 6 — hash laundering
-    # ------------------------------------------------------------------
     if claim.get("payload_modified") is True and claim.get("hash_recalculated") is True:
         return _reject(
             "HASH_LAUNDERING",
             detail="Recalculated hash after semantic change is not automatic trust",
         )
 
-    # ------------------------------------------------------------------
-    # Attack 7 — seal laundering
-    # ------------------------------------------------------------------
     if claim.get("rebound_from_module") and claim.get("original_seal_module"):
         if str(claim.get("rebound_from_module")) != str(claim.get("original_seal_module")):
             return _reject(
@@ -286,9 +291,6 @@ def evaluate_claim(
                 detail="Seal is bound to its original module domain",
             )
 
-    # ------------------------------------------------------------------
-    # Attack 8 — authority laundering
-    # ------------------------------------------------------------------
     if claim.get("verified") is True:
         if claim.get("authorized") is True or claim.get("executable") is True:
             if not claim.get("admission_artifact") and not claim.get("execution_authority_record"):
@@ -297,9 +299,6 @@ def evaluate_claim(
                     detail="verified=true does not imply authorized or executable",
                 )
 
-    # ------------------------------------------------------------------
-    # Attack 9 — blocked-path bypass
-    # ------------------------------------------------------------------
     if status in BLOCKED_STATES:
         if claim.get("force_execute") is True or claim.get("executable") is True:
             return _reject(
@@ -315,9 +314,6 @@ def evaluate_claim(
                 proposed_construction_module=module,
             )
 
-    # ------------------------------------------------------------------
-    # Attack 10 — seal mutation
-    # ------------------------------------------------------------------
     if current_commit and seal_commit and seal_commit != current_commit:
         if status in SEALED_REQUIRES_EVIDENCE:
             return _reject(
@@ -330,6 +326,110 @@ def evaluate_claim(
     return _accept()
 
 
+def issue_admission_decision(
+    claim: Mapping[str, Any],
+    *,
+    seal_records: Optional[Mapping[str, Any]] = None,
+    current_commit: Optional[str] = None,
+    evidence_index: Optional[Mapping[str, Any]] = None,
+    grant_execution: bool = False,
+    request_identity: Optional[str] = None,
+    evidence_identity: Optional[str] = None,
+) -> AdmissionDecision:
+    """Turn evaluate_claim into an AdmissionDecision.
+
+    grant_execution=True is only honored when evaluate_claim returns ok and
+    the claim is not merely a construction reference. Claim-only acceptance
+    never yields execution_authority.
+    """
+    result = evaluate_claim(
+        claim,
+        seal_records=seal_records,
+        current_commit=current_commit,
+        evidence_index=evidence_index,
+    )
+    module = None
+    if isinstance(claim, Mapping):
+        module = claim.get("module") or claim.get("module_id")
+        if module is not None:
+            module = str(module)
+
+    if not result.get("ok"):
+        return AdmissionDecision(
+            ok=False,
+            module=module,
+            commit=current_commit,
+            decision="REJECT",
+            reason=str(result.get("reason") or "REJECTED"),
+            request_identity=request_identity,
+            evidence_identity=evidence_identity,
+            execution_authority=False,
+            architectural_admission=False,
+            seal=False,
+        )
+
+    # ACCEPT_CLAIM_ONLY never becomes execution authority
+    if result.get("action") == "ACCEPT_CLAIM_ONLY" and not grant_execution:
+        return AdmissionDecision(
+            ok=True,
+            module=module,
+            commit=current_commit,
+            decision="ACCEPT_CLAIM_ONLY",
+            reason=str(result.get("note") or "CLAIM_ONLY"),
+            request_identity=request_identity,
+            evidence_identity=evidence_identity,
+            execution_authority=False,
+            architectural_admission=False,
+            seal=False,
+        )
+
+    if grant_execution and result.get("ok"):
+        # Still refuse if evaluate_claim explicitly set execution_authority False
+        # and action is claim-only without an admission_artifact on the claim.
+        has_artifact = bool(
+            isinstance(claim, Mapping)
+            and (claim.get("admission_artifact") or claim.get("execution_authority_record"))
+        )
+        if result.get("action") == "ACCEPT_CLAIM_ONLY" and not has_artifact:
+            return AdmissionDecision(
+                ok=True,
+                module=module,
+                commit=current_commit,
+                decision="ACCEPT_CLAIM_ONLY",
+                reason="GRANT_EXECUTION_REFUSED_WITHOUT_ADMISSION_ARTIFACT",
+                request_identity=request_identity,
+                evidence_identity=evidence_identity,
+                execution_authority=False,
+                architectural_admission=False,
+                seal=False,
+            )
+        return AdmissionDecision(
+            ok=True,
+            module=module,
+            commit=current_commit,
+            decision="ADMITTED",
+            reason="ADMITTED_WITH_ARTIFACT",
+            request_identity=request_identity,
+            evidence_identity=evidence_identity,
+            execution_authority=True,
+            architectural_admission=True,
+            seal=False,
+        )
+
+    return AdmissionDecision(
+        ok=True,
+        module=module,
+        commit=current_commit,
+        decision=str(result.get("action") or "ACCEPT_CLAIM_ONLY"),
+        reason=str(result.get("note") or "CLAIM_ONLY"),
+        request_identity=request_identity,
+        evidence_identity=evidence_identity,
+        execution_authority=False,
+        architectural_admission=False,
+        seal=False,
+    )
+
+
 def is_module_sealed(
     module: str,
     *,
@@ -337,7 +437,6 @@ def is_module_sealed(
     current_commit: Optional[str] = None,
     documentation_says_sealed: bool = False,
 ) -> dict[str, Any]:
-    """Convenience: is this module sealed under executable rules?"""
     claim = {
         "module": module,
         "status": "SEALED",
