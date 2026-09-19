@@ -6,8 +6,9 @@ M07 normal-path integrity failures and M09 integrity/persistence failures
 also STOP (ModuleKernelError).
 Halt recording remains best-effort and never converts failure into success.
 
-Admission: Trainer.process requires keyword-only admission: AdmissionDecision
-before any state formation (turn counter, module calls, M07/M09 writes).
+Admission: Trainer.process requires keyword-only admission (AdmissionDecision
+shape: object with is_valid_for(module, commit)) before any state formation
+(turn counter, module calls, M07/M09 writes).
 There is no admission=None production fallback.
 
 _record_halt is only reachable after admission has succeeded (post-admission
@@ -19,7 +20,7 @@ not proven for those residual surfaces.
 from __future__ import annotations
 import datetime as _dt
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Optional
+from typing import Any, Optional
 
 from .config_loader import load_config
 from .module02_security_probe import SecurityProbe, ProbeResult
@@ -29,9 +30,6 @@ from .module06_drift_analyzer import DriftAnalyzer, DriftResult
 from .module07_memory_validator import MemoryValidator
 from .module09_audit_logger import AuditLogger
 from .module_kernel import AdmissionRequiredError, ModuleKernelError
-
-if TYPE_CHECKING:
-    from .admission_boundary import AdmissionDecision
 
 # Pipeline module identity for admission binding
 TRAINER_MODULE_ID = "00"
@@ -117,12 +115,17 @@ class Trainer:
         text: str,
         timestamp: Optional[_dt.datetime] = None,
         *,
-        admission: AdmissionDecision,
+        admission: Any,
     ) -> PipelineResult:
-        """Run the pipeline only after a valid AdmissionDecision.
+        """Run the pipeline only after a valid admission object.
 
         ``admission`` is required (keyword-only). Omitting it is a TypeError.
         Passing an invalid decision is AdmissionRequiredError before turn++.
+
+        Expected shape: object with is_valid_for(module, commit) -> bool
+        (typically AdmissionDecision from admission_boundary). No runtime
+        import of AdmissionDecision here — duck-typed to keep production
+        import surface minimal.
         """
         # First executable boundary — before turn counter and all side effects.
         self._require_admission(admission)

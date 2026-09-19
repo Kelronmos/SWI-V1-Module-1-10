@@ -216,11 +216,12 @@ def test_attack_09_module_10_admission_status_is_blocked():
 # ---------------------------------------------------------------------------
 
 def test_attack_10_old_seal_does_not_cover_new_tip():
-    claim = {"module": "M05", "status": "SEALED", "seal_commit": "oldsha1"}
+    # Valid 7+ character hex commit identifiers (required by COMMIT_NOT_HEX rule)
+    claim = {"module": "M05", "status": "SEALED", "seal_commit": "aaaaaaa"}
     result = evaluate_claim(
         claim,
-        seal_records={"M05": {"commit": "oldsha1"}},
-        current_commit="newsha2",
+        seal_records={"M05": {"commit": "aaaaaaa"}},
+        current_commit="bbbbbbb",
     )
     assert result["ok"] is False
     assert result["reason"] in ("SEAL_COMMIT_MISMATCH", "SEAL_MUTATION")

@@ -156,7 +156,20 @@ def evaluate_claim(
     current_commit: Optional[str] = None,
     evidence_index: Optional[Mapping[str, Any]] = None,
 ) -> dict[str, Any]:
-    """Evaluate whether a claim object is admissible. Fail-closed on malformed inputs."""
+    """Evaluate whether a claim object is admissible. Fail-closed on malformed inputs.
+
+    Ordering is a security property:
+
+      validate malformed input
+        → validate seal/CI binding
+        → validate upstream receipts
+        → validate hash laundering
+        → validate authority laundering
+        → validate blocked-path bypass
+        → ONLY THEN bare module number → CONSTRUCTION_REFERENCE
+
+    An early accept on module-without-status must never skip the checks above.
+    """
     if not isinstance(claim, Mapping):
         return _reject("CLAIM_NOT_A_MAPPING", observed=type(claim).__name__)
 
@@ -255,9 +268,7 @@ def evaluate_claim(
                 ci_commit=ci_commit,
             )
 
-    if module is not None and not status:
-        return _accept(note="MODULE_NUMBER_IS_CONSTRUCTION_REFERENCE")
-
+    # --- All security / laundering checks BEFORE construction-reference accept ---
     upstream = claim.get("upstream_receipts") or claim.get("receipt_chain")
     if upstream is not None:
         if not isinstance(upstream, (list, tuple)):
@@ -323,6 +334,10 @@ def evaluate_claim(
                 detail="OLD SEAL ≠ CURRENT IMPLEMENTATION",
             )
 
+    # ONLY after all rejection checks: bare module number is construction reference
+    if module is not None and not status:
+        return _accept(note="MODULE_NUMBER_IS_CONSTRUCTION_REFERENCE")
+
     return _accept()
 
 
@@ -384,8 +399,6 @@ def issue_admission_decision(
         )
 
     if grant_execution and result.get("ok"):
-        # Still refuse if evaluate_claim explicitly set execution_authority False
-        # and action is claim-only without an admission_artifact on the claim.
         has_artifact = bool(
             isinstance(claim, Mapping)
             and (claim.get("admission_artifact") or claim.get("execution_authority_record"))
