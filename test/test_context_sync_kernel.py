@@ -6,6 +6,7 @@ import pytest
 from swi_core.module00_trainer import Trainer
 from swi_core.module03_context_sync import ContextSync
 from swi_core.module_kernel import ModuleKernelError
+from test.helpers_admission import TEST_COMMIT, pipeline_admission
 
 
 def test_first_turn_not_stale_gap_zero():
@@ -78,7 +79,7 @@ def test_ctor_rejects_bool_staleness():
 
 def test_trainer_halt_on_module_03_kernel(tmp_path, monkeypatch):
     log = tmp_path / "audit.jsonl"
-    trainer = Trainer(str(log))
+    trainer = Trainer(str(log), expected_commit=TEST_COMMIT)
     called = {"n": 0}
     original = trainer.security.scan
 
@@ -88,7 +89,11 @@ def test_trainer_halt_on_module_03_kernel(tmp_path, monkeypatch):
 
     monkeypatch.setattr(trainer.security, "scan", wrapped)
     with pytest.raises(ModuleKernelError) as ei:
-        trainer.process("hello", timestamp="not-a-datetime")  # type: ignore[arg-type]
+        trainer.process(
+            "hello",
+            timestamp="not-a-datetime",  # type: ignore[arg-type]
+            admission=pipeline_admission(),
+        )
     assert "halted_by_module_03_kernel" in str(ei.value)
     assert called["n"] == 0
 
@@ -97,11 +102,13 @@ def test_trainer_stale_does_not_halt(tmp_path):
     log = tmp_path / "audit.jsonl"
     cfg = tmp_path / "cfg.yaml"
     cfg.write_text("context_sync:\n  staleness_seconds: 10\n")
-    trainer = Trainer(str(log), config_path=str(cfg))
+    trainer = Trainer(str(log), config_path=str(cfg), expected_commit=TEST_COMMIT)
     t0 = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
-    trainer.process("hello", timestamp=t0)
+    trainer.process("hello", timestamp=t0, admission=pipeline_admission())
     result = trainer.process(
-        "hello again", timestamp=t0 + dt.timedelta(seconds=100)
+        "hello again",
+        timestamp=t0 + dt.timedelta(seconds=100),
+        admission=pipeline_admission(),
     )
     assert result.sync.stale is True
     assert result.allowed is True

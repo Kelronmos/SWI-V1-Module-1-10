@@ -12,6 +12,7 @@ from swi_core.foundation_evidence import (
     sign_foundation_evidence,
     verify_signed_foundation_evidence,
 )
+from test.helpers_admission import TEST_COMMIT, sign_admission
 
 
 def _sample_envelope() -> FoundationEvidenceEnvelope:
@@ -40,7 +41,9 @@ def _sample_envelope() -> FoundationEvidenceEnvelope:
 def test_seal5_sign_verify_roundtrip():
     priv, pub = generate_keypair()
     env = _sample_envelope()
-    signed = sign_foundation_evidence(env, priv)
+    signed = sign_foundation_evidence(
+        env, priv, admission=sign_admission(), expected_commit=TEST_COMMIT
+    )
     assert signed.public_key_hex == pub.hex()
     assert signed.seal5_version == SEAL5_VERSION
     assert verify_signed_foundation_evidence(signed) is True
@@ -49,7 +52,9 @@ def test_seal5_sign_verify_roundtrip():
 def test_seal5_tampered_integrity_fails():
     priv, _ = generate_keypair()
     env = _sample_envelope()
-    signed = sign_foundation_evidence(env, priv)
+    signed = sign_foundation_evidence(
+        env, priv, admission=sign_admission(), expected_commit=TEST_COMMIT
+    )
     bad_env = FoundationEvidenceEnvelope(
         payload=env.payload,
         foundation_version=env.foundation_version,
@@ -74,7 +79,9 @@ def test_seal5_wrong_key_fails():
     priv1, _ = generate_keypair()
     _, pub2 = generate_keypair()
     env = _sample_envelope()
-    signed = sign_foundation_evidence(env, priv1)
+    signed = sign_foundation_evidence(
+        env, priv1, admission=sign_admission(), expected_commit=TEST_COMMIT
+    )
     swapped = SignedFoundationEvidence(
         envelope=signed.envelope,
         signature_hex=signed.signature_hex,
@@ -83,3 +90,12 @@ def test_seal5_wrong_key_fails():
     )
     with pytest.raises(SignatureVerificationError):
         verify_signed_foundation_evidence(swapped)
+
+
+def test_seal5_sign_rejects_without_admission():
+    from swi_core.module_kernel import AdmissionRequiredError
+
+    priv, _ = generate_keypair()
+    env = _sample_envelope()
+    with pytest.raises(AdmissionRequiredError):
+        sign_foundation_evidence(env, priv)

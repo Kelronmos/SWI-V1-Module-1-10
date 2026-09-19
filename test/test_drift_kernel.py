@@ -7,6 +7,7 @@ from swi_core.module00_trainer import Trainer
 from swi_core.module02_security_probe import ProbeResult
 from swi_core.module06_drift_analyzer import DriftAnalyzer, DriftResult
 from swi_core.module_kernel import ModuleKernelError
+from test.helpers_admission import TEST_COMMIT, pipeline_admission
 
 
 def test_topic_shift_still_detected():
@@ -114,7 +115,7 @@ def test_ctor_rejects_invalid_threshold():
 
 
 def test_trainer_halt_on_module_06_kernel(tmp_path, monkeypatch):
-    trainer = Trainer(str(tmp_path / "a.log"))
+    trainer = Trainer(str(tmp_path / "a.log"), expected_commit=TEST_COMMIT)
     trainer.drift.set_baseline(["general customer support conversation about billing"])
     monkeypatch.setattr(
         trainer.drift,
@@ -122,21 +123,24 @@ def test_trainer_halt_on_module_06_kernel(tmp_path, monkeypatch):
         lambda text: DriftResult(similarity=2.0, drifted=False),
     )
     with pytest.raises(ModuleKernelError) as ei:
-        trainer.process("hello about billing support")
+        trainer.process("hello about billing support", admission=pipeline_admission())
     assert "halted_by_module_06_kernel" in str(ei.value)
 
 
 def test_trainer_drifted_true_does_not_halt(tmp_path):
-    trainer = Trainer(str(tmp_path / "a.log"))
+    trainer = Trainer(str(tmp_path / "a.log"), expected_commit=TEST_COMMIT)
     trainer.drift.set_baseline(["quarterly revenue finance forecasts"])
-    result = trainer.process("completely unrelated chocolate cake recipe frosting")
+    result = trainer.process(
+        "completely unrelated chocolate cake recipe frosting",
+        admission=pipeline_admission(),
+    )
     assert result.drift is not None
     assert result.drift.drifted is True
     assert result.allowed is True
 
 
 def test_security_block_skips_drift(tmp_path, monkeypatch):
-    trainer = Trainer(str(tmp_path / "a.log"))
+    trainer = Trainer(str(tmp_path / "a.log"), expected_commit=TEST_COMMIT)
     called = {"n": 0}
 
     def spy(text):
@@ -151,7 +155,7 @@ def test_security_block_skips_drift(tmp_path, monkeypatch):
             risk_score=0.9, triggered=["x"], block_threshold=0.5
         ),
     )
-    result = trainer.process("hello")
+    result = trainer.process("hello", admission=pipeline_admission())
     assert result.allowed is False
     assert called["n"] == 0
     assert result.drift is None
