@@ -1,0 +1,34 @@
+# SWI V1 — sensitive path ownership
+# When branch protection / rulesets require CODEOWNERS review,
+# changes to these paths need approval from the listed owner.
+#
+# MODULE NUMBER ≠ PERMISSION
+# Documentation ownership ≠ architectural admission
+
+# Admission / claim boundary
+/swi_core/admission_boundary.py @Kelronmos
+
+# Core runtime
+/swi_core/ @Kelronmos
+
+# Security & adversarial tests
+/security/ @Kelronmos
+/test/adversarial/ @Kelronmos
+/tests/ @Kelronmos
+/test/ @Kelronmos
+
+# CI / automation
+/.github/ @Kelronmos
+/scripts/verify.sh @Kelronmos
+/scripts/check_claim_language.py @Kelronmos
+
+# Governance & evidence doctrine
+/docs/GOVERNANCE_LOCK.md @Kelronmos
+/docs/EVIDENCE_MATRIX.md @Kelronmos
+/docs/MODULE_10_ADMISSION_STATUS.md @Kelronmos
+/docs/EVIDENCE_BOUNDARY_230_STEP_STATUS.md @Kelronmos
+/docs/KNOWN_LIMITATIONS.md @Kelronmos
+/docs/SECURITY* @Kelronmos
+
+# Default: all other paths
+* @Kelronmos
