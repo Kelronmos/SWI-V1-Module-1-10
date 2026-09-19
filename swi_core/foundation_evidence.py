@@ -4,6 +4,9 @@ V1 Foundation Evidence Producer
 Produces a versioned FoundationEvidenceEnvelope from a successful PipelineResult
 for cross-repository consumption (V2 M11).
 
+export_foundation_evidence / sign_foundation_evidence require a valid
+AdmissionDecision before envelope or signature formation.
+
 Integrity (SHA-256) covers ONLY:
   payload, foundation_version, evidence_schema_version,
   evidence_id, source_reference
@@ -22,12 +25,16 @@ from dataclasses import asdict, dataclass
 from typing import Any, Optional
 
 from .module00_trainer import PipelineResult
+from .module_kernel import AdmissionRequiredError
 
 FOUNDATION_VERSION = "1.0-proposed"
 EVIDENCE_SCHEMA_VERSION = "1.0-proposed"
 VERIFICATION_STATUS_V1_PIPELINE = "v1_trainer_pipeline_completed"
 SOURCE_REFERENCE = "Kelronmos/SWI-V1-Module-1-10:Trainer.process"
 SEAL5_VERSION = "seal5-v0"
+
+EXPORT_MODULE_ID = "foundation_export"
+SIGN_MODULE_ID = "foundation_sign"
 
 
 @dataclass(frozen=True)
@@ -50,6 +57,20 @@ class SignedFoundationEvidence:
     signature_hex: str
     public_key_hex: str
     seal5_version: str = SEAL5_VERSION
+
+
+def _require_admission(admission: Any, module_id: str, expected_commit: Optional[str] = None) -> None:
+    if admission is None:
+        raise AdmissionRequiredError(
+            f"{module_id}: STATE_FORMATION_WITHOUT_ADMISSION"
+        )
+    is_valid = getattr(admission, "is_valid_for", None)
+    if not callable(is_valid):
+        raise AdmissionRequiredError(f"{module_id}: ADMISSION_OBJECT_INVALID")
+    if not admission.is_valid_for(module=module_id, commit=expected_commit):
+        raise AdmissionRequiredError(
+            f"{module_id}: ADMISSION_NOT_VALID_FOR_CONTEXT"
+        )
 
 
 def compute_integrity_reference(
@@ -117,9 +138,13 @@ def _payload_from_pipeline(result: PipelineResult) -> dict:
 def export_foundation_evidence(
     result: PipelineResult,
     *,
+    admission: Any = None,
+    expected_commit: Optional[str] = None,
     evidence_id: Optional[str] = None,
     source_reference: str = SOURCE_REFERENCE,
 ) -> FoundationEvidenceEnvelope:
+    _require_admission(admission, EXPORT_MODULE_ID, expected_commit)
+
     if not isinstance(result, PipelineResult):
         raise TypeError("export_foundation_evidence requires a PipelineResult")
     payload = _payload_from_pipeline(result)
@@ -164,11 +189,17 @@ def sign_foundation_evidence(
     envelope: FoundationEvidenceEnvelope,
     private_key: bytes,
     public_key: bytes | None = None,
+    *,
+    admission: Any = None,
+    expected_commit: Optional[str] = None,
 ) -> SignedFoundationEvidence:
     """Optional Seal 5 Ed25519 signature over integrity-bound material.
 
+    Requires valid AdmissionDecision for foundation_sign before any signing.
     If public_key is omitted, it is derived from private_key (Seal 5 v0 helper).
     """
+    _require_admission(admission, SIGN_MODULE_ID, expected_commit)
+
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
     from .ed25519_sig import canonical_message, sign_ed25519

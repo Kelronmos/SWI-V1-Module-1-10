@@ -6,20 +6,15 @@ M07 normal-path integrity failures and M09 integrity/persistence failures
 also STOP (ModuleKernelError).
 Halt recording remains best-effort and never converts failure into success.
 
-stale / out_of_order / drifted remain advisory flags.
-
-Runtime config: security_probe.block_threshold, context_sync.staleness_seconds,
-drift_analyzer.drift_threshold.
-
-Terminology note:
-- M07 is an in-process, in-memory hash-chain (integrity only).
-- M09 is the on-disk audit log (persistence + integrity).
-Do not describe an M07 failure as a "persistence" failure.
+Admission: Trainer.process requires a valid AdmissionDecision before any
+state formation (turn counter, module calls, M07/M09 writes).
+This does not gate direct module APIs (scan/redact/…); Universal Gate is
+not proven for those surfaces.
 """
 from __future__ import annotations
 import datetime as _dt
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 from .config_loader import load_config
 from .module02_security_probe import SecurityProbe, ProbeResult
@@ -28,7 +23,10 @@ from .module05_redaction_engine import RedactionEngine, RedactionResult
 from .module06_drift_analyzer import DriftAnalyzer, DriftResult
 from .module07_memory_validator import MemoryValidator
 from .module09_audit_logger import AuditLogger
-from .module_kernel import ModuleKernelError
+from .module_kernel import AdmissionRequiredError, ModuleKernelError
+
+# Pipeline module identity for admission binding
+TRAINER_MODULE_ID = "00"
 
 
 @dataclass
@@ -44,7 +42,13 @@ class PipelineResult:
 class Trainer:
     """Module 00: orchestrates Modules 02, 03, 05, 06, 07, 09 into one pipeline."""
 
-    def __init__(self, audit_log_path: str, config_path: Optional[str] = None):
+    def __init__(
+        self,
+        audit_log_path: str,
+        config_path: Optional[str] = None,
+        *,
+        expected_commit: Optional[str] = None,
+    ):
         self.config = load_config(config_path)
         self.security = SecurityProbe(
             block_threshold=self.config.get("security_probe", "block_threshold")
@@ -59,6 +63,25 @@ class Trainer:
         self.memory = MemoryValidator()
         self.audit = AuditLogger(audit_log_path)
         self._turn_counter = 0
+        self.expected_commit = expected_commit
+
+    def _require_admission(self, admission: Any) -> None:
+        if admission is None:
+            raise AdmissionRequiredError(
+                "Trainer.process: STATE_FORMATION_WITHOUT_ADMISSION"
+            )
+        is_valid = getattr(admission, "is_valid_for", None)
+        if not callable(is_valid):
+            raise AdmissionRequiredError(
+                "Trainer.process: ADMISSION_OBJECT_INVALID"
+            )
+        if not admission.is_valid_for(
+            module=TRAINER_MODULE_ID,
+            commit=self.expected_commit,
+        ):
+            raise AdmissionRequiredError(
+                "Trainer.process: ADMISSION_NOT_VALID_FOR_CONTEXT"
+            )
 
     def _record_halt(self, reason: str) -> None:
         payload = {
@@ -77,8 +100,15 @@ class Trainer:
             pass
 
     def process(
-        self, text: str, timestamp: Optional[_dt.datetime] = None
+        self,
+        text: str,
+        timestamp: Optional[_dt.datetime] = None,
+        *,
+        admission: Any = None,
     ) -> PipelineResult:
+        # Admission before any formation (including turn counter).
+        self._require_admission(admission)
+
         self._turn_counter += 1
 
         try:
@@ -134,8 +164,6 @@ class Trainer:
         try:
             self.memory.append(memory_payload)
         except Exception as exc:
-            # M07 is in-memory only; an append failure is still an integrity/chain
-            # path failure, not disk persistence (that language is reserved for M09).
             reason = f"halted_by_module_07_integrity:{exc}"
             self._record_halt(reason)
             raise ModuleKernelError(reason) from exc
