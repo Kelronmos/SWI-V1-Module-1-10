@@ -8,7 +8,7 @@ Structured Workflow Intelligence reference implementation.
 
 **Licence:** [Apache License 2.0](LICENSE)  
 **Start:** [`docs/START_HERE.md`](docs/START_HERE.md) · **Governance:** [`docs/GOVERNANCE_LOCK.md`](docs/GOVERNANCE_LOCK.md)  
-**Tip CI:** [`docs/TIP_CI_STATUS.md`](docs/TIP_CI_STATUS.md) · **Contribute:** [`CONTRIBUTING.md`](CONTRIBUTING.md)
+**Tip CI:** [`docs/TIP_CI_STATUS.md`](docs/TIP_CI_STATUS.md) · **pre-R (design):** [`docs/PRE_R_INDEX.md`](docs/PRE_R_INDEX.md)
 
 ## Verify
 
@@ -26,7 +26,7 @@ M03 → M02 → M05 → M06 → M07 / M09 → PipelineResult
         → export_foundation_evidence() → FoundationEvidenceEnvelope
 ```
 
-Kernel contract failure → **HALT**. M02 block / M03 stale / M06 drifted remain policy or **advisory** as documented.
+Kernel contract failure → **HALT**.
 
 ## Status (honest)
 
@@ -41,16 +41,8 @@ Kernel contract failure → **HALT**. M02 block / M03 stale / M06 drifted remain
 | Ed25519 helper | Primitive only · **not CRTG** |
 | **Foundation Seal 5** | **NOT READY** |
 | CRTG | PROPOSED / design track |
-| Tip CI (Actions) | See `docs/TIP_CI_STATUS.md` |
-| Bidirectional verified return path | **Not in V1** — experimental **pre-R** on V2 only |
-
-## v1.1 upgrade
-
-- Working `Scar` model + `ScarStore` (content hashing, Sovereign priority, integrity root, optional SQLite).
-- Module 07 can validate attached ScarStore integrity.
-- Module 11 Continuity Lock (bounded state tags, optional persistence).
-- Tests for new components.
-- No false seal claims.
+| Tip CI | See `docs/TIP_CI_STATUS.md` |
+| Bidirectional return path (pre-R) | **DESIGN only** · NOT AUTHORIZED · NOT IMPLEMENTED |
 
 ## Progression rule
 
@@ -59,13 +51,4 @@ Readiness % never overrides a failed critical gate.
 
 «Do not claim what the code cannot demonstrate.»
 
-Next: **prove the foundation** (Seal 5 path), then progressive admission of higher modules under evidence discipline.  
-Do not treat green CI as Seal 5 or as a verified return path.
-
-## Collaboration
-
-SWI is open for collaboration under Apache-2.0.  
-Contribution does not rewrite provenance.  
-Evidence is required before claims are accepted.
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full policy.
+Next: **prove the foundation** (Seal 5 path). pre-R remains experimental design until explicitly authorized.
