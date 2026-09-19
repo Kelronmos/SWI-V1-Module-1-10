@@ -22,6 +22,7 @@ run_check "Module 06 kernel tests" python -m pytest -q test/test_drift_kernel.py
 run_check "Module 05 kernel tests" python -m pytest -q test/test_redaction_kernel.py
 run_check "Trainer Module 05 halt" python -m pytest -q test/test_trainer_module05_halt.py
 run_check "Module 05 adversarial" python -m pytest -q test/adversarial/test_redaction_boundaries.py
+run_check "Architecture boundary attacks" python -m pytest -q test/adversarial/test_architecture_boundary_attacks.py
 run_check "Trainer persistence integrity" python -m pytest -q test/test_trainer_persistence_integrity.py
 run_check "Full pytest suite" python -m pytest -q
 echo "VERIFY: PASS"

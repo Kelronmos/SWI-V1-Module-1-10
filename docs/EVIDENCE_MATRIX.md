@@ -11,7 +11,16 @@
 | Modules 11–46 in V1 | — | **BLOCKED** |
 | Proposed Module 10 BoundaryExporter (M07→M08→M09→M10 chain) | Red-team review 2026-09-19; no integration with canonical path | **PROPOSED / NOT ADMITTED** |
 | Existing Module 10 External Sandbox | Code + tests (subprocess isolation) | IMPLEMENTED / LIMITED (see KNOWN_LIMITATIONS) |
+| Architecture-boundary attack suite | `test/adversarial/test_architecture_boundary_attacks.py` + `swi_core/admission_boundary.py` | **IMPLEMENTED / TESTED** (anti-overclaim controls) |
 
 Latest tip CI: re-check Actions for the exact SHA before sealing any new change. An older green run does not seal a newer commit.
 
 **Rule:** Module number is not permission. Proposed components remain construction references until the full evidence chain is satisfied.
+
+**Executable anti-overclaim rules (admission_boundary):**
+- DOCUMENTATION ≠ ADMISSION ≠ SEAL
+- MODULE NUMBER = CONSTRUCTION REFERENCE
+- HASH ≠ AUTHORITY
+- verified=true ≠ authorized ≠ executable
+- OLD CI / OLD SEAL ≠ CURRENT TIP
+- SYNTHETIC RECEIPT ≠ REAL UPSTREAM PRODUCTION

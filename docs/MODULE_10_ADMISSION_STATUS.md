@@ -41,6 +41,33 @@ The proposed BoundaryExporter is a separate, unadmitted proposal.
 
 ---
 
+## Executable boundary protection (2026-09-19 upgrade)
+
+Anti-overclaim controls are now executable, not documentation-only:
+
+| Control | Location |
+|---------|----------|
+| Admission / claim checker | `swi_core/admission_boundary.py` |
+| Architecture-boundary attack suite | `test/adversarial/test_architecture_boundary_attacks.py` |
+| Wired into verification | `scripts/verify.sh` (Architecture boundary attacks) |
+
+Attacks covered:
+
+1. Fake seal  
+2. Documentation injection  
+3. Old CI substitution  
+4. Module-number injection  
+5. Fake upstream receipt chain  
+6. Hash laundering  
+7. Seal laundering  
+8. Authority laundering  
+9. Blocked-path bypass  
+10. Seal mutation / tip mismatch  
+
+These tests **reject** attempts to promote Module 10 (or any module) via documentation, synthetic hashes, module numbers, or old CI runs. They do **not** admit Module 10.
+
+---
+
 ## What the proposal can demonstrate (if implemented)
 
 | Item | Classification |
@@ -120,6 +147,7 @@ Only after the above may the status advance to **INTEGRATED / VERIFIED**.
 - Prefer the repository’s established verification commands over a parallel unittest/coverage regime that fragments evidence.
 - Name outputs “integrity-bound evidence envelope”, not “cryptographically sealed package”, unless an actual signature mechanism is present and governed.
 - Do not let module number, file naming, or CI job titles become architectural authority.
+- Run the architecture-boundary attack suite; it must remain green.
 
 ---
 
@@ -132,6 +160,7 @@ ARCHITECTURAL ADMISSION: NO
 SEAL:                   NO
 CANONICAL PIPELINE:     NO
 FOUNDATION SEAL 5:      NOT READY (unchanged)
+ANTI-OVERCLAIM SUITE:   IMPLEMENTED / TESTED
 ```
 
 **Governing rule:** Do not claim what the code cannot demonstrate.
