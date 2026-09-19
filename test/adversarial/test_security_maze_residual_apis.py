@@ -47,8 +47,7 @@ def test_residual_drift_analyzer_check_without_admission():
     """ATTACK residual: DriftAnalyzer.check forms result without admission."""
     analyzer = DriftAnalyzer()
     assert analyzer.kernel.require_admission is False
-    # check signature: use a minimal valid call if possible
-    result = analyzer.check({"baseline": "a", "observed": "a"})
+    result = analyzer.check("baseline text for drift")
     assert result is not None
 
 
@@ -61,5 +60,4 @@ def test_residual_module_kernels_default_false_inventory():
         "DriftAnalyzer": DriftAnalyzer().kernel.require_admission,
     }
     assert all(v is False for v in inventory.values()), inventory
-    # Marker for Universal Gate status
-    assert inventory  # non-empty residual set ⇒ NOT PROVEN
+    assert inventory  # non-empty residual set ⇒ Universal Gate NOT PROVEN
