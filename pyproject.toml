@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swi-v1-core"
+version = "0.1.0a1"
+description = "SWI V1 reference implementation (swi_core) — development alpha, not a sealed release"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "See LICENSE" }
+authors = [{ name = "Kelronmos" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+dependencies = [
+    "cryptography>=41.0.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[project.urls]
+Repository = "https://github.com/Kelronmos/SWI-V1-Module-1-10"
+
+[tool.setuptools.packages.find]
+include = ["swi_core*"]
+
+[tool.setuptools.package-data]
+swi_core = ["py.typed"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["test", "tests"]
+python_files = ["test_*.py"]
+addopts = "-ra --strict-markers --tb=short"
+markers = [
+    "unit: Fast unit tests",
+    "contract: Contract and schema validation tests",
+    "adversarial: Negative and hostile-input tests",
+]
+
+# Coverage threshold is configuration only until release workflow enforces it.
+[tool.coverage.report]
+fail_under = 0
