@@ -1,51 +1,38 @@
 # V1 Tip CI Status
 
 **Date:** 2026-09-19  
-**Tip SHA:** `2bab827b40dd444348592fe3a557c746e4ad3fdd`  
-**Message:** `docs: add V4 lessons + evidence-first discipline manual (no mock, no simulation claims)`
+**Tip SHA:** `6cc720f5666395696ad425a3d8bfa8f10209c536`  
+**Message:** `fix(admission): run all security checks before construction-reference accept`
+
+## What this tip fixes
+
+1. **evaluate_claim ordering** — bare module-without-status no longer returns ACCEPT_CLAIM_ONLY before upstream / hash-laundering / authority-laundering / blocked-path checks.
+2. **Attack 10** — uses valid 7+ hex commit ids (`aaaaaaa` / `bbbbbbb`) instead of non-hex `oldsha1` / `newsha2`.
+3. **Trainer** — removed TYPE_CHECKING import of AdmissionDecision; keyword-only `admission` is duck-typed via `is_valid_for`.
 
 ## GitHub Actions
 
-| Run ID | Conclusion | Workflow |
-|--------|------------|----------|
-| (pending after this push) | check Actions | CI |
-| Prior verified | **success** — run 35342332253 on `f1f6e266…` | CI |
+| Run | Conclusion | Note |
+|-----|------------|------|
+| This tip | **must re-verify** | https://github.com/Kelronmos/SWI-V1-Module-1-10/actions |
+| Prior tip `f1f6e266…` | success — run 35342332253 | historical |
 
-Re-verify after every push: https://github.com/Kelronmos/SWI-V1-Module-1-10/actions
-
-## Local suite (maintenance check)
+## Required local verification before any seal claim
 
 ```text
 pip install -r requirements.txt
 python -m pytest -q
-→ 190 passed (Python 3.12) on prior tip; re-run after every docs or code change
+./scripts/verify.sh
 ```
 
-Requires `requirements.txt` (including `jsonschema`). Pytest without install may fail collection on schema tests.
-
-## Historical artifacts
-
-| File | Label |
-|------|--------|
-| `test_run_log.txt` | **HISTORICAL** — 27-item session; not tip evidence |
-| `docs/V4_LESSONS_AND_EVIDENCE_DISCIPLINE.md` | Lessons from June 2026 research prototype; not a claim of completeness |
+Target: full suite green (including adversarial architecture-boundary attacks).
 
 ## Explicit non-claims
 
 | Item | Status |
 |------|--------|
 | Foundation Seal 5 | NOT READY |
-| Authority boundary | IMPLEMENTED / TESTED / prior tip CI green — **not sealed** |
+| Authority boundary | IMPLEMENTED / TESTED — **not sealed** |
 | Bidirectional verified return path | **Not implemented in V1** |
 | CRTG / production key governance | NOT IMPLEMENTED |
-| V4 package | RESEARCH_PROTOTYPE / SIMULATED crypto — **not** a foundation of this repo |
-
-## Recommended sequence
-
-```text
-CURRENT TIP → CI green
-  → Authority + canonicalization evidence
-  → Foundation Seal 5 path
-  → Response return experiment on V2 as pre-R only
-  → Adversarial tests → audit → formal module decision
-```
+| Universal Gate | NOT PROVEN until every formation path is independently covered |
