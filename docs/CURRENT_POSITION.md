@@ -1,19 +1,29 @@
-# Current SWI Position — 15 September 2026
+# Current SWI Position — 19 September 2026
 
-**Governance milestone:** V1 and V2 share the same progression rule (dependency boundaries, not module-count symmetry).
+**Governance:** dependency boundaries, not module-count symmetry.
 
-## Description
+## V1 (`SWI-V1-Module-1-10` → V1.1 / Modules 00–11)
 
-- **V1:** Foundation evidence seam implemented; Foundation Seal 5 still open.  
-- **V2:** Admission/kernel boundary progressing; not sealed.  
-- **CRTG:** Design track, not implementation.  
-- **M13–M22:** Deliberately not bulk-built.  
-- **Other repositories:** Independent, contract-driven progression.
+| Item | State |
+|------|--------|
+| Tip | `f1f6e266…` |
+| Tip CI | **success** — run 35342332253 (`docs/TIP_CI_STATUS.md`) |
+| Local pytest (deps installed) | **190 passed** (2026-09-19 check) |
+| Foundation evidence export | IMPLEMENTED / TESTED · unsigned |
+| Authority boundary | IMPLEMENTED / TESTED · tip CI green · **not sealed** |
+| Canonicalization | Tightened (NaN/Inf reject, golden vectors) |
+| Foundation Seal 5 | **NOT READY** |
+| Bidirectional return path | **Not in V1** |
 
-## Next move
+## V2 (`SWI-V2-Modules-11-22`)
 
-Prove the foundation. Do not add another architectural layer.
+| Item | State |
+|------|--------|
+| M11 | **SEALED** |
+| M12 | FROZEN pending controlled gates |
+| Bidirectional return path | **DESIGN only** — pre-R · NOT AUTHORIZED · invariants NOT TESTED |
+| SCAR → Firefly | Policy frozen · NOT AUTHORIZED |
 
-## Constitutional sentence
+## Next
 
-A readiness percentage may authorize investigation or integration preparation, but it can never override a failed critical dependency or integrity gate.
+Prove foundation gates (Seal 5 path). Do not promote pre-R into formal modules without AUTHORIZED implementation + adversarial PROVEN evidence.
