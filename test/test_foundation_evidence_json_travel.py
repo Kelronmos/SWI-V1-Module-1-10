@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from swi_core.foundation_evidence import (
     VERIFICATION_STATUS_V1_PIPELINE,
     compute_integrity_reference,
@@ -12,19 +10,26 @@ from swi_core.foundation_evidence import (
     export_foundation_evidence,
 )
 from swi_core.module00_trainer import Trainer
+from test.helpers_admission import TEST_COMMIT, export_admission, pipeline_admission
 
 
 def test_json_roundtrip_preserves_integrity(tmp_path):
-    trainer = Trainer(str(tmp_path / "audit.log"))
-    result = trainer.process("cross-repo travel test user@example.com")
-    env = export_foundation_evidence(result, evidence_id="v1-json-travel-001")
+    trainer = Trainer(str(tmp_path / "audit.log"), expected_commit=TEST_COMMIT)
+    result = trainer.process(
+        "cross-repo travel test user@example.com",
+        admission=pipeline_admission(),
+    )
+    env = export_foundation_evidence(
+        result,
+        admission=export_admission(),
+        expected_commit=TEST_COMMIT,
+        evidence_id="v1-json-travel-001",
+    )
     assert env.verification_status == VERIFICATION_STATUS_V1_PIPELINE
 
-    # Serialize as if crossing a process/repo boundary (no shared memory).
     raw = json.dumps(envelope_to_dict(env), sort_keys=True, separators=(",", ":"))
     loaded = json.loads(raw)
 
-    # created_at may be present; must not be required for integrity match
     expected = compute_integrity_reference(
         loaded["payload"],
         loaded["foundation_version"],
@@ -38,9 +43,12 @@ def test_json_roundtrip_preserves_integrity(tmp_path):
 
 
 def test_json_tamper_breaks_integrity(tmp_path):
-    trainer = Trainer(str(tmp_path / "audit.log"))
+    trainer = Trainer(str(tmp_path / "audit.log"), expected_commit=TEST_COMMIT)
     env = export_foundation_evidence(
-        trainer.process("tamper travel"), evidence_id="v1-json-tamper-001"
+        trainer.process("tamper travel", admission=pipeline_admission()),
+        admission=export_admission(),
+        expected_commit=TEST_COMMIT,
+        evidence_id="v1-json-tamper-001",
     )
     loaded = json.loads(json.dumps(envelope_to_dict(env)))
     loaded["payload"] = dict(loaded["payload"])

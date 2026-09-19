@@ -1,8 +1,8 @@
 # Universal-Gate Construction Gate (mandatory)
 
-**Status of Universal Gate:** **NOT PROVEN**  
-**Baseline inventory tip:** `f7dff5488283c6a2df4fcd64facbe578e840b92c`  
-**Construction commit (AdmissionDecision + optional choke):** see main tip after this file  
+**Universal Gate status:** **NOT PROVEN** (direct module APIs still default-ungated)  
+**Production entrypoints Trainer / export / sign:** **WIRED** (require AdmissionDecision)  
+**Wiring tip:** see main after admission gate commits (a408609+)
 
 ---
 
@@ -10,66 +10,49 @@
 
 | Item | State |
 |------|--------|
-| Admission boundary implementation | IMPLEMENTED / TESTED |
-| AdmissionDecision object | IMPLEMENTED / TESTED |
-| ModuleKernel strict mode (`require_admission=True`) | IMPLEMENTED / TESTED |
-| ModuleKernel default | `require_admission=False` (legacy / ungated) |
-| Trainer.process wired | **NO** |
-| export_foundation_evidence wired | **NO** |
-| sign_foundation_evidence wired | **NO** |
+| AdmissionDecision | IMPLEMENTED / TESTED |
+| ModuleKernel strict mode | IMPLEMENTED / TESTED |
+| ModuleKernel default | still `require_admission=False` |
+| Trainer.process admission | **WIRED** — reject before turn/modules/M07/M09 |
+| export_foundation_evidence admission | **WIRED** |
+| sign_foundation_evidence admission | **WIRED** |
+| Direct M02/M03/M05/M06/M07/M09 APIs | **NOT WIRED** (residual surface) |
+| Architectural CI AST guard (all paths) | PARTIAL |
 | Universal Gate | **NOT PROVEN** |
-| Zero-side-effect rejection (∀ paths) | **NOT PROVEN** |
 | Module 10 | PROPOSED / NOT ADMITTED |
 | Foundation Seal 5 | NOT READY |
 
 ---
 
-## Construction steps A–K
-
-| Step | Description | Status |
-|------|-------------|--------|
-| A | Enumerate every formation primitive | PARTIAL (entrypoint map) |
-| B | Enumerate every production caller | PARTIAL |
-| C | Require admission decision before every formation primitive | **PARTIAL** — only strict ModuleKernel |
-| D | Static detection of newly ungated callers | PARTIAL (tests assert known ungated list) |
-| E | Runtime rejection testing | PARTIAL (strict kernel only) |
-| F | Zero formation on rejection | PARTIAL (strict kernel) |
-| G | Zero unauthorized side effects | NOT PROVEN ∀ paths |
-| H | Mutation-test the gate | NOT DONE |
-| I | Re-run complete architecture inventory | PENDING after wiring |
-| J | Mark Universal Gate = IMPLEMENTED | **BLOCKED** until A–I for all paths |
-| K | Mark Universal Gate = VERIFIED | **BLOCKED** until independent verification |
-
----
-
-## Required invariants (architecture, not mere tests)
+## Wired contract
 
 ```text
-∀ execution_paths:
-    state_formation(path) ⇒ admission(path) == ADMITTED
+Trainer.process(*, admission)
+  → is_valid_for(module="00", commit=expected_commit)
+  → else AdmissionRequiredError BEFORE _turn_counter++
 
-admission(path) != ADMITTED
-    ⇒ Δstate == 0
-    ⇒ Δexternal_side_effects == 0
+export_foundation_evidence(*, admission)
+  → is_valid_for(module="foundation_export", ...)
+
+sign_foundation_evidence(*, admission)
+  → is_valid_for(module="foundation_sign", ...)
 ```
 
----
-
-## Next wiring order (do not reorder casually)
-
-1. `ModuleKernel` strict paths for sealed modules (M02/M03/M05/M06)  
-2. `Trainer.process` — admission **before** processing  
-3. `export_foundation_evidence` / `sign_foundation_evidence` — export authority contract  
-4. Direct module APIs or mark them internal-only  
-5. AST/CI guard: fail if new public formation symbol lacks gate  
-6. Mutation tests + local `./scripts/verify.sh` on exact tip  
+Test admissions use explicit `admission_artifact` + `grant_execution=True` via
+`test/helpers_admission.py` (**test_only** — not production authority).
 
 ---
 
-## Non-claims
+## Remaining residual bypasses
 
-- Optional `require_admission` does not prove universal enforcement.  
-- Documentation of ungated paths is not a seal.  
-- Do not mark Foundation Seal 5 or Module 10 based on this construction step.
+- `SecurityProbe.scan` / `RedactionEngine.redact` / … without going through Trainer
+- `ModuleKernel(require_admission=False)` default inside modules
+- No full AST CI fail on every new formation symbol
+
+Until residual surfaces are closed or marked internal-only with enforced policy:
+
+```text
+Universal Gate = NOT PROVEN
+```
 
 **Do not claim what the code cannot demonstrate.**
