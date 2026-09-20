@@ -1,15 +1,11 @@
 /**
- * SWI V4.7 Status Engine (hardened)
- * Pure function. Mechanically enforces evidence-boundary rules.
+ * SWI V4.7 Status Engine (closed transition system)
  *
- * NON-CLAIMS:
- * - Does not prove production correctness
- * - Does not close FM-005
- * - Does not establish Universal Gate
- * - Does not invent evidence
+ * Pipeline:
+ *   INPUT → null/empty check → unknown check → domain check
+ *        → transition matrix → evidence check → ALLOW / REJECT
  *
- * Tracks (closed, independent):
- *   construction | formal | residual
+ * NON-CLAIMS: not production proof, not FM-005 closure, not Universal Gate.
  */
 
 export const CONSTRUCTION = Object.freeze([
@@ -29,6 +25,9 @@ const FORMAL_SET = new Set(FORMAL);
 const RESIDUAL_SET = new Set(RESIDUAL);
 const ALL_STATUSES = new Set([...CONSTRUCTION, ...FORMAL, ...RESIDUAL]);
 
+/** Input-boundary tokens that must never enter transition logic as statuses */
+const INPUT_BOUNDARY = new Set(["UNKNOWN", "UNDEFINED", "INVALID"]);
+
 function domainOf(status) {
   if (CONSTRUCTION_SET.has(status)) return "construction";
   if (FORMAL_SET.has(status)) return "formal";
@@ -36,7 +35,32 @@ function domainOf(status) {
   return null;
 }
 
-/** Required evidence keys for each target status */
+/**
+ * Explicit transition matrix (closed).
+ * Only listed edges are legal; everything else is REJECT unless identity.
+ */
+export const TRANSITIONS = Object.freeze({
+  PROPOSED: Object.freeze(["MAPPED"]),
+  MAPPED: Object.freeze(["SPECIFIED"]),
+  SPECIFIED: Object.freeze(["IMPLEMENTED"]),
+  IMPLEMENTED: Object.freeze(["TESTED"]),
+  TESTED: Object.freeze(["ADVERSARIALLY_TESTED"]),
+  ADVERSARIALLY_TESTED: Object.freeze(["REPLAY_VERIFIED"]),
+  REPLAY_VERIFIED: Object.freeze(["EVIDENCE_HASHED"]),
+  EVIDENCE_HASHED: Object.freeze(["SEALED"]),
+  SEALED: Object.freeze([]),
+
+  NOT_PROVEN: Object.freeze(["PROVEN_ON_MODEL", "BOUND_ONLY", "FALSIFIED"]),
+  PROVEN_ON_MODEL: Object.freeze(["PROVEN"]),
+  BOUND_ONLY: Object.freeze([]),
+  FALSIFIED: Object.freeze([]),
+  PROVEN: Object.freeze([]),
+
+  OPEN: Object.freeze(["CLOSED"]),
+  CLOSED: Object.freeze([]),
+  INAPPLICABLE: Object.freeze([])
+});
+
 export const REQUIREMENTS = Object.freeze({
   MAPPED: Object.freeze(["mapping"]),
   SPECIFIED: Object.freeze(["specification"]),
@@ -46,41 +70,18 @@ export const REQUIREMENTS = Object.freeze({
   REPLAY_VERIFIED: Object.freeze(["implementation", "tests", "replay"]),
   EVIDENCE_HASHED: Object.freeze(["implementation", "tests", "replay", "evidence_hash"]),
   SEALED: Object.freeze([
-    "implementation",
-    "tests",
-    "replay",
-    "evidence_hash",
-    "required_review",
-    "runtime_correspondence"
+    "implementation", "tests", "replay", "evidence_hash",
+    "required_review", "runtime_correspondence"
   ]),
   PROVEN_ON_MODEL: Object.freeze(["model_evidence", "tlc_result"]),
+  BOUND_ONLY: Object.freeze(["model_evidence", "bound_declaration"]),
+  FALSIFIED: Object.freeze(["counterexample"]),
   PROVEN: Object.freeze([
-    "model_evidence",
-    "tlc_result",
-    "runtime_correspondence",
-    "refinement"
+    "model_evidence", "tlc_result", "runtime_correspondence", "refinement"
   ]),
   CLOSED: Object.freeze(["closure_evidence"])
 });
 
-/**
- * Unconditional hard blocks.
- * PROVEN_ON_MODEL → PROVEN is NOT listed here; it is governed by REQUIREMENTS.PROVEN
- * (requires runtime_correspondence + refinement). That aligns code with the documented policy.
- */
-export const HARD_BLOCKS = Object.freeze([
-  Object.freeze({ from: "PROVEN_ON_MODEL", to: "SEALED" }),
-  Object.freeze({ from: "FALSIFIED", to: "PROVEN_ON_MODEL" }),
-  Object.freeze({ from: "FALSIFIED", to: "PROVEN" }),
-  Object.freeze({ from: "NOT_PROVEN", to: "SEALED" }),
-  Object.freeze({ from: "FALSIFIED", to: "SEALED" }),
-  Object.freeze({ from: "BOUND_ONLY", to: "SEALED" }),
-  Object.freeze({ from: "BOUND_ONLY", to: "PROVEN" })
-]);
-
-/**
- * Evidence acceptance policy (stricter than original truthy check).
- */
 function hasEvidence(evidence, key) {
   if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) return false;
   const v = evidence[key];
@@ -101,20 +102,47 @@ function missingKeys(evidence, keys) {
   return keys.filter(k => !hasEvidence(evidence, k));
 }
 
-/**
- * Evaluate a status promotion request.
- */
+function isAbsent(v) {
+  return v === null || v === undefined;
+}
+
+function isEmptyString(v) {
+  return typeof v === "string" && v.trim() === "";
+}
+
 export function evaluate(current, requested, evidence = {}) {
-  if (current == null || current === "" || requested == null || requested === "") {
+  if (isAbsent(current) || isAbsent(requested)) {
     return {
       decision: "STATUS_PROMOTION_REJECTED",
-      current: current == null || current === "" ? null : current,
-      requested: requested == null || requested === "" ? null : requested,
+      current: isAbsent(current) ? null : current,
+      requested: isAbsent(requested) ? null : requested,
       missing: ["current_status", "requested_status"].filter((_, i) =>
-        i === 0 ? (current == null || current === "") : (requested == null || requested === "")
+        i === 0 ? isAbsent(current) : isAbsent(requested)
       ),
-      reason: "Both current and requested status are required",
-      code: "SWI-STATUS-MISSING"
+      reason: "Status value absent (NULL)",
+      code: "STATUS_VALUE_ABSENT"
+    };
+  }
+
+  if (isEmptyString(current) || isEmptyString(requested)) {
+    return {
+      decision: "STATUS_PROMOTION_REJECTED",
+      current: isEmptyString(current) ? null : current,
+      requested: isEmptyString(requested) ? null : requested,
+      missing: [],
+      reason: "Status value empty",
+      code: "STATUS_VALUE_EMPTY"
+    };
+  }
+
+  if (INPUT_BOUNDARY.has(current) || INPUT_BOUNDARY.has(requested)) {
+    return {
+      decision: "STATUS_PROMOTION_REJECTED",
+      current,
+      requested,
+      missing: [],
+      reason: "Input-boundary token cannot enter transition graph",
+      code: "STATUS_VALUE_UNRESOLVED"
     };
   }
 
@@ -125,7 +153,7 @@ export function evaluate(current, requested, evidence = {}) {
       requested,
       missing: [],
       reason: `Unknown current status: ${current}`,
-      code: "SWI-STATUS-UNKNOWN-CURRENT"
+      code: "STATUS_VALUE_UNDEFINED"
     };
   }
   if (!ALL_STATUSES.has(requested)) {
@@ -135,7 +163,7 @@ export function evaluate(current, requested, evidence = {}) {
       requested,
       missing: [],
       reason: `Unknown requested status: ${requested}`,
-      code: "SWI-STATUS-UNKNOWN-REQUESTED"
+      code: "STATUS_VALUE_UNDEFINED"
     };
   }
 
@@ -162,31 +190,16 @@ export function evaluate(current, requested, evidence = {}) {
     };
   }
 
-  for (const block of HARD_BLOCKS) {
-    if (current === block.from && requested === block.to) {
-      return {
-        decision: "STATUS_PROMOTION_REJECTED",
-        current,
-        requested,
-        missing: ["required_extra_evidence"],
-        reason: `Hard block: ${current} cannot become ${requested}`,
-        code: "SWI-STATUS-HARD-BLOCK"
-      };
-    }
-  }
-
-  if (current === "OPEN" && requested === "CLOSED") {
-    const missing = missingKeys(evidence, REQUIREMENTS.CLOSED);
-    if (missing.length > 0) {
-      return {
-        decision: "STATUS_PROMOTION_REJECTED",
-        current,
-        requested,
-        missing,
-        reason: "Residual OPEN cannot become CLOSED without closure_evidence",
-        code: "SWI-STATUS-RESIDUAL-OPEN"
-      };
-    }
+  const allowed = TRANSITIONS[current] || [];
+  if (!allowed.includes(requested)) {
+    return {
+      decision: "STATUS_PROMOTION_REJECTED",
+      current,
+      requested,
+      missing: [],
+      reason: `Illegal transition: ${current} → ${requested} not in transition matrix`,
+      code: "SWI-STATUS-ILLEGAL-JUMP"
+    };
   }
 
   const required = REQUIREMENTS[requested];
@@ -208,15 +221,15 @@ export function evaluate(current, requested, evidence = {}) {
     decision: "ALLOW",
     current,
     requested,
-    reason: "All required evidence present for requested transition",
+    reason: "Transition legal and required evidence present",
     code: "SWI-STATUS-ALLOW"
   };
 }
 
 export default {
   evaluate,
+  TRANSITIONS,
   REQUIREMENTS,
-  HARD_BLOCKS,
   CONSTRUCTION,
   FORMAL,
   RESIDUAL

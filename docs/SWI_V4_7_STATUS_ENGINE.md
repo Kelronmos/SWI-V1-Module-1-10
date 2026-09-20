@@ -2,55 +2,44 @@
 
 **Status:** IMPLEMENTED / TESTED  
 **Location:** `src/verification/status_engine.mjs`  
-**Tests:** `src/verification/status_engine.test.mjs` (30 cases)
+**Tests:** `src/verification/status_engine.test.mjs` (38 cases)
 
-## Purpose
+## Architecture
 
-Mechanically reject illegal status promotions so that overclaiming becomes difficult.
-
-## Closed status domains
-
-Three independent tracks (cross-domain transitions are rejected):
-
-| Track | Statuses |
-|-------|----------|
-| Construction | PROPOSED, MAPPED, SPECIFIED, IMPLEMENTED, TESTED, ADVERSARIALLY_TESTED, REPLAY_VERIFIED, EVIDENCE_HASHED, SEALED |
-| Formal | NOT_PROVEN, PROVEN_ON_MODEL, PROVEN, FALSIFIED, BOUND_ONLY |
-| Residual | OPEN, CLOSED, INAPPLICABLE |
-
-## Core rules
+Closed transition system:
 
 ```
-PROVEN_ON_MODEL → SEALED          HARD BLOCK (cross-domain + absolute)
-FALSIFIED → PROVEN_ON_MODEL       HARD BLOCK
-FALSIFIED → PROVEN                HARD BLOCK
-NOT_PROVEN → SEALED               HARD BLOCK
-Unknown status                    REJECTED
-Cross-domain transition           REJECTED
-PROVEN_ON_MODEL → PROVEN          CONDITIONAL (requires runtime_correspondence + refinement)
-OPEN → CLOSED                     CONDITIONAL (requires closure_evidence)
+INPUT → NULL/EMPTY → UNKNOWN/UNDEFINED/INVALID
+     → closed vocabulary → domain isolation
+     → explicit TRANSITIONS matrix → evidence check
+     → ALLOW / REJECT
 ```
 
-## Evidence acceptance
+## Domains
 
-Accepted forms only:
-- boolean `true`
-- non-empty string (id / hash / path)
-- non-empty array of non-empty strings
-- object with `id`, `hash`, or `sha256` field
+| Domain | Statuses |
+|--------|----------|
+| Construction | PROPOSED → MAPPED → SPECIFIED → IMPLEMENTED → TESTED → ADVERSARIALLY_TESTED → REPLAY_VERIFIED → EVIDENCE_HASHED → SEALED |
+| Formal | NOT_PROVEN → PROVEN_ON_MODEL / BOUND_ONLY / FALSIFIED; PROVEN_ON_MODEL → PROVEN |
+| Residual | OPEN → CLOSED |
 
-Rejected: `false`, empty string, empty array, empty object, unrelated keys.
+Illegal jumps (e.g. PROPOSED → SEALED) are rejected even when full seal evidence is supplied.
+
+## Input boundary (not lifecycle statuses)
+
+| Token | Code |
+|-------|------|
+| null / undefined | STATUS_VALUE_ABSENT |
+| "" | STATUS_VALUE_EMPTY |
+| UNKNOWN / UNDEFINED / INVALID | STATUS_VALUE_UNRESOLVED |
+| other unknown string | STATUS_VALUE_UNDEFINED |
+
+Identity ALLOW applies only after successful classification.
 
 ## Non-claims
 
-- Does not prove production correctness
-- Does not close FM-005
-- Does not establish Universal Gate
-- Does not invent TLC results
-- Does not modify frozen V1
-- Hash ≠ truth; expected ≠ actual until execution occurs
-
-## Run tests
+Does not prove production correctness, close FM-005, establish Universal Gate, or invent TLC results.
+Hash ≠ truth. Expected ≠ actual until execution occurs.
 
 ```bash
 node src/verification/status_engine.test.mjs
