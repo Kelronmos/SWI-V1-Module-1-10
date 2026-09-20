@@ -1,0 +1,15 @@
+{
+  "artifactId": "SWI-FM005-001",
+  "version": "v1",
+  "claim": "Deliberately ungated formation must provide a counterexample to the admission safety property.",
+  "status": "PROPOSED",
+  "boundary": "negative-control TLA+ model",
+  "method": "deliberate mutation / TLC counterexample",
+  "expectedResult": "FALSIFIED",
+  "sourceShaFull": "REQUIRED_AT_EXECUTION",
+  "nonClaims": [
+    "does not close FM-005",
+    "does not prove the runtime is ungated",
+    "does not establish production behavior"
+  ]
+}
