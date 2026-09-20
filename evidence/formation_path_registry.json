@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "FORMATION_PATH_REGISTRY",
+  "baseline_main_commit": "080a78e55a18ab78fe49d85b5867ffa2622332b0",
+  "universal_gate": "NOT_PROVEN",
+  "fm005": "OPEN",
+  "foundation_seal_5": "NOT_READY",
+  "paths": [
+    {
+      "path_id": "FP-KERNEL-DEFAULT",
+      "module": "module_kernel",
+      "callable": "ModuleKernel.__init__",
+      "forms_state": true,
+      "consequential": true,
+      "requires_admission": true,
+      "gate": "UNIVERSAL_GATE",
+      "status": "OPEN",
+      "note": "require_admission defaults to False on production surface"
+    },
+    {
+      "path_id": "FP-KERNEL-RUN",
+      "module": "module_kernel",
+      "callable": "ModuleKernel.run",
+      "forms_state": true,
+      "consequential": true,
+      "requires_admission": true,
+      "gate": "UNIVERSAL_GATE",
+      "status": "PARTIAL",
+      "note": "strict mode exists; default path residual"
+    },
+    {
+      "path_id": "FP-TRAINER-PROCESS",
+      "module": "module00_trainer",
+      "callable": "Trainer.process",
+      "forms_state": true,
+      "consequential": true,
+      "requires_admission": true,
+      "gate": "admission_boundary",
+      "status": "WIRED",
+      "note": "admission keyword required per PACKAGING_AND_RELEASE_STATUS"
+    },
+    {
+      "path_id": "FP-EXPORT-SIGN",
+      "module": "evidence",
+      "callable": "export/sign",
+      "forms_state": true,
+      "consequential": true,
+      "requires_admission": true,
+      "gate": "admission_boundary",
+      "status": "WIRED"
+    },
+    {
+      "path_id": "FP-DIRECT-M02-M09",
+      "module": "M02-M09",
+      "callable": "direct public APIs",
+      "forms_state": true,
+      "consequential": true,
+      "requires_admission": true,
+      "gate": "UNIVERSAL_GATE",
+      "status": "OPEN",
+      "note": "Ungated residual per packaging status"
+    }
+  ],
+  "summary": {
+    "registered": 5,
+    "gated_or_wired": 2,
+    "open_or_partial": 3,
+    "universal_gate_proven": false
+  },
+  "non_claims": [
+    "Registry presence is not Universal Gate proof",
+    "WIRED trainer/export does not close direct module APIs",
+    "Status OPEN until CI-enforced inventory + zero-execution tests pass"
+  ]
+}
