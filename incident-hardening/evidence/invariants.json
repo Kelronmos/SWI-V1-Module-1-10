@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "track": "incident-hardening",
+  "invariants": [
+    {"id": "INC-01", "statement": "UNKNOWN \u2260 APPROVED", "enforcement_point": "admission", "test": "tests/incidents/INC-001", "evidence": null, "status": "OPEN"},
+    {"id": "INC-02", "statement": "PASS \u2260 AUTHORIZATION", "enforcement_point": "admission", "test": "tests/incidents/INC-006", "evidence": null, "status": "OPEN"},
+    {"id": "INC-03", "statement": "MODEL_CLAIM \u2260 AUTHORIZATION", "enforcement_point": "evaluation", "test": "tests/incidents/INC-006", "evidence": null, "status": "OPEN"},
+    {"id": "INC-04", "statement": "CREDENTIAL_POSSESSION \u2260 AUTHORIZATION", "enforcement_point": "credential-gate", "test": "tests/incidents/INC-003", "evidence": null, "status": "OPEN"},
+    {"id": "INC-05", "statement": "RESOURCE_REACHABILITY \u2260 AUTHORIZATION", "enforcement_point": "network-egress", "test": "tests/incidents/INC-007", "evidence": null, "status": "OPEN"},
+    {"id": "INC-06", "statement": "SCOPE_CHANGE invalidates admission", "enforcement_point": "execution-revalidation", "test": "tests/incidents/INC-005", "evidence": null, "status": "OPEN"},
+    {"id": "INC-07", "statement": "BOUNDARY_CHANGE invalidates admission", "enforcement_point": "environment-hash", "test": "tests/incidents/INC-005", "evidence": null, "status": "OPEN"},
+    {"id": "INC-08", "statement": "DENY must reach actual enforcement point", "enforcement_point": "execution-adapter", "test": "tests/incidents/INC-010", "evidence": null, "status": "OPEN"},
+    {"id": "INC-09", "statement": "Unauthorized side channel must not create authority", "enforcement_point": "channel-gate", "test": "tests/incidents/INC-004", "evidence": null, "status": "OPEN"},
+    {"id": "INC-10", "statement": "Execution after valid DENY => SWI test FAIL", "enforcement_point": "execution-adapter", "test": "tests/incidents/INC-010", "evidence": null, "status": "OPEN"}
+  ]
+}
