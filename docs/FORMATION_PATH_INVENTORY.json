@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "repository": "SWI-V1-Module-1-10",
+  "commit": "0c8a2e662dc2b906a1166c091f37de6bd5c67299",
+  "note": "Phase 0-5 mirror of the canonical inventory. Source of truth remains docs/formation_path_inventory.json. Status values are not upgraded by this file.",
+  "universal_gate": "NOT_PROVEN",
+  "foundation_seal_5": "NOT_READY",
+  "formation_paths": [
+    {
+      "id": "FM-001",
+      "surface": "swi_core.module00_trainer.Trainer.process",
+      "entry_type": "api",
+      "privileged": true,
+      "inputs": ["admission", "turn_data"],
+      "expected_boundary": "admission required before process",
+      "tests": ["test_trainer_admission_gate"],
+      "negative_tests": [],
+      "evidence": [],
+      "status": "OPEN"
+    },
+    {
+      "id": "FM-002",
+      "surface": "swi_core.foundation_evidence.export_foundation_evidence",
+      "entry_type": "factory",
+      "privileged": true,
+      "inputs": ["admission", "pipeline_result"],
+      "expected_boundary": "admission required before export",
+      "tests": ["test_foundation_evidence"],
+      "negative_tests": [],
+      "evidence": [],
+      "status": "OPEN"
+    },
+    {
+      "id": "FM-003",
+      "surface": "swi_core.foundation_evidence.sign_foundation_evidence",
+      "entry_type": "mutation",
+      "privileged": true,
+      "inputs": ["admission", "evidence_envelope"],
+      "expected_boundary": "admission required before sign",
+      "tests": ["test_foundation_evidence"],
+      "negative_tests": [],
+      "evidence": [],
+      "status": "OPEN"
+    },
+    {
+      "id": "FM-004",
+      "surface": "swi_core.security_maze.SecurityMaze.evaluate_request",
+      "entry_type": "api",
+      "privileged": true,
+      "inputs": ["request", "kernel"],
+      "expected_boundary": "maze evaluation under ModuleKernel",
+      "tests": ["test_security_maze_v1"],
+      "negative_tests": [],
+      "evidence": [],
+      "status": "OPEN"
+    },
+    {
+      "id": "FM-005",
+      "surface": "swi_core.module_kernel.ModuleKernel.run",
+      "entry_type": "api",
+      "privileged": true,
+      "inputs": ["payload"],
+      "expected_boundary": "default require_admission=False is residual; not maze authority",
+      "tests": ["test_fm_005_default_kernel_unadmitted_run_forms_output_not_maze_authority"],
+      "negative_tests": [],
+      "evidence": [],
+      "status": "OPEN"
+    },
+    {
+      "id": "FM-006",
+      "surface": "swi_core.module02_security_probe.SecurityProbe.scan",
+      "entry_type": "api",
+      "privileged": true,
+      "inputs": ["payload"],
+      "expected_boundary": "unadmitted scan must not grant maze authority",
+      "tests": ["test_fm_006_scan_without_admission_no_maze_authority"],
+      "negative_tests": [],
+      "evidence": [],
+      "status": "OPEN"
+    },
+    {
+      "id": "FM-007",
+      "surface": "swi_core.module03_context_sync.ContextSync.record_turn",
+      "entry_type": "mutation",
+      "privileged": true,
+      "inputs": ["turn"],
+      "expected_boundary": "unadmitted record_turn must not grant maze authority",
+      "tests": ["test_fm_007_record_turn_without_admission_no_maze_authority"],
+      "negative_tests": [],
+      "evidence": [],
+      "status": "OPEN"
+    },
+    {
+      "id": "FM-008",
+      "surface": "swi_core.module05_redaction_engine.RedactionEngine.redact",
+      "entry_type": "api",
+      "privileged": true,
+      "inputs": ["text"],
+      "expected_boundary": "unadmitted redact must not grant maze authority",
+      "tests": ["test_fm_008_redact_without_admission_no_maze_authority"],
+      "negative_tests": [],
+      "evidence": [],
+      "status": "OPEN"
+    },
+    {
+      "id": "FM-009",
+      "surface": "swi_core.module06_drift_analyzer.DriftAnalyzer.check",
+      "entry_type": "api",
+      "privileged": true,
+      "inputs": ["signals"],
+      "expected_boundary": "unadmitted check must not grant maze authority",
+      "tests": ["test_fm_009_check_without_admission_no_maze_authority"],
+      "negative_tests": [],
+      "evidence": [],
+      "status": "OPEN"
+    }
+  ]
+}

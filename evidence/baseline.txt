@@ -1,0 +1,26 @@
+SWI V1 Formation-Path Evidence Baseline
+========================================
+Repository: Kelronmos/SWI-V1-Module-1-10
+Branch: hardening/next-evidence-gate
+Frozen tip SHA: 0c8a2e662dc2b906a1166c091f37de6bd5c67299
+Recorded UTC: 2026-09-20
+
+Purpose of this baseline commit
+-------------------------------
+Record the exact starting SHA for the controlled Phase 0-5 evidence
+increment. This commit does NOT upgrade any status, seal, gate, or
+claim language.
+
+Explicit non-claims
+-------------------
+- Universal Gate remains NOT_PROVEN
+- Foundation Seal 5 remains NOT READY
+- FM-005..009 remain OPEN where inventory so records
+- S9 remains NOT_PROVEN / NOT ESTABLISHED
+- No production / regulatory / certification claim is made
+
+Evidence rule
+-------------
+change -> test -> attack -> record -> CI -> freeze exact SHA -> only then change status
+
+This file is historical once written. Do not overwrite with a later tip.

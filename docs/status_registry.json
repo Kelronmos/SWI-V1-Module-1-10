@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "repository": "SWI-V1-Module-1-10",
+  "commit": "0c8a2e662dc2b906a1166c091f37de6bd5c67299",
+  "recorded_utc": "2026-09-20",
+  "modules": {
+    "M02": "SEALED",
+    "M03": "SEALED",
+    "M05": "SEALED",
+    "M06": "SEALED",
+    "M07": "TESTED",
+    "M09": "TESTED",
+    "M11": "TESTED",
+    "ScarStore": "IMPLEMENTED_TESTED",
+    "Authority": "IMPLEMENTED_TESTED_NOT_SEALED"
+  },
+  "formation_paths": {
+    "source": "docs/formation_path_inventory.json",
+    "note": "Canonical inventory lives at docs/formation_path_inventory.json; FORMATION_PATH_INVENTORY.json is the Phase 0-5 mirror"
+  },
+  "security_gates": {
+    "Universal_Gate": "NOT_PROVEN",
+    "Foundation_Seal_5": "NOT_READY",
+    "Security_Maze": "PARTIAL_NOT_SEALED",
+    "CRTG": "NOT_IMPLEMENTED",
+    "Production_keys": "NOT_IMPLEMENTED"
+  },
+  "claims": {
+    "S9": "NOT_PROVEN",
+    "regulatory_certification": "NOT_CLAIMED",
+    "production_readiness": "NOT_CLAIMED"
+  },
+  "evidence": {
+    "baseline": "evidence/baseline.txt",
+    "cryptographic_contract": "docs/CRYPTOGRAPHIC_EVIDENCE_CONTRACT_V1.md",
+    "formation_inventory": "docs/formation_path_inventory.json"
+  }
+}
