@@ -1,0 +1,20 @@
+{
+  "claim_id": "SWI-CLAIM-WORKFLOW-001",
+  "property_ids": ["SWI-WORKFLOW-001", "SWI-WORKFLOW-002", "SWI-WORKFLOW-003"],
+  "repository": "SWI-V1-Module-1-10",
+  "module": "formal/tla-workflow-track",
+  "commit_sha": null,
+  "implementation": "verification/tla/specs/swi_workflow_001.tla",
+  "tests": [],
+  "replay": null,
+  "evidence": null,
+  "status": "SPECIFIED",
+  "non_claims": [
+    "not production-code proof",
+    "not Universal Gate",
+    "not FM-005 closed",
+    "not mathematical seal",
+    "not authorization",
+    "not runtime binding"
+  ]
+}
