@@ -1,11 +1,15 @@
 #!/usr/bin/env node
+
 /**
  * SWI V4.7 discipline check (lightweight).
  * Does not run TLC. Verifies presence of required formal-track files
  * and refuses to invent sealed status.
+ *
+ * This file is .mjs, so it uses native ES module imports.
  */
-const fs = require("fs");
-const path = require("path");
+
+import fs from "node:fs";
+import path from "node:path";
 
 const required = [
   "docs/SWI_V4_7_DISCIPLINE.md",
@@ -19,8 +23,10 @@ const required = [
 ];
 
 let ok = true;
+
 for (const rel of required) {
   const p = path.join(process.cwd(), rel);
+
   if (!fs.existsSync(p)) {
     console.error("[MISSING]", rel);
     ok = false;
