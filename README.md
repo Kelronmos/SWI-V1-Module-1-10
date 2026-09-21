@@ -10,6 +10,9 @@ Structured Workflow Intelligence reference implementation.
 **Start:** [`docs/START_HERE.md`](docs/START_HERE.md) · **Governance:** [`docs/GOVERNANCE_LOCK.md`](docs/GOVERNANCE_LOCK.md)  
 **Tip CI:** [`docs/TIP_CI_STATUS.md`](docs/TIP_CI_STATUS.md) · **pre-R (design):** [`docs/PRE_R_INDEX.md`](docs/PRE_R_INDEX.md)
 
+> ⚠️ **Experimenters:** Read [`docs/SWI_EXPERIMENTAL_WARNING.md`](docs/SWI_EXPERIMENTAL_WARNING.md) before forking, modifying, or building on experimental / PRE-R material.  
+> Named ≠ Implemented · Implemented ≠ Tested · Tested ≠ Sealed · Sealed ≠ Authorized.
+
 ## Verify
 
 ```bash
