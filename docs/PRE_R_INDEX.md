@@ -2,6 +2,10 @@
 
 **Status:** DESIGN ONLY · NOT AUTHORIZED · NOT IMPLEMENTED  
 
+> ⚠️ **Read first:** [`SWI_EXPERIMENTAL_WARNING.md`](SWI_EXPERIMENTAL_WARNING.md)  
+> Named ≠ Implemented · Implemented ≠ Tested · Tested ≠ Sealed · Sealed ≠ Authorized.  
+> Do not present experimental work as sealed or authorized capability.
+
 | Doc | Role |
 |-----|------|
 | `PRE_R_BOUNDARY_PROOF_GUIDE.md` | Build specification |
