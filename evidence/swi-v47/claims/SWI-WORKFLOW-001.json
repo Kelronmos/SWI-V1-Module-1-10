@@ -1,0 +1,20 @@
+{
+  "artifactId": "SWI-WORKFLOW-001",
+  "version": "v1",
+  "claim": "Formed workflow state requires prior admission in the abstract SWI V4.7 model.",
+  "status": "SPECIFIED",
+  "boundary": "TLA+ abstract model",
+  "method": "TLC safety invariant",
+  "sourceShaFull": "REQUIRED_AT_EXECUTION",
+  "sourceArtifacts": [
+    "verification/tla/v47/SWIWorkflowV47.tla",
+    "verification/tla/v47/SWIWorkflowV47.cfg"
+  ],
+  "nonClaims": [
+    "runtime implementation proof",
+    "production authorization",
+    "Universal Gate",
+    "mathematical seal",
+    "FM-005 closure"
+  ]
+}

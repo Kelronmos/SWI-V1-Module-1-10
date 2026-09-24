@@ -1,0 +1,15 @@
+name: SWI V4.7 Discipline
+
+on:
+  push:
+    branches: [ formal/v47-discipline-patch, formal/tla-workflow-track ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  presence-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run discipline presence check
+        run: node scripts/swi-v47-check.mjs

@@ -1,0 +1,19 @@
+{
+  "package": "SWI V4.7 Formal Evidence",
+  "version": "0.1",
+  "status": "NOT_PROVEN",
+  "claims": [],
+  "properties": [],
+  "source_artifacts": [],
+  "implementation_artifacts": [],
+  "test_artifacts": [],
+  "formal_artifacts": [],
+  "replay_artifacts": [],
+  "hashes": [],
+  "non_claims": [
+    "not production-code proof",
+    "not Universal Gate",
+    "not FM-005 closed",
+    "not mathematical seal"
+  ]
+}

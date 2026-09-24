@@ -1,0 +1,15 @@
+{
+  "name": "SWI V4.7 Discipline Patch",
+  "version": "0.1",
+  "status": "APPLIED_AS_OVERLAY",
+  "nonClaims": [
+    "Not a certification",
+    "Not an independent audit",
+    "Not production authorization",
+    "Not runtime/model correspondence",
+    "Not mathematical proof",
+    "Not legal compliance",
+    "Does not close FM-005",
+    "Does not seal mathematics"
+  ]
+}

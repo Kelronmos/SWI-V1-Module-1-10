@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.1",
+  "artifact_type": "FORMATION_PATH_REGISTRY",
+  "baseline_main_commit": "080a78e55a18ab78fe49d85b5867ffa2622332b0",
+  "universal_gate": "NOT_PROVEN",
+  "fm005": "OPEN",
+  "swi_enforcement_gap": "OPEN",
+  "t10": "NOT_PROVEN",
+  "paths": [
+    {"path_id": "FP-KERNEL-INIT", "module": "module_kernel", "callable": "ModuleKernel.__init__", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "UNIVERSAL_GATE", "status": "OPEN", "note": "require_admission defaults False"},
+    {"path_id": "FP-KERNEL-RUN", "module": "module_kernel", "callable": "ModuleKernel.run", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "UNIVERSAL_GATE", "status": "PARTIAL"},
+    {"path_id": "FP-TRAINER-PROCESS", "module": "module00_trainer", "callable": "Trainer.process", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "admission_boundary", "status": "WIRED"},
+    {"path_id": "FP-M02-SCAN", "module": "M02", "callable": "SecurityProbe.scan", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "UNIVERSAL_GATE", "status": "OPEN"},
+    {"path_id": "FP-M03-RECORD", "module": "M03", "callable": "ContextSync.record_turn", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "UNIVERSAL_GATE", "status": "OPEN"},
+    {"path_id": "FP-M05-REDACT", "module": "M05", "callable": "RedactionEngine.redact", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "UNIVERSAL_GATE", "status": "OPEN"},
+    {"path_id": "FP-M06-CHECK", "module": "M06", "callable": "DriftAnalyzer.check", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "UNIVERSAL_GATE", "status": "OPEN"},
+    {"path_id": "FP-M07-APPEND", "module": "M07", "callable": "MemoryValidator.append", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "UNIVERSAL_GATE", "status": "OPEN"},
+    {"path_id": "FP-M09-LOG", "module": "M09", "callable": "AuditLogger.log_event", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "UNIVERSAL_GATE", "status": "OPEN"},
+    {"path_id": "FP-EVIDENCE-FORM", "module": "evidence", "callable": "evidence_formation", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "admission_boundary", "status": "PARTIAL"},
+    {"path_id": "FP-EXPORT", "module": "evidence", "callable": "export", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "admission_boundary", "status": "WIRED"},
+    {"path_id": "FP-SIGN", "module": "evidence", "callable": "sign", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "admission_boundary", "status": "WIRED"},
+    {"path_id": "FP-SEAL", "module": "foundation", "callable": "seal_creation", "forms_state": true, "consequential": true, "requires_admission": true, "gate": "UNIVERSAL_GATE", "status": "OPEN"}
+  ],
+  "required_path_ids": [
+    "FP-KERNEL-INIT", "FP-KERNEL-RUN", "FP-TRAINER-PROCESS",
+    "FP-M02-SCAN", "FP-M03-RECORD", "FP-M05-REDACT", "FP-M06-CHECK",
+    "FP-M07-APPEND", "FP-M09-LOG", "FP-EVIDENCE-FORM", "FP-EXPORT", "FP-SIGN", "FP-SEAL"
+  ],
+  "closure_rule": "UNIVERSAL_GATE = PROVEN only when every required path is GATED or WIRED and ungated count is 0",
+  "non_claims": [
+    "Registry is not Universal Gate proof",
+    "WIRED trainer/export does not close direct M02-M09",
+    "G3 synthetic adapter is not OS/network enforcement"
+  ]
+}
