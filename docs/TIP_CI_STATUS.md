@@ -1,10 +1,10 @@
 # V1 Tip CI Status
 
 **Date:** 2026-09-29  
-**Current main tip SHA:** `96e93d8cc3dfda7a2e5220ce4bbe020dda61c22b`  
-**Message:** `Merge pull request #4 from Kelronmos/architecture/proposed-fm-023-040`
+**Current main tip SHA:** `c76c1d8f0f25f5ac3a5de5c2efe3b6879f2c29f5`  
+**Message:** `docs: add SWI External Source Admission Policy (SPECIFIED)`
 
-> Previous tip metadata in this file (`6cc720f5666395696ad425a3d8bfa8f10209c536`) is **historical only** and must not be treated as evidence for the current SHA.
+> Older tip metadata previously recorded in this file (`6cc720f…`, `96e93d8…`, intermediate repair commits) is **historical only** and must not be treated as evidence for the current SHA.
 
 ## Current formation-path inventory (canonical)
 
@@ -18,6 +18,7 @@ Source of truth: `docs/formation_path_inventory.json`
 | Security Maze V1 | **NOT SEALED / NOT_READY** |
 | Foundation Seal 5 | **NOT READY** |
 | Legal / regulatory compliance | **NOT CLAIMED** |
+| External Source Admission | **SPECIFIED** (policy only — not implemented/tested) |
 
 ### Explicit residuals preserved
 
@@ -28,15 +29,22 @@ Source of truth: `docs/formation_path_inventory.json`
 - **FM-009** `DriftAnalyzer.check` — unadmitted call forms result.
 - **FM-010 – FM-013** — constructor residuals; default kernel remains `require_admission=False`.
 
-No FM status is flipped by this documentation repair. The current evidence contract deliberately preserves these residuals as **OPEN**.
+No FM status is flipped by documentation updates. The current evidence contract deliberately preserves these residuals as **OPEN**.
+
+## Recent documentation commits (this tip lineage)
+
+| Commit | Content |
+|--------|---------|
+| Policy | `docs/SWI_EXTERNAL_SOURCE_ADMISSION_POLICY.md` — SPECIFIED only |
+| Diagnosis | `docs/TEST_SUITE_REPLAY_GEOMETRY_DIAGNOSIS_2026-09-29.md` |
+| Prior repair | TIP_CI_STATUS alignment (historical relative to this tip) |
 
 ## GitHub Actions
 
 | Run | Conclusion | Note |
 |-----|------------|------|
-| Current tip `96e93d8…` | See Actions | Must be verified independently of older runs |
-| Historical tip `f1f6e266…` | success — run 35342332253 | **historical only** — not evidence for current SHA |
-| Historical tip `6cc720f…` | prior admission-fix tip | **historical only** |
+| Current tip | See Actions | Must be verified independently of older runs |
+| Historical tips | prior success runs | **historical only** — not evidence for current SHA |
 
 ## Required local verification before any seal claim
 
@@ -58,6 +66,7 @@ Target: full suite green (including adversarial architecture-boundary attacks).
 | CRTG / production key governance | NOT IMPLEMENTED |
 | Universal Gate | NOT_PROVEN until every formation path is independently covered |
 | Security Maze sealed | NOT_READY |
+| External Source Admission enforcement | **SPECIFIED only** — not IMPLEMENTED / TESTED |
 | Legal / regulatory compliance (GDPR, CCPA, AI Act, etc.) | **NOT CLAIMED** |
 | Crypto proves authority / truth / path closure | **NOT CLAIMED** (see CRYPTOGRAPHIC_EVIDENCE_CONTRACT_V1) |
 
