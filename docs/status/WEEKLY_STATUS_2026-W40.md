@@ -3,9 +3,9 @@
 **Week:** 2026-W40  
 **Report date:** 2026-09-29 (Tuesday)  
 **Timezone reference:** CAT  
-**Live tip at report time:** `5a5d4342fecd9aee10cbf0057485a2c60a3898fa`  
-**Canonical inventory:** `docs/formation_path_inventory.json`  
-**Tip status:** `docs/TIP_CI_STATUS.md`
+**Live tip:** see `docs/TIP_CI_STATUS.md` (aligned to interop verification lineage)  
+**Interop verification SHA:** `87163df01f4f43f05e60956d11c9181356cbc233`  
+**Canonical inventory:** `docs/formation_path_inventory.json`
 
 > Named ≠ Implemented · Implemented ≠ Tested · Tested ≠ Sealed · Sealed ≠ Authorized.
 
@@ -20,101 +20,67 @@
 | Universal Gate | **NOT_PROVEN** |
 | Security Maze V1 | **NOT SEALED / NOT_READY** |
 | Foundation Seal 5 | **NOT READY** |
-| External Source Admission | **SPECIFIED** only |
-| Replay engine | Scaffold only (not IMPLEMENTED/TESTED) |
+| External Source Admission | **IMPLEMENTED + TESTED (bounded)** · REPLAYABLE_BOUNDED |
+| Interoperability template | **IMPLEMENTED + TESTED (PROTOTYPE)** |
+| Interop mutation suite | **TESTED (10/10)** |
 | Legal / regulatory compliance | **NOT CLAIMED** |
+| Production trust | **NOT CLAIMED** |
 
-No formation-path status was flipped this week. Documentation was aligned to live tip and two foundation docs were added under honest SPECIFIED status.
+No formation-path FM status was flipped. Residuals remain **OPEN**.
 
 ---
 
 ## 2. Changes this week (2026-09-29)
 
-| Commit | Summary |
-|--------|---------|
-| `4928740…` | Repaired stale TIP_CI_STATUS (removed 6cc720f as current tip) |
-| `15bba6b…` | Added test suite / replay / geometry diagnosis report |
-| `c76c1d8…` | Added External Source Admission Policy (**SPECIFIED only**) |
-| `5a5d434…` | Refreshed TIP_CI_STATUS after policy + diagnosis |
+| Area | Summary |
+|------|---------|
+| Source admission | Halt + layered replay + CONTEXT_MISMATCH |
+| Change control | Claim slots; no silent inheritance |
+| External input sandbox | API/AI quarantine → admission → demo sink |
+| Demo journey | Stage orchestrator for UI-ready experiences |
+| Interoperability | 14-stage template + question states |
+| Mutation & replay | M01–M10 suite |
+| Evidence | `reports/interoperability/` (21 + 204 observed PASS) |
+| Reference policy | METADATA cleanup audit (0 interface artifacts) |
 
-**Prior week context (for continuity):**  
-2026-09-24 merges: architecture proposed FM-023–040 pointer (NOT_IMPLEMENTED), formal/v47 discipline patch.
+**Observed local tests:** interop **21/21**; full adversarial **204/204**. Re-check GitHub Actions on current tip independently.
 
 ---
 
 ## 3. Formation geometry (unchanged residuals)
 
-Still **OPEN** and must remain visible:
+Still **OPEN**:
 
 - FM-005 `ModuleKernel.run` — default `require_admission=False`
-- FM-006 `SecurityProbe.scan` — unadmitted forms output
-- FM-007 `ContextSync.record_turn` — unadmitted mutates
-- FM-008 `RedactionEngine.redact` — unadmitted forms output
-- FM-009 `DriftAnalyzer.check` — unadmitted forms result
-- FM-010–013 constructor residuals — default kernel False
+- FM-006 `SecurityProbe.scan`
+- FM-007 `ContextSync.record_turn`
+- FM-008 `RedactionEngine.redact`
+- FM-009 `DriftAnalyzer.check`
+- FM-010–013 constructor residuals
 
 ---
 
-## 4. Policy / privacy / open-source foundation
+## 4. Bounded claim (interop only)
 
-| Item | State |
-|------|-------|
-| External Source Admission Policy | **SPECIFIED** (`docs/SWI_EXTERNAL_SOURCE_ADMISSION_POLICY.md`) |
-| Privacy obligations in policy | Referenced as design constraints — **NOT CLAIMED** as compliance |
-| Open-source licence obligations in policy | Referenced (identify → obligations → HALT on unknown/incompatible) — **NOT CLAIMED** as compliance |
-| HALT-on-violation enforcement code | **Not implemented** |
-| Adversarial tests for source admission | **Not present** |
-| Replay of admission decisions | **Not present** |
+Within the tested prototype scope, post-decision mutations of the tested classes do not silently reuse the original PASS.
 
-Core policy rules recorded (not yet enforced in code):
-
-- Pull ≠ trusted  
-- Scan ≠ approved  
-- Warning ≠ authorization  
-- Hash ≠ authority  
-- Violation → HALT  
-- Fix requires revalidation  
-- Exception must be explicit and scoped  
+Does **not** establish Universal Gate, production trust, legal compliance, or C4/C5 full consequence gate.
 
 ---
 
-## 5. Test / replay / evidence
+## 5. Open / next
 
-| Area | State |
-|------|-------|
-| Primary suite (`test/`, `test/adversarial/`) | Present; adversarial coverage on maze/admission/boundaries |
-| Replay directory | Scaffold (`replay/manifests`, `replay/swi-v47`) — not executable replay engine |
-| Historical test log | Correctly marked non-current (`test_run_log.txt`) |
-| CI = Universal Gate proof | **NOT** equivalent — CI pass does not close residuals |
-
----
-
-## 6. Next week priorities (recommended order)
-
-1. **Implement** minimal `source_admission` models + decision + HALT path  
-2. **Test** adversarial: violation → HALT → zero protected side-effect  
-3. **Replay** one recorded HALT decision (same evidence hash → same decision)  
-4. Only then consider bounded status moves (still no silent FM flips)  
-5. Keep TIP_CI_STATUS and weekly status aligned to live tip  
-
-Do **not** claim PROVEN, SEALED, or regulatory compliance without the corresponding evidence chain.
+| Item | Next |
+|------|------|
+| IOP-C5-GATE | V3 consequence gate |
+| IOP-RUNTIME-CTX | V3 runtime binding |
+| S9 cross-node | Separate V3 repo |
+| External audit residuals (other public surfaces) | Fix fail-open / vacuous PASS / description overclaims without claiming V1 path closure |
 
 ---
 
-## 7. Explicit non-claims (this week)
+## 6. Explicit non-claims
 
-- Universal Gate PROVEN  
-- Security Maze SEALED  
-- Foundation Seal 5 READY  
-- External Source Admission IMPLEMENTED / TESTED / SEALED  
-- GDPR / CCPA / EU AI Act / other regime compliance  
-- Crypto proves authority, truth, or path closure  
+Universal Gate PROVEN · Security Maze SEALED · Foundation Seal 5 READY · Production · GDPR/CCPA/AI Act compliance · Crypto proves authority/truth/path closure
 
----
-
-## 8. Cadence
-
-This file is the **2026-W40** weekly status snapshot.  
-Subsequent weeks should add `docs/status/WEEKLY_STATUS_YYYY-Www.md` (ISO week) without overwriting prior reports, so the history remains auditable.
-
-**End of weekly status 2026-W40.**
+**End of weekly status 2026-W40 (refreshed).**
