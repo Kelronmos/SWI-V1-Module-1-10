@@ -38,6 +38,7 @@ from swi_core.source_admission.open_source import OpenSourceComponent, admit_com
 from swi_core.source_admission.replay import (
     Disposition,
     FailureClass,
+    RecordedContext,
     ReplayContext,
     ReplayResult,
     ReplayStatus,
@@ -60,6 +61,7 @@ __all__ = [
     "ReplayStatus",
     "Disposition",
     "ReplayContext",
+    "RecordedContext",
     "ReplayResult",
     "ViolationReport",
     "replay_admission",

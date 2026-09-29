@@ -5,6 +5,11 @@ A hash match proves byte–digest correspondence for the recorded material.
 It does not prove the original decision was true, lawful, or authorized.
 
 Access levels must not magically escalate during replay.
+
+Separation:
+  insufficient knowledge  → REPLAY_LIMITED_BY_ACCESS_CONTEXT
+  context contradiction   → CONTEXT_MISMATCH → BLOCK
+  restricted data misuse  → ACCESS_CONTEXT_INVALID → BLOCK
 """
 from __future__ import annotations
 
@@ -49,8 +54,6 @@ class Disposition(str, Enum):
     REVALIDATE = "REVALIDATE"
 
 
-# Knowledge / access levels (conceptual; bounded implementation)
-# 0 public · 1 admitted metadata · 2 protected workflow · 3 restricted evidence · 4 execution/authority
 KNOWLEDGE_PUBLIC = 0
 KNOWLEDGE_ADMITTED_METADATA = 1
 KNOWLEDGE_WORKFLOW = 2
@@ -60,9 +63,24 @@ KNOWLEDGE_EXECUTION = 4
 
 @dataclass(frozen=True)
 class ReplayContext:
+    """Runtime access context for this replay attempt."""
+
     knowledge_level: int = KNOWLEDGE_ADMITTED_METADATA
     access_scope: tuple[str, ...] = ("source_metadata", "admission_evidence")
     restricted_information_used: bool = False
+    # Binding fields — if set on both recorded and supplied, contradiction → CONTEXT_MISMATCH
+    workflow_id: Optional[str] = None
+    target_boundary: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class RecordedContext:
+    """Context that was bound when the original admission evidence was produced."""
+
+    workflow_id: Optional[str] = None
+    target_boundary: Optional[str] = None
+    knowledge_level: Optional[int] = None
+    access_scope: tuple[str, ...] = ()
 
 
 @dataclass
@@ -119,7 +137,7 @@ def _serialization_ok(record: SourceAdmissionRecord) -> LayerResult:
     try:
         _ = record.to_evidence_dict()
         return LayerResult("serialization", "PASS")
-    except Exception as exc:  # noqa: BLE001 — fail-closed
+    except Exception as exc:  # noqa: BLE001
         return LayerResult(
             "serialization",
             "FAIL",
@@ -143,6 +161,7 @@ def _hash_layer(record: SourceAdmissionRecord) -> LayerResult:
 
 
 def _access_layer(ctx: ReplayContext, required_level: int) -> LayerResult:
+    """Insufficient level → LIMITED (not contradiction). Restricted misuse → FAIL."""
     if ctx.restricted_information_used and ctx.knowledge_level < KNOWLEDGE_RESTRICTED:
         return LayerResult(
             "access",
@@ -151,13 +170,62 @@ def _access_layer(ctx: ReplayContext, required_level: int) -> LayerResult:
             "restricted information claimed without sufficient knowledge level",
         )
     if ctx.knowledge_level < required_level:
+        # Deliberately no ACCESS_CONTEXT_INVALID failure_class — this is limitation, not contradiction
         return LayerResult(
             "access",
             "LIMITED",
-            FailureClass.ACCESS_CONTEXT_INVALID,
+            None,
             f"available knowledge_level={ctx.knowledge_level} < required={required_level}",
         )
     return LayerResult("access", "PASS")
+
+
+def _context_binding_layer(
+    supplied: ReplayContext,
+    recorded: Optional[RecordedContext],
+) -> LayerResult:
+    """Supplied context contradicts recorded context → CONTEXT_MISMATCH.
+
+    Missing recorded context is not a mismatch (nothing to contradict).
+    Insufficient knowledge alone is handled by _access_layer.
+    """
+    if recorded is None:
+        return LayerResult("context", "PASS", detail="no recorded context binding")
+
+    mismatches: list[str] = []
+
+    if recorded.workflow_id is not None and supplied.workflow_id is not None:
+        if recorded.workflow_id != supplied.workflow_id:
+            mismatches.append(
+                f"workflow_id recorded={recorded.workflow_id!r} supplied={supplied.workflow_id!r}"
+            )
+
+    if recorded.target_boundary is not None and supplied.target_boundary is not None:
+        if recorded.target_boundary != supplied.target_boundary:
+            mismatches.append(
+                f"target_boundary recorded={recorded.target_boundary!r} "
+                f"supplied={supplied.target_boundary!r}"
+            )
+
+    if recorded.access_scope and supplied.access_scope:
+        # Contradiction if supplied claims a scope set that excludes required recorded scopes
+        # while also claiming to be the same workflow — only flag direct set inequality when both non-empty
+        if set(recorded.access_scope) != set(supplied.access_scope):
+            # Only treat as contradiction when recorded required scopes are claimed present but differ
+            if set(recorded.access_scope) - set(supplied.access_scope):
+                mismatches.append(
+                    f"access_scope missing required recorded scopes "
+                    f"recorded={list(recorded.access_scope)} supplied={list(supplied.access_scope)}"
+                )
+
+    if mismatches:
+        return LayerResult(
+            "context",
+            "FAIL",
+            FailureClass.CONTEXT_MISMATCH,
+            "; ".join(mismatches),
+        )
+    return LayerResult("context", "PASS")
 
 
 def _build_violation(
@@ -189,6 +257,8 @@ def _build_violation(
             "knowledge_level": ctx.knowledge_level,
             "access_scope": list(ctx.access_scope),
             "restricted_information_used": ctx.restricted_information_used,
+            "workflow_id": ctx.workflow_id,
+            "target_boundary": ctx.target_boundary,
         },
         rules=[
             "Recorded evidence must remain cryptographically consistent",
@@ -196,6 +266,8 @@ def _build_violation(
             "Unverified continuation must not execute protected operations",
             "HASH ≠ AUTHORITY ≠ TRUTH",
             "Replay must not escalate knowledge level",
+            "Access limitation ≠ context contradiction",
+            "Context contradiction ≠ original decision false",
         ],
         questions={
             "what_failed": what_failed,
@@ -216,16 +288,8 @@ def three_question_disposition(
     continuation_authority: str,
     failure: FailureClass,
 ) -> Disposition:
-    """CONTINUE only when continuation_authority is demonstrated; else BLOCK/ESCALATE."""
     auth = (continuation_authority or "").strip().upper()
     if auth in {"", "UNPROVEN", "NONE", "NOT_AUTHORIZED", "MISSING"}:
-        if failure in {
-            FailureClass.ACCESS_CONTEXT_INVALID,
-            FailureClass.AUTHORITY_UNPROVEN,
-            FailureClass.HASH_MISMATCH,
-            FailureClass.SOURCE_MUTATED,
-        }:
-            return Disposition.BLOCK
         return Disposition.BLOCK
     if auth.startswith("ESCALATE"):
         return Disposition.ESCALATE
@@ -233,7 +297,6 @@ def three_question_disposition(
         return Disposition.ISOLATE
     if auth.startswith("REVALIDATE"):
         return Disposition.REVALIDATE
-    # Explicit scoped authorization string required for CONTINUE
     if auth.startswith("AUTHORIZED:") or auth.startswith("SCOPED:"):
         return Disposition.CONTINUE
     return Disposition.BLOCK
@@ -244,12 +307,13 @@ def replay_admission(
     *,
     source_for_reeval: Optional[SourceDescriptor] = None,
     context: Optional[ReplayContext] = None,
+    recorded_context: Optional[RecordedContext] = None,
     required_knowledge_level: int = KNOWLEDGE_ADMITTED_METADATA,
     continuation_authority: str = "UNPROVEN",
 ) -> ReplayResult:
-    """Replay recorded admission decision under stated access context.
+    """Replay recorded admission under stated access + optional recorded context binding.
 
-    Does not execute protected operations. On violation: PAUSE/BLOCK report only.
+    Does not execute protected operations.
     """
     ctx = context or ReplayContext()
     layers: List[LayerResult] = []
@@ -352,8 +416,40 @@ def replay_admission(
             context=ctx,
         )
 
-    # Cryptographic binding (bounded: hash integrity only; not signature/CRTG)
     layers.append(LayerResult("cryptographic_binding", "PASS", detail="hash binding only; not CRTG"))
+
+    # Context contradiction (before access limitation) when recorded binding present
+    ctx_layer = _context_binding_layer(ctx, recorded_context)
+    layers.append(ctx_layer)
+    if ctx_layer.status == "FAIL":
+        disp = three_question_disposition(
+            what_failed=ctx_layer.detail,
+            consequence="Supplied context contradicts recorded context; do not treat as same workflow",
+            continuation_authority=continuation_authority,
+            failure=FailureClass.CONTEXT_MISMATCH,
+        )
+        report = _build_violation(
+            FailureClass.CONTEXT_MISMATCH,
+            ctx_layer.detail,
+            recorded_hash=recorded.evidence_hash,
+            recomputed_hash=recomputed_hash,
+            ctx=ctx,
+            layers=layers,
+            what_failed=ctx_layer.detail,
+            consequence="Supplied context contradicts recorded context; do not treat as same workflow",
+            continuation_authority=continuation_authority,
+            disposition=disp,
+        )
+        return ReplayResult(
+            recorded_decision=recorded.decision.value,
+            recomputed_decision=None,
+            recorded_hash=recorded.evidence_hash,
+            recomputed_hash=recomputed_hash,
+            layers=layers,
+            replay_status=ReplayStatus.BLOCKED,
+            violation=report,
+            context=ctx,
+        )
 
     access = _access_layer(ctx, required_knowledge_level)
     layers.append(access)
@@ -387,7 +483,6 @@ def replay_admission(
             context=ctx,
         )
     if access.status == "LIMITED":
-        # Not automatically a failed original decision — limited by access context
         return ReplayResult(
             recorded_decision=recorded.decision.value,
             recomputed_decision=None,
@@ -399,10 +494,8 @@ def replay_admission(
             context=ctx,
         )
 
-    # Re-evaluation (decision comparison) when source provided
     recomputed_decision: Optional[str] = None
     if source_for_reeval is not None:
-        # Detect source mutation vs recorded descriptor
         if recorded.source is not None:
             rs = recorded.source
             if (
