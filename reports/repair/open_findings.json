@@ -1,0 +1,100 @@
+{
+  "repository": "Kelronmos/SWI-V1-Module-1-10",
+  "commit_sha": "3e32d27f4830dbf3aa6b819e81c7fcde87c28f25",
+  "findings": [
+    {
+      "finding_id": "SWI-REPAIR-001",
+      "status": "NOT_APPLICABLE_THIS_REPO",
+      "description": "test_execution_gate_allows_on_admit failure reported by external audit",
+      "evidence": ["grep across SWI-V1-Module-1-10: NOT_FOUND"],
+      "next_action": "Locate owning repository and reproduce on exact SHA"
+    },
+    {
+      "finding_id": "SWI-REPAIR-002",
+      "status": "NOT_APPLICABLE_THIS_REPO",
+      "description": "test_reconstruct failure reported by external audit",
+      "evidence": ["grep: NOT_FOUND in this repo"],
+      "next_action": "Locate owning repository"
+    },
+    {
+      "finding_id": "SWI-REPAIR-003",
+      "status": "NOT_APPLICABLE_THIS_REPO",
+      "description": "verify_route_chain count=0 vacuous PASS",
+      "evidence": ["grep: NOT_FOUND in this repo"],
+      "next_action": "Locate owning repository; enforce count==0 cannot PASS"
+    },
+    {
+      "finding_id": "SWI-REPAIR-004",
+      "status": "PARTIALLY_ADDRESSED",
+      "description": "jsonschema required for schema tests",
+      "evidence": ["requirements.txt declares jsonschema>=4.0.0", "collection errors without install"],
+      "limitation": "Clean full pip install of requirements hit transient PyPI errors in one environment",
+      "next_action": "Document install path in README/CI; ensure CI installs requirements.txt"
+    },
+    {
+      "finding_id": "SWI-REPAIR-005",
+      "status": "OPEN",
+      "description": "PYTHONPATH=. often required for local pytest/scripts",
+      "evidence": ["scripts/export_travel_evidence.py header", "local command used PYTHONPATH=."],
+      "next_action": "Prefer installable package layout or conftest path bootstrap"
+    },
+    {
+      "finding_id": "SWI-REPAIR-006",
+      "status": "OPEN_ECOSYSTEM",
+      "description": "Rust substring matching admin vs user_is_not_admin",
+      "next_action": "Repair in Rust prototype repository"
+    },
+    {
+      "finding_id": "SWI-REPAIR-007",
+      "status": "OPEN_ECOSYSTEM",
+      "description": "Rust NaN drift fail-open",
+      "next_action": "Fail closed / INVALID_MEASUREMENT in Rust prototype"
+    },
+    {
+      "finding_id": "SWI-REPAIR-008",
+      "status": "OPEN_ECOSYSTEM",
+      "description": "V1.02 Cargo workspace with 0 .rs files",
+      "next_action": "Mark SCAFFOLD/NOT_BUILDABLE or implement sources"
+    },
+    {
+      "finding_id": "SWI-REPAIR-009",
+      "status": "OPEN_ECOSYSTEM",
+      "description": "Firefly TypeScript import/path errors",
+      "next_action": "Repair structure or document NOT_BUILDABLE"
+    },
+    {
+      "finding_id": "SWI-REPAIR-010",
+      "status": "OPEN_ECOSYSTEM",
+      "description": "Evidence Engine public claim exceeds implementation",
+      "next_action": "Rewrite description to match actual UI scaffold"
+    },
+    {
+      "finding_id": "SWI-REPAIR-011",
+      "status": "OPEN",
+      "description": "Root ZIP artifacts in SWI-V1-Module-1-10",
+      "evidence": ["swi_v1_part1_source.zip", "SWI_security_self_check_pilot.zip"],
+      "next_action": "Classify SOURCE vs CLUTTER; extract if needed; gitignore generated archives"
+    },
+    {
+      "finding_id": "FM-005-013",
+      "status": "OPEN",
+      "description": "Formation-path residuals",
+      "evidence": ["docs/formation_path_inventory.json", "test_security_maze_fm_open_attacks.py"]
+    },
+    {
+      "finding_id": "UNIVERSAL_GATE",
+      "status": "NOT_PROVEN",
+      "description": "Not all privileged paths gated"
+    },
+    {
+      "finding_id": "SECURITY_MAZE",
+      "status": "NOT_SEALED",
+      "description": "Partial construction; residuals outside maze"
+    },
+    {
+      "finding_id": "S9",
+      "status": "NOT_IMPLEMENTED",
+      "description": "Cross-node evidence share without authority transfer — V3 design"
+    }
+  ]
+}

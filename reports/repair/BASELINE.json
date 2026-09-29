@@ -1,0 +1,47 @@
+{
+  "operation": "SWI_REPAIR_BASELINE",
+  "repository": "Kelronmos/SWI-V1-Module-1-10",
+  "branch": "main",
+  "commit_sha": "3e32d27f4830dbf3aa6b819e81c7fcde87c28f25",
+  "date": "2026-09-29",
+  "scope_note": "This baseline covers only SWI-V1-Module-1-10. External audit items referring to Rust prototype, Firefly, Evidence Engine, V1.02 Cargo workspace, and other public surfaces are OUT OF SCOPE for this repository and remain OPEN at ecosystem level.",
+  "audit_items_searched_in_this_repo": {
+    "test_execution_gate_allows_on_admit": "NOT_FOUND",
+    "test_reconstruct": "NOT_FOUND",
+    "verify_route_chain": "NOT_FOUND",
+    "CONTRACT_FROZEN": "FOUND as status token in swi_core/admission_boundary.py (not a test expectation mismatch in this repo)",
+    "jsonschema": "DECLARED in requirements.txt (jsonschema>=4.0.0); collection fails if not installed",
+    "PYTHONPATH": "Documented for some scripts; tests run with PYTHONPATH=.",
+    "committed_zips": [
+      "./swi_v1_part1_source.zip",
+      "./SWI_security_self_check_pilot.zip"
+    ]
+  },
+  "observed_pytest": {
+    "command": "pip install jsonschema && PYTHONPATH=. python -m pytest -q",
+    "result": "PASS",
+    "passed": 375,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "duration_seconds": 26.09,
+    "without_jsonschema": "2 collection ERRORS (test_adversarial_contracts, test_m00_m10_schema)"
+  },
+  "interop": {
+    "mutation_suite": "test/adversarial/test_interoperability_mutation_replay.py",
+    "prior_verification_sha": "87163df01f4f43f05e60956d11c9181356cbc233",
+    "status": "TESTED_BOUNDED"
+  },
+  "formation": {
+    "FM-001-004": "TESTED",
+    "FM-005-013": "OPEN",
+    "universal_gate": "NOT_PROVEN",
+    "security_maze": "NOT_SEALED",
+    "foundation_seal_5": "NOT_READY"
+  },
+  "limitations": [
+    "Clean venv full requirements install hit transient PyPI 502 in this environment",
+    "CI tip re-check still required",
+    "Other Kelronmos/public SWI surfaces not repaired in this commit"
+  ]
+}
