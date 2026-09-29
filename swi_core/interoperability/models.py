@@ -57,4 +57,8 @@ class WorkflowTemplate:
     market_allocation_requested: bool = False
     price_setting_requested: bool = False
 
+    # Prototype binding fields (mutation-detectable; not production authority)
+    consequence_level: Optional[str] = None  # C0..C5 or None
+    execution_mode: Optional[str] = None  # SIMULATION | ADVISORY_ONLY | etc.
+
     notes: str = ""
