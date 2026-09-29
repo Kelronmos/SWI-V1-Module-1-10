@@ -1,0 +1,5 @@
+{
+  "track": "DOMAIN_MUTATION",
+  "survivors": [],
+  "note": "No domain mutant allowed a stale PASS under the tested matrix"
+}

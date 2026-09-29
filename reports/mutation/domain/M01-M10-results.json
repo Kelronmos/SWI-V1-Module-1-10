@@ -1,0 +1,21 @@
+{
+  "track": "DOMAIN_MUTATION",
+  "commit_sha": "f85675e7bfff3b6fa6ef5d2055b222d89dcc3758",
+  "invariant": "A PASS must not become stale when the evidence that justified it changes",
+  "passed": 10,
+  "failed": 0,
+  "stale_pass_survived": 0,
+  "correctly_re_evaluated": 10,
+  "results": [
+    {"id": "M01", "mutation": "required_stage_removed", "observed": "QUESTION_REQUIRED", "stale_pass_survived": false, "status": "PASS"},
+    {"id": "M02", "mutation": "provider_count", "hashes_differ": true, "status": "PASS"},
+    {"id": "M03", "mutation": "alternatives_None", "observed": "QUESTION_REQUIRED", "status": "PASS"},
+    {"id": "M04", "mutation": "switching_path", "observed": ["QUESTION_REQUIRED", "REVIEW_REQUIRED"], "status": "PASS"},
+    {"id": "M05", "mutation": "authority_removed", "observed": "AUTHORITY_REQUIRED", "side_effects": 0, "status": "PASS"},
+    {"id": "M06", "mutation": "consequence_C2_to_C5", "hashes_differ": true, "limitation": "C5 not auto-BLOCK", "status": "PASS"},
+    {"id": "M07", "mutation": "runtime_mode", "hashes_differ": true, "status": "PASS"},
+    {"id": "M08", "mutation": "decision_tamper", "observed": "HASH_MISMATCH", "status": "PASS"},
+    {"id": "M09", "mutation": "serialized_material", "observed": "HASH_MISMATCH", "status": "PASS"},
+    {"id": "M10", "mutation": "input_identity", "hashes_differ": true, "status": "PASS"}
+  ]
+}

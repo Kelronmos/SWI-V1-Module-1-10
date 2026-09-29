@@ -1,0 +1,7 @@
+{
+  "commit_sha": "f85675e7bfff3b6fa6ef5d2055b222d89dcc3758",
+  "python": "3.12.3",
+  "pytest": "9.0.3",
+  "mutmut": "NOT_INSTALLED",
+  "os": "linux"
+}

@@ -1,0 +1,19 @@
+{
+  "track": "CODE_MUTATION",
+  "tool": "in-repo-pilot-not-mutmut",
+  "targets": ["swi_core/interoperability/evaluate.py"],
+  "killed": 5,
+  "survived": 0,
+  "equivalent": 0,
+  "timeout_flaky": 0,
+  "inconclusive": 0,
+  "mutants": [
+    {"id": "C01", "desc": "missing stages → PASS", "status": "KILLED"},
+    {"id": "C02", "desc": "None alternatives → PASS", "status": "KILLED"},
+    {"id": "C03", "desc": "market BLOCK → PASS", "status": "KILLED"},
+    {"id": "C04", "desc": "AUTHORITY_REQUIRED → PASS", "status": "KILLED"},
+    {"id": "C05", "desc": "switching REVIEW → PASS", "status": "KILLED"}
+  ],
+  "limitation": "Hand-selected high-value mutants only; not a full mutmut operator suite",
+  "next_iteration": "Install mutmut when PyPI available; expand to evidence.py"
+}

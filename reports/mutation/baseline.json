@@ -1,0 +1,16 @@
+{
+  "commit_sha": "f85675e7bfff3b6fa6ef5d2055b222d89dcc3758",
+  "domain_suite": {
+    "command": "PYTHONPATH=. python -m pytest -q test/adversarial/test_interoperability_template.py test/adversarial/test_interoperability_mutation_replay.py",
+    "passed": 21,
+    "failed": 0
+  },
+  "code_tool": {
+    "preferred": "mutmut",
+    "status": "NOT_INSTALLED",
+    "reason": "PyPI 502 on mutmut/jsonschema wheel fetch in environment",
+    "fallback": "scripts/code_mutation_pilot.py (bounded hand mutants)"
+  },
+  "security_maze": "NOT_READY",
+  "universal_gate": "NOT_PROVEN"
+}

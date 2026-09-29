@@ -1,0 +1,6 @@
+{
+  "tool": "mutmut",
+  "status": "NOT_RUN",
+  "reason": "Package install failed (PyPI HTTP 502) in verification environment",
+  "fallback_used": true
+}

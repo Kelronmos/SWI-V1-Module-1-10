@@ -1,0 +1,8 @@
+{
+  "track": "DOMAIN_MUTATION",
+  "exact_replay_hash_ok": true,
+  "decision_tamper": "HASH_MISMATCH",
+  "serialization_tamper": "HASH_MISMATCH",
+  "authority_mutation": "AUTHORITY_REQUIRED",
+  "limitation": "Cross-runtime CONTEXT_MISMATCH class not fully typed in interop module"
+}
