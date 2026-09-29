@@ -1,0 +1,93 @@
+{
+  "schema_version": "swi-v3-start-freeze-v1",
+  "freeze_date": "2026-09-29",
+  "freeze_purpose": "Immutable boundary before V3 implementation. V1 is evidence of what existed; V3 is evidence of what changed.",
+  "rule": "V3 must not rewrite historical V1 evidence",
+  "v3_started": false,
+  "baselines": {
+    "v1_original_baseline": {
+      "sha": "7f40a19b2b2f554ca7ea5adebd568b7fcfdc99b5",
+      "source": "docs/BASELINE_FREEZE.md",
+      "date": "2026-09-15",
+      "purpose": "Phase 0 original V1 baseline freeze",
+      "status": "HISTORICAL"
+    },
+    "v1_frozen_audit_target": {
+      "sha": "0c8a2e662dc2b906a1166c091f37de6bd5c67299",
+      "source": "docs/S9_E01_FROZEN_V1_RESIDUAL_REPLAY.md",
+      "purpose": "S9 frozen residual replay target — do not modify SHA to improve report",
+      "status": "FROZEN"
+    },
+    "path_closure_baseline": {
+      "sha": "0e15fc96791cc97ab712dcdc1b76aab6dc66ee7e",
+      "source": "docs/formation_path_inventory.json path_closure_baseline",
+      "purpose": "Historical path-closure inventory baseline",
+      "status": "HISTORICAL"
+    },
+    "formation_inventory_blob": {
+      "sha": "6ecba6948e226f0d79dfe87550d92892fbec607e",
+      "path": "docs/formation_path_inventory.json",
+      "purpose": "V1 geometry snapshot at freeze (FM-001–004 TESTED; FM-005–013 OPEN)",
+      "status": "V1_GEOMETRY_SNAPSHOT"
+    },
+    "v2_admission_baseline": {
+      "sha": "c58daaf3f8ea8a12e436eb71e571bea44ff05634",
+      "source": "docs/BASELINE_FREEZE.md",
+      "purpose": "V2 admission baseline (historical)",
+      "status": "HISTORICAL"
+    },
+    "pre_v3_main_tip": {
+      "sha": "d2cab7aa2eab1fd95332bc472779916385648183",
+      "purpose": "Live main tip when V3_START_FREEZE was recorded (includes source_admission bounded slice)",
+      "status": "PRE_V3_TIP"
+    }
+  },
+  "v1_geometry_at_freeze": {
+    "fm_001_to_004": "TESTED",
+    "fm_005": "OPEN",
+    "fm_006": "OPEN",
+    "fm_007": "OPEN",
+    "fm_008": "OPEN",
+    "fm_009": "OPEN",
+    "fm_010_to_013": "OPEN",
+    "universal_gate": "NOT_PROVEN",
+    "security_maze": "NOT_READY",
+    "foundation_seal_5": "NOT_READY"
+  },
+  "bounded_work_present_not_closing_v1_residuals": {
+    "external_source_admission": "IMPLEMENTED_TESTED_BOUNDED",
+    "replay_engine": "NOT_IMPLEMENTED_TESTED",
+    "legal_regulatory_compliance": "NOT_CLAIMED"
+  },
+  "must_preserve": [
+    "docs/S9_E01_FROZEN_V1_RESIDUAL_REPLAY.md",
+    "docs/formation_path_inventory.json",
+    "docs/BASELINE_FREEZE.md",
+    "docs/GOVERNANCE_LOCK.md",
+    "V1 frozen audit target SHA 0c8a2e662dc2b906a1166c091f37de6bd5c67299",
+    "M02/M03/M05/M06 bounded seal evidence and their stated limitations"
+  ],
+  "v3_may_change_with_new_evidence": [
+    "FM-005",
+    "FM-006",
+    "FM-007",
+    "FM-008",
+    "FM-009",
+    "FM-010",
+    "FM-011",
+    "FM-012",
+    "FM-013",
+    "Universal Gate",
+    "Replay engine",
+    "External Source Admission (extend)",
+    "Foundation Seal 5",
+    "CRTG",
+    "Execution adapters"
+  ],
+  "v3_process": {
+    "do_not_rewrite_left_side": true,
+    "prefer_versioned_successor_inventory": "docs/formation_path_inventory_v3.json when V3 geometry is claimed",
+    "prefer_branch": "v3/* or controlled branch off main; do not silently rewrite V1 evidence on main",
+    "promotion_requires": "new implementation + new tests + new evidence + new SHA"
+  }
+}
