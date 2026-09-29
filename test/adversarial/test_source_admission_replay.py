@@ -40,6 +40,65 @@ def _valid_source(**overrides) -> SourceDescriptor:
     return SourceDescriptor(**base)
 
 
+def test_headline_pass_record_mutate_hash_mismatch_pause_zero_side_effects():
+    """Headline adversarial path:
+
+    PASS → record H1 → modify evidence → replay → HASH_MISMATCH
+    → PAUSE/BLOCK → violation report → side_effects == 0
+
+    Proves a previously accepted workflow cannot silently continue when
+    the cryptographic binding of the recorded evidence has changed.
+    """
+    side_effects = {"count": 0}
+
+    # 1. PASS and record H1
+    recorded = evaluate_source(_valid_source())
+    assert recorded.decision == DecisionStatus.PASS
+    h1 = recorded.evidence_hash
+    assert h1 is not None and len(h1) == 64
+
+    # Optional: would-be continue path only if replay matches (not taken after mutate)
+    def protected_continue():
+        side_effects["count"] += 1
+        return "continued"
+
+    # 2. Modify evidence binding (representation drift / tamper)
+    recorded.evidence_hash = "d" * 64
+
+    # 3. Replay under normal access context
+    result = replay_admission(
+        recorded,
+        context=ReplayContext(knowledge_level=1),
+        continuation_authority="UNPROVEN",
+    )
+
+    # 4. HASH_MISMATCH — not a generic INVALID
+    assert result.replay_status in {ReplayStatus.BLOCKED, ReplayStatus.PAUSED}
+    assert result.violation is not None
+    assert result.violation.failure_class == FailureClass.HASH_MISMATCH
+    assert result.violation.cryptographic["recorded_hash"] == "d" * 64
+    assert result.violation.cryptographic["recomputed_hash"] == h1
+    assert result.violation.cryptographic["match"] is False
+
+    # 5. PAUSE / report / 3 questions / disposition
+    assert result.violation.status in {"PAUSED", "BLOCKED"}
+    assert result.violation.questions["what_failed"]
+    assert result.violation.questions["consequence"]
+    assert result.violation.questions["continuation_authority"] == "UNPROVEN"
+    assert result.violation.disposition == Disposition.BLOCK
+
+    # 6. Must not continue protected work
+    if result.violation.disposition != Disposition.CONTINUE:
+        # protected_continue deliberately not invoked
+        pass
+    else:
+        protected_continue()
+
+    assert result.violation.execution["continued"] is False
+    assert result.violation.execution["side_effects"] == 0
+    assert side_effects["count"] == 0
+
+
 def test_replay_same_evidence_same_decision():
     recorded = evaluate_source(_valid_source())
     assert recorded.decision == DecisionStatus.PASS
@@ -56,7 +115,6 @@ def test_replay_same_evidence_same_decision():
 
 def test_hash_mismatch_is_not_generic_invalid():
     recorded = evaluate_source(_valid_source())
-    # Tamper evidence_hash after the fact (simulates representation drift)
     recorded.evidence_hash = "d" * 64
     result = replay_admission(recorded, context=ReplayContext(knowledge_level=1))
     assert result.replay_status in {ReplayStatus.BLOCKED, ReplayStatus.PAUSED}
@@ -79,7 +137,6 @@ def test_schema_invalid_layered():
 
 def test_access_limited_not_false_original_decision():
     recorded = evaluate_source(_valid_source())
-    # Require level 3; provide only level 1 → LIMITED, not automatic DECISION false
     result = replay_admission(
         recorded,
         context=ReplayContext(knowledge_level=1),
@@ -119,9 +176,6 @@ def test_source_mutated_blocks():
 
 def test_decision_mismatch_blocks():
     recorded = evaluate_source(_valid_source())
-    # Same identity but privacy no longer clear → HALT on reeval
-    changed = _valid_source(privacy_clear=False)
-    # Keep identity fields same so SOURCE_MUTATED does not fire first
     changed = _valid_source(
         privacy_clear=False,
         source_id=recorded.source.source_id,  # type: ignore[union-attr]
