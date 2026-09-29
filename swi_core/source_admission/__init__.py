@@ -1,8 +1,8 @@
-"""SWI External Source Admission — bounded enforcement slice.
+"""SWI External Source Admission — bounded enforcement + replay slice.
 
-Status of this package on introduction:
-  SPECIFIED (policy doc) → IMPLEMENTED (this code) → TESTED (adversarial suite).
-  REPLAYABLE / PROVEN / SEALED / regulatory compliance: NOT CLAIMED.
+Progression for this package:
+  SPECIFIED → IMPLEMENTED → TESTED → REPLAYABLE (bounded).
+  PROVEN beyond slice / SEALED / regulatory compliance: NOT CLAIMED.
 
 Does not close FM-005–013 or the Universal Gate.
 """
@@ -20,6 +20,11 @@ from swi_core.source_admission.models import (
     SourceDescriptor,
     Violation,
 )
+from swi_core.source_admission.replay import (
+    ReplayResult,
+    ReplayResultStatus,
+    replay_admission,
+)
 
 __all__ = [
     "DecisionStatus",
@@ -31,4 +36,7 @@ __all__ = [
     "admit_or_halt",
     "guarded_operation",
     "evidence_hash_for_record",
+    "ReplayResult",
+    "ReplayResultStatus",
+    "replay_admission",
 ]
