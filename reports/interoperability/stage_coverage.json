@@ -1,0 +1,20 @@
+{
+  "commit_sha": "87163df01f4f43f05e60956d11c9181356cbc233",
+  "note": "Stages exist in template model; enforcement is via evaluate_workflow checks, not per-stage engines.",
+  "stages": [
+    {"stage": "01_IDENTIFY", "specified": true, "implemented": true, "tested": true, "evidence": ["models.WorkflowStage", "evaluate stage completeness"], "limitation": "Presence check only"},
+    {"stage": "02_BOUNDARY", "specified": true, "implemented": true, "tested": true, "evidence": ["REQUIRED_STAGES completeness"], "limitation": "Presence check only"},
+    {"stage": "03_CONTRACT", "specified": true, "implemented": true, "tested": true, "evidence": ["REQUIRED_STAGES"], "limitation": "Presence check only"},
+    {"stage": "04_INPUT", "specified": true, "implemented": true, "tested": true, "evidence": ["REQUIRED_STAGES"], "limitation": "Presence check only"},
+    {"stage": "05_ADMISSION", "specified": true, "implemented": true, "tested": true, "evidence": ["REQUIRED_STAGES"], "limitation": "Presence check only"},
+    {"stage": "06_POLICY", "specified": true, "implemented": true, "tested": true, "evidence": ["REQUIRED_STAGES"], "limitation": "Presence check only"},
+    {"stage": "07_CAPACITY", "specified": true, "implemented": true, "tested": true, "evidence": ["REQUIRED_STAGES"], "limitation": "Presence check only"},
+    {"stage": "08_COMPETITION", "specified": true, "implemented": true, "tested": true, "evidence": ["REQUIRED_STAGES", "single_provider REVIEW"], "limitation": "Limited competition logic"},
+    {"stage": "09_ALTERNATIVES", "specified": true, "implemented": true, "tested": true, "evidence": ["alternative_providers_known None → QUESTION"], "limitation": "Count/unknown only"},
+    {"stage": "10_SWITCHING", "specified": true, "implemented": true, "tested": true, "evidence": ["switching_path_known None/False"], "limitation": "Boolean/unknown only"},
+    {"stage": "11_EXECUTION", "specified": true, "implemented": true, "tested": true, "evidence": ["real_world + authority", "market/price BLOCK"], "limitation": "No real-world execution path"},
+    {"stage": "12_EVIDENCE", "specified": true, "implemented": true, "tested": true, "evidence": ["evidence_available", "record_evaluation hash"], "limitation": "Prototype hash only"},
+    {"stage": "13_REVIEW", "specified": true, "implemented": true, "tested": true, "evidence": ["REVIEW_REQUIRED paths"], "limitation": "No human workflow system"},
+    {"stage": "14_EXIT", "specified": true, "implemented": true, "tested": true, "evidence": ["REQUIRED_STAGES presence"], "limitation": "Presence check only"}
+  ]
+}

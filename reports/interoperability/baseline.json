@@ -1,0 +1,28 @@
+{
+  "test_type": "baseline",
+  "repository": "Kelronmos/SWI-V1-Module-1-10",
+  "commit_sha": "87163df01f4f43f05e60956d11c9181356cbc233",
+  "branch": "main",
+  "suite": "test/adversarial/test_interoperability_template.py + test_interoperability_mutation_replay.py",
+  "command": "PYTHONPATH=. python -m pytest -q test/adversarial/test_interoperability_template.py test/adversarial/test_interoperability_mutation_replay.py",
+  "result": "PASS",
+  "passed": 21,
+  "failed": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_seconds": 0.08,
+  "full_adversarial_suite": {
+    "command": "PYTHONPATH=. python -m pytest -q test/adversarial/",
+    "passed": 204,
+    "failed": 0,
+    "duration_seconds": 13.40
+  },
+  "environment": {
+    "python": "3.12.3",
+    "pytest": "9.0.3"
+  },
+  "limitations": [
+    "Single environment run; CI tip re-check still required",
+    "Does not prove Universal Gate or production readiness"
+  ]
+}

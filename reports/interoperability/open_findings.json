@@ -1,0 +1,61 @@
+{
+  "commit_sha": "87163df01f4f43f05e60956d11c9181356cbc233",
+  "findings": [
+    {
+      "finding_id": "FM-005",
+      "status": "OPEN",
+      "description": "Formation-path residual OPEN in inventory; not closed by interoperability slice",
+      "impact": "Privileged path geometry incomplete",
+      "next_action": "Separate formation-path evidence work"
+    },
+    {
+      "finding_id": "FM-006-013",
+      "status": "OPEN",
+      "description": "Formation-path residuals remain OPEN",
+      "impact": "Universal path coverage not established",
+      "next_action": "Do not close from interoperability tests alone"
+    },
+    {
+      "finding_id": "IOP-C5-GATE",
+      "status": "OPEN",
+      "description": "Consequence C5 mutation changes evidence hash but evaluator does not yet BLOCK C4/C5",
+      "impact": "Consequence gate incomplete in V1 interoperability prototype",
+      "next_action": "V3 Consequence Gate module"
+    },
+    {
+      "finding_id": "IOP-RUNTIME-CTX",
+      "status": "OPEN",
+      "description": "Execution-mode mutation is hash-detectable; no typed RUNTIME CONTEXT_MISMATCH in interoperability module",
+      "impact": "Cross-runtime binding incomplete",
+      "next_action": "V3 Runtime Binding"
+    },
+    {
+      "finding_id": "UNIVERSAL_GATE",
+      "status": "NOT_PROVEN",
+      "description": "No evidence of universal privileged-path coverage",
+      "impact": "Cannot claim Universal Gate",
+      "next_action": "Independent path-closure program"
+    },
+    {
+      "finding_id": "FOUNDATION_SEAL_5",
+      "status": "NOT_READY",
+      "description": "Seal 5 checklist incomplete",
+      "impact": "Foundation not sealed",
+      "next_action": "Seal 5 completion path"
+    },
+    {
+      "finding_id": "PRODUCTION",
+      "status": "NOT_CLAIMED",
+      "description": "Prototype only; no production authorization",
+      "impact": "Must not deploy as production authority",
+      "next_action": "Separate production readiness program"
+    },
+    {
+      "finding_id": "LEGAL_REGULATORY",
+      "status": "NOT_CLAIMED",
+      "description": "No legal/regulatory adjudication claimed",
+      "impact": "Technical states only",
+      "next_action": "Separate compliance assessment if required"
+    }
+  ]
+}

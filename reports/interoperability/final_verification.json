@@ -1,0 +1,40 @@
+{
+  "project": "Structured Workflow Intelligence",
+  "repository": "Kelronmos/SWI-V1-Module-1-10",
+  "branch": "main",
+  "verified_sha": "87163df01f4f43f05e60956d11c9181356cbc233",
+  "scope": "interoperability prototype verification",
+  "baseline": {
+    "interop_tests_passed": 21,
+    "interop_tests_failed": 0,
+    "full_adversarial_passed": 204,
+    "full_adversarial_failed": 0
+  },
+  "mutation_tests": {"passed": 10, "failed": 0},
+  "bounded_claim": "Within the tested prototype scope, the interoperability implementation detects the tested classes of post-decision mutation and does not silently reuse the original result when the tested evidence, context, authority, decision, serialization, or input changes.",
+  "not_claimed": [
+    "Universal Gate",
+    "Production trust",
+    "Legal compliance",
+    "Regulatory compliance",
+    "Complete C4/C5 consequence enforcement",
+    "Cross-node S9 pipe",
+    "Closure of FM-005–013"
+  ],
+  "status_table": {
+    "14_stage_template": "IMPLEMENTED_TESTED",
+    "question_states": "IMPLEMENTED_TESTED",
+    "mutation_detection": "TESTED",
+    "replay": "REPLAYABLE_BOUNDED",
+    "authority": "BOUNDED",
+    "runtime": "BOUNDED_PROTOTYPE",
+    "consequence": "SPECIFIED_PARTIAL",
+    "FM-005-013": "OPEN",
+    "Universal_Gate": "NOT_PROVEN",
+    "Foundation_Seal_5": "NOT_READY",
+    "Production": "NOT_CLAIMED",
+    "Legal_regulatory": "NOT_CLAIMED"
+  },
+  "production_ready": false,
+  "real_world_execution": false
+}

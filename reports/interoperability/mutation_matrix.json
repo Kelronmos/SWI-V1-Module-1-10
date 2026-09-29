@@ -1,0 +1,19 @@
+{
+  "commit_sha": "87163df01f4f43f05e60956d11c9181356cbc233",
+  "suite": "test/adversarial/test_interoperability_mutation_replay.py",
+  "invariant": "EVIDENCE_CHANGED → OLD DECISION ≠ AUTOMATICALLY VALID",
+  "results": [
+    {"test_id": "M01", "name": "required_stage_mutation", "expected": "QUESTION_REQUIRED", "observed": "QUESTION_REQUIRED", "status": "PASS"},
+    {"test_id": "M02", "name": "provider_count_mutation", "expected": "new evidence_hash", "observed": "evidence_hash differs", "status": "PASS"},
+    {"test_id": "M03", "name": "alternative_provider_None", "expected": "QUESTION_REQUIRED", "observed": "QUESTION_REQUIRED", "status": "PASS"},
+    {"test_id": "M04", "name": "switching_path_mutation", "expected": "QUESTION_REQUIRED / REVIEW_REQUIRED", "observed": "QUESTION_REQUIRED / REVIEW_REQUIRED", "status": "PASS"},
+    {"test_id": "M05", "name": "authority_mutation", "expected": "AUTHORITY_REQUIRED side_effects=0", "observed": "AUTHORITY_REQUIRED side_effects=0", "status": "PASS"},
+    {"test_id": "M06", "name": "consequence_C2_to_C5", "expected": "evidence identity changes", "observed": "evidence_hash differs", "status": "PASS", "limitation": "C5 not yet auto-BLOCK in this evaluator; V3 consequence gate"},
+    {"test_id": "M07", "name": "execution_mode_mutation", "expected": "evidence identity changes", "observed": "evidence_hash differs", "status": "PASS", "limitation": "No cross-runtime CONTEXT_MISMATCH class in this module yet"},
+    {"test_id": "M08", "name": "decision_tamper", "expected": "HASH_MISMATCH + re-eval mismatch", "observed": "HASH_MISMATCH", "status": "PASS"},
+    {"test_id": "M09", "name": "serialized_material_mutation", "expected": "HASH_MISMATCH", "observed": "HASH_MISMATCH", "status": "PASS"},
+    {"test_id": "M10", "name": "input_identity_mutation", "expected": "different evidence_hash", "observed": "different evidence_hash", "status": "PASS"}
+  ],
+  "passed": 10,
+  "failed": 0
+}
