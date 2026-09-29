@@ -11,6 +11,9 @@ WHAT THIS DOES NOT DO:
   This is not CEK, SAD-DFU, Vector Memory, or a global SWI Kernel.
   Default require_admission=False preserves existing callers; Universal Gate is NOT PROVEN
   until Trainer/export and all formation paths set require_admission and supply decisions.
+
+FM-005 status: OPEN — compatibility default retained pending module API admission migration.
+Use ModuleKernel.for_privileged(...) for paths that must refuse unadmitted formation.
 """
 from __future__ import annotations
 
@@ -60,6 +63,31 @@ class ModuleKernel:
         self.require_admission = require_admission
         self.module_id = module_id or name
         self.expected_commit = expected_commit
+
+    @classmethod
+    def for_privileged(
+        cls,
+        name: str,
+        pre_checks: Iterable[Check] = (),
+        post_checks: Iterable[Check] = (),
+        *,
+        module_id: Optional[str] = None,
+        expected_commit: Optional[str] = None,
+    ) -> "ModuleKernel":
+        """Factory for paths that must not form state without valid admission.
+
+        Does not change the compatibility default (require_admission=False).
+        Callers that need gated formation should use this factory and supply
+        admission to run().
+        """
+        return cls(
+            name,
+            pre_checks=pre_checks,
+            post_checks=post_checks,
+            require_admission=True,
+            module_id=module_id,
+            expected_commit=expected_commit,
+        )
 
     @staticmethod
     def _run_checks(checks: Iterable[Check], value: Any) -> List[CheckResult]:

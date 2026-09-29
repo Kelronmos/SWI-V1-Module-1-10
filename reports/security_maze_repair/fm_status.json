@@ -1,0 +1,30 @@
+{
+  "baseline_sha": "bc33232c999551905cea374f952582f3e011861e",
+  "security_maze_seal": "NOT_READY",
+  "universal_gate": "NOT_PROVEN",
+  "paths": {
+    "FM-001": "TESTED",
+    "FM-002": "TESTED",
+    "FM-003": "TESTED",
+    "FM-004": "TESTED",
+    "FM-005": "OPEN",
+    "FM-006": "OPEN",
+    "FM-007": "OPEN",
+    "FM-008": "OPEN",
+    "FM-009": "OPEN",
+    "FM-010": "OPEN",
+    "FM-011": "OPEN",
+    "FM-012": "OPEN",
+    "FM-013": "OPEN"
+  },
+  "fm005_decision": {
+    "global_default_flipped": false,
+    "reason": "Module APIs lack admission threading; blind True breaks callers",
+    "privileged_factory": "ModuleKernel.for_privileged",
+    "unadmitted_privileged_calls_proven_zero": true,
+    "compatibility_unadmitted_formation_still_possible": true
+  },
+  "g7_replay": "PLACEHOLDER / NOT_COMPLETE",
+  "sm_v1_005": "CROSS_REPO / NOT_PROVEN_IN_V1",
+  "sm_v1_013": "NOT_IMPLEMENTED"
+}
