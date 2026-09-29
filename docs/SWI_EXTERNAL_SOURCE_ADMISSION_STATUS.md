@@ -7,33 +7,44 @@
 |-------|--------|
 | SPECIFIED | **Yes** — `docs/SWI_EXTERNAL_SOURCE_ADMISSION_POLICY.md` |
 | IMPLEMENTED | **Yes (bounded)** — `swi_core/source_admission/` |
-| TESTED | **Yes (bounded)** — halt + adversarial suite |
-| REPLAYABLE | **Yes (bounded)** — `replay_admission` + adversarial replay suite |
+| TESTED | **Yes (bounded)** — halt + replay adversarial suites |
+| REPLAYABLE | **REPLAYABLE_BOUNDED** (this slice only) |
 | PROVEN (beyond slice) | **NOT CLAIMED** |
 | SEALED | **NOT CLAIMED** |
 | Regulatory compliance | **NOT CLAIMED** |
 
-## What this slice proves
+## Halt slice
 
-**Enforcement**
 - Policy violation → `SourceAdmissionHalt`
 - Protected operation is **not** invoked on HALT
 - Side-effect counter remains **0** on HALT paths
 
-**Replay (bounded)**
-- Same source + same evidence → same decision and same `evidence_hash`
-- Same HALT / same PASS evidence reproduced
-- Modified source, tampered hash, licence/privacy/architecture change → `REPLAY_INVALID`
-- Claimed authorization cannot turn a violation into PASS
-- Missing evidence → `NOT_PROVEN`
+## Replay slice — layered invalidity (not generic INVALID)
 
-## What this slice does **not** prove
+| Failure class | Meaning |
+|---------------|---------|
+| SERIALIZATION_INVALID | Canonical reconstruction failed |
+| SCHEMA_INVALID | Required fields/types missing or malformed |
+| HASH_MISMATCH | Recomputed digest ≠ recorded evidence_hash |
+| ACCESS_CONTEXT_INVALID | Knowledge level / restricted-info boundary violated |
+| SOURCE_MUTATED | Identity/hash/version differs from recorded |
+| DECISION_MISMATCH | Re-evaluation differs from recorded decision |
+| AUTHORITY_UNPROVEN | Continuation authority not demonstrated |
+
+**Access dimension:** knowledge levels 0–4. Insufficient level → `REPLAY_LIMITED_BY_ACCESS_CONTEXT` (does **not** mean “original decision was false”).
+
+**Violation path:** PAUSE/BLOCK → `ViolationReport` → 3 questions (what failed / consequence / continuation authority) → disposition. `CONTINUE` only with explicit `AUTHORIZED:` / `SCOPED:` authority; default **BLOCK** with `side_effects=0`.
+
+**HASH ≠ AUTHORITY ≠ TRUTH** remains in claim language. A hash match proves byte–digest correspondence for recorded material only.
+
+## What is still not claimed
 
 - FM-005–013 closed
 - Universal Gate PROVEN
 - Foundation Seal 5 READY
-- GDPR / CCPA / EU AI Act or any compliance conclusion
-- Production-wide or cross-module replayability
+- CRTG / signature-based cryptographic authority
+- GDPR / CCPA / EU AI Act compliance
+- Cross-node V3 replay under separated stores
 
 ## Code map
 
@@ -47,5 +58,4 @@
 
 > Named ≠ Implemented · Implemented ≠ Tested · Tested ≠ Sealed · Sealed ≠ Authorized.
 
-**Limitation text attached to every ReplayResult:**  
-REPLAYABLE within the tested source-admission contract and evidence format; not proof of Universal Gate closure, legal compliance, or production-wide replayability.
+**Limitation text:** REPLAYABLE within the tested source-admission contract and evidence format; not proof of Universal Gate closure, legal compliance, or production-wide replayability.
