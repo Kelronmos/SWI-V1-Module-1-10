@@ -1,8 +1,8 @@
 # V1 Tip CI Status
 
-**Date:** 2026-10-12  
-**Current main tip SHA:** `7a53df143a65e9695c534f3d0a0bbaf7c6d25520`  
-**Message:** `docs(status): weekly status 2026-W42 — honest snapshot, no FM flips`
+**Date:** 2026-10-19  
+**Current main tip SHA:** `7dab1b37b8517b6b6de6acffb74578a0d104e53a`  
+**Message:** `docs(status): weekly status 2026-W43 — honest snapshot, no FM flips`
 
 > Older tip metadata in prior versions of this file is **historical only** and must not be treated as evidence for the current SHA.
 >
@@ -56,7 +56,7 @@ Bounded interop claim (only):
 
 > Within the tested prototype scope, post-decision mutations of the tested classes do not silently reuse the original PASS.
 
-Weekly snapshot: `docs/status/WEEKLY_STATUS_2026-W42.md`.
+Weekly snapshot: `docs/status/WEEKLY_STATUS_2026-W43.md`.
 
 ## GitHub Actions
 
