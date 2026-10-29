@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://swi.local/schemas/swi_artifact_identity_v1.json",
+  "title": "SWI Artifact Identity v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "artifact_id",
+    "serial",
+    "artifact_type",
+    "created_at",
+    "timestamp_source",
+    "timestamp_trust",
+    "origin_type",
+    "content",
+    "integrity_status",
+    "signature_status",
+    "proof_status",
+    "authorization_status",
+    "replay_status",
+    "record_version"
+  ],
+  "properties": {
+    "schema": { "const": "swi.artifact-identity.v1" },
+    "artifact_id": { "type": "string", "minLength": 8 },
+    "serial": { "type": "string", "minLength": 8 },
+    "artifact_type": {
+      "type": "string",
+      "enum": ["document", "report", "json", "archive", "image", "binary", "event", "import", "export", "other"]
+    },
+    "task_id": { "type": ["string", "null"] },
+    "execution_id": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "timestamp_source": { "type": "string" },
+    "timestamp_trust": {
+      "type": "string",
+      "enum": ["UNVERIFIED", "UNKNOWN", "EXTERNAL_TSA"]
+    },
+    "origin_type": {
+      "type": "string",
+      "enum": ["SWI_GENERATED", "IMPORTED", "REGENERATED", "UNKNOWN"]
+    },
+    "origin_reference": { "type": ["string", "null"] },
+    "external_id": { "type": ["string", "null"] },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["media_type", "size_bytes", "hash_algorithm", "digest"],
+      "properties": {
+        "media_type": { "type": "string" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "hash_algorithm": { "const": "SHA-256" },
+        "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "parent_artifacts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "transformations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": ["UNVERIFIED", "MATCH", "MISMATCH", "UNAVAILABLE"]
+    },
+    "signature_status": {
+      "type": "string",
+      "enum": ["UNSIGNED", "VALID", "INVALID", "UNKNOWN_KEY"]
+    },
+    "proof_status": {
+      "type": "string",
+      "enum": [
+        "NOT_PROVEN",
+        "PROOF_PENDING",
+        "PROOF_PASSED_WITHIN_SCOPE",
+        "PROOF_FAILED",
+        "PROOF_INCOMPLETE"
+      ]
+    },
+    "authorization_status": {
+      "type": "string",
+      "enum": ["NOT_AUTHORIZED", "AUTHORIZED", "DENIED"]
+    },
+    "replay_status": {
+      "type": "string",
+      "enum": [
+        "NOT_REPLAYED",
+        "REPLAY_PENDING",
+        "REPLAY_MATCH",
+        "REPLAY_MISMATCH",
+        "REPLAY_FAILED",
+        "REPLAY_INCOMPLETE"
+      ]
+    },
+    "record_version": { "type": "integer", "minimum": 1 }
+  }
+}
