@@ -2,30 +2,36 @@
 
 **Package:** SWI-Evidence-Package-2026-10-29-v1.zip  
 **Local path (agent workspace):** `/home/workdir/artifacts/SWI-Evidence-Package-2026-10-29-v1.zip`  
-**SHA-256:** `c74a2348ae3547a7ae4b19889a20d3b7946c9e8319cd74e54415a84fc6a61dca`  
-**Entries:** 32  
-**Integrity (CRC + path checks):** PASS  
+**Note:** ZIP is **not** stored on GitHub; only this documentation is.
 
-## Original evidence
+## Digests
 
-- `claim_evidence_2026-10-29/`: FOUND  
-- `CLAIM_TEST_REPLAY_MANIFEST.json` SHA-256: `d119968b23ecfdfef4ac3fb035d9f56461acad9286e223a86d213303898c815a` — **VERIFIED**  
-- Original claim files copied unmodified into the ZIP  
+| Item | Value |
+|------|--------|
+| ZIP SHA-256 (reported) | `c74a2348ae3547a7ae4b19889a20d3b7946c9e8319cd74e54415a84fc6a61dca` |
+| ZIP SHA-256 (independently recalculated) | `c74a2348ae3547a7ae4b19889a20d3b7946c9e8319cd74e54415a84fc6a61dca` |
+| Match | **YES** |
+| ZIP size | 26,116 bytes |
+| Entries | 32 |
+| zipfile.testzip | OK |
+| Unsafe paths | none |
+| Original manifest SHA-256 (reported) | `d119968b23ecfdfef4ac3fb035d9f56461acad9286e223a86d213303898c815a` |
+| Original manifest SHA-256 (recalculated) | `d119968b23ecfdfef4ac3fb035d9f56461acad9286e223a86d213303898c815a` |
+| Match | **YES** |
 
-## Claims included
+## Claims included (from package structure)
 
-| Claim | Commit | Prior targeted result |
-|-------|--------|----------------------|
-| CLAIM-ARCH-INT-001 | e0fc8b34… | 10 passed |
-| CLAIM-ART-ID-001 | 1ec76400… | 9 passed |
-| CLAIM-MATH-AUTH-001 | 8bd8c0c9… | 5 passed |
+| Claim | Commit |
+|-------|--------|
+| CLAIM-ARCH-INT-001 | e0fc8b34… |
+| CLAIM-ART-ID-001 | 1ec76400… |
+| CLAIM-MATH-AUTH-001 | 8bd8c0c9… |
 
-## Open gaps
+## Date note
 
-- V2 empty-capability: NOT_RUN / NOT fixed  
-- Firefly OTP still sets `replay_permission: true` on success alone (code inspection)  
-- V4 `build_engine.py`: ABSENT at 2e8ced1e  
-- Independent review: PENDING  
+All mission dates are **2026-10-29**. Any “2029-10-29” header in prior session text is a typo and must not be treated as evidence.
+
+## Governance
 
 ```
 PROVEN = NO
